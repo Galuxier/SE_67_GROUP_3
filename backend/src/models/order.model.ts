@@ -2,7 +2,7 @@ import { Schema, model, Document } from 'mongoose';
 import { validateOrderItems } from '../middlewares/order.middleware';
 
 
-enum OrderType {
+export enum OrderType {
   Product = 'product',
   Course = 'course',
   Ticket = 'ticket'
@@ -33,7 +33,7 @@ interface ShippingAddress {
   information?: string;
 }
 
-interface OrderDocument extends Document {
+export interface OrderDocument extends Document {
   user_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Users
   order_type: OrderType;
   items: OrderItem[];
@@ -67,5 +67,5 @@ const OrderSchema = new Schema<OrderDocument>({
   });
 
 OrderSchema.pre('validate', validateOrderItems);
-const OrderModel = model<OrderDocument>('Order', OrderSchema);
-export { OrderDocument, OrderType, OrderModel };
+
+export const Order = model<OrderDocument>('Order', OrderSchema);

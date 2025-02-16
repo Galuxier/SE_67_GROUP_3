@@ -32,7 +32,7 @@ interface Package {
 }
 
 // กำหนด interface สำหรับ Course document
-interface CourseDocument extends Document {
+export interface CourseDocument extends Document {
   gym_id: Schema.Types.ObjectId;
   course_name: string;
   level: string;
@@ -72,6 +72,6 @@ const CourseSchema = new Schema<CourseDocument>({
 });
 
 // สร้างโมเดล Course
-const CourseModel = model<CourseDocument>('Course', CourseSchema);
 
-export default CourseModel;
+
+export const Course = model<CourseDocument>('Course', CourseSchema);
