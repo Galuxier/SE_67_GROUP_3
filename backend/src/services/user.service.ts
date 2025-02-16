@@ -1,8 +1,8 @@
 import { ObjectId } from 'mongoose';
-import { User, IUser } from '../models/user.model';
+import { User, UserDocument } from '../models/user.model';
 
 // สร้างผู้ใช้ใหม่
-export const createUser = async (userData: IUser) => {
+export const createUser = async (userData: UserDocument) => {
   const newUser = await User.create(userData);
   // const newUser = new User(userData);
   // await newUser.save();
@@ -21,7 +21,7 @@ export const getUserById = async (userId: string) => {
 };
 
 // อัปเดตข้อมูลผู้ใช้
-export const updateUser = async (userId: string, updateData: Partial<IUser>) => {
+export const updateUser = async (userId: string, updateData: Partial<UserDocument>) => {
   const user = await User.findById(userId);
   if (!user) {
     throw new Error('User not found');
