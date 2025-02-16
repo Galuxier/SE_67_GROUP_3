@@ -1,11 +1,11 @@
 import { Schema, model, Document } from 'mongoose';
 
-export interface ILicense {
+export interface License {
   license_type: string;
   license: string;
 }
 
-export interface IUser extends Document {
+export interface UserDocument extends Document {
   user_name: string;
   password: string;
   email: string;
@@ -15,7 +15,7 @@ export interface IUser extends Document {
   last_name: string;
   nickname: string;
   bio: string;
-  licenses?: ILicense[];
+  licenses?: License[];
   gym_id?: Schema.Types.ObjectId;
   contact_info?: { [key: string]: any }; // รับ key-value ที่ไม่กำหนดโครงสร้าง
   role: string[];
@@ -24,7 +24,7 @@ export interface IUser extends Document {
   status: 'active' | 'inActive';
 }
 
-const UserSchema = new Schema<IUser>({
+const UserSchema = new Schema<UserDocument>({
   user_name: { type: String, required: true },
   password: { type: String, required: true },
   email: { type: String, required: true },
@@ -46,4 +46,4 @@ const UserSchema = new Schema<IUser>({
   status: { type: String, enum: ['active', 'inActive'], required: true, default: 'active' },
 });
 
-export const User = model<IUser>('User', UserSchema);
+export const User = model<UserDocument>('User', UserSchema);
