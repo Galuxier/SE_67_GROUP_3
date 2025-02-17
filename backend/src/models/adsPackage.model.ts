@@ -1,9 +1,8 @@
 import { Schema, model, Document } from 'mongoose';
 
 enum AdsPackageType {
-  Banner = 'banner',
-  Popup = 'popup',
-  Video = 'video',
+  Coure = 'course',
+  Event = 'event'
 }
 
 export interface AdsPackageDocument extends Document {

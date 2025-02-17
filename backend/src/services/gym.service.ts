@@ -1,24 +1,10 @@
 import { Gym, GymDocument } from '../models/gym.model';
+import {BaseService} from './base.service';
 
-export const createGym = async (gymData: GymDocument) => {
-  return await Gym.create(gymData);
-};
+class GymService extends BaseService<GymDocument> {
+  constructor() {
+    super(Gym);
+  }
+}
 
-export const getGyms = async () => {
-  return await Gym.find();
-};
-
-export const getGymById = async (gymId: string) => {
-  return await Gym.findById(gymId);
-};
-
-export const updateGym = async (gymId: string, updateData: Partial<GymDocument>) => {
-  const gym = await Gym.findById(gymId);
-  if (!gym) throw new Error('Gym not found');
-  Object.assign(gym, updateData);
-  return await gym.save();
-};
-
-export const deleteGym = async (gymId: string) => {
-  return await Gym.findByIdAndDelete(gymId);
-};
+export default new GymService;

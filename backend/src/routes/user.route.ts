@@ -16,12 +16,12 @@ router.post('/users', createUserController);
 router.get('/users', getUsersController);
 
 // ดึงข้อมูลผู้ใช้โดย ID
-router.get('/users/:id', getUserByIdController);
+router.get('/user/:id', getUserByIdController);
 
 // อัปเดตข้อมูลผู้ใช้
-router.put('/users/:id', updateUserController);
+router.put('/user/:id', updateUserController);
 
 // ลบผู้ใช้
-router.delete('/users/:id', deleteUserController);
+router.delete('/user/:id', deleteUserController);
 
 export default router;

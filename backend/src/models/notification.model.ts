@@ -1,9 +1,9 @@
 import { Schema, model, Document } from 'mongoose';
 
 enum NotificationType {
-  Info = 'info',
-  Warning = 'warning',
-  Error = 'error',
+  Course = "course",
+  Event = "event",
+  Shop = "shop"
 }
 
 interface NotificationDocument extends Document {
@@ -12,6 +12,7 @@ interface NotificationDocument extends Document {
   title: string;
   message: string;
   relate_id?: Schema.Types.ObjectId; // อ้างอิงไปที่ collection ต่างๆ
+  order_id?: Schema.Types.ObjectId;
   is_read: boolean;
   create_at: Date;
 }
@@ -22,6 +23,7 @@ const NotificationSchema = new Schema<NotificationDocument>({
   title: { type: String, required: true },
   message: { type: String, required: true },
   relate_id: { type: Schema.Types.ObjectId, refPath: 'notifications.relateModel' }, // อ้างอิงไปที่ collection ต่างๆ
+  order_id: {type: Schema.Types.ObjectId, ref: 'Order'},
   is_read: { type: Boolean, required: true },
   create_at: { type: Date, default: Date.now, required: true },
 });

@@ -18,7 +18,7 @@ interface Contacts {
 }
 
 // กำหนด interface สำหรับ Shop document
-interface ShopDocument extends Document {
+export interface ShopDocument extends Document {
   owner_id: Schema.Types.ObjectId; // อ้างอิงไปยัง User
   shop_name: string;
   license?: string; // optional field
@@ -38,19 +38,17 @@ const ShopSchema = new Schema<ShopDocument>({
   logo_url: { type: String, required: true },
   contacts: { type: Schema.Types.Mixed, required: true }, // ใช้ Mixed type สำหรับ key-value pairs
   address: {
-    province: { type: String, required: true },
-    district: { type: String, required: true },
-    subdistrict: { type: String, required: true },
-    street: { type: String, required: true },
-    postal_code: { type: String, required: true },
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true },
+    province: { type: String },
+    district: { type: String },
+    subdistrict: { type: String },
+    street: { type: String },
+    postal_code: { type: String },
+    latitude: { type: Number },
+    longitude: { type: Number },
     information: { type: String },
   },
   create_at: { type: Date, default: Date.now, required: true },
 });
 
 // สร้างโมเดล Shop
-const ShopModel = model<ShopDocument>('Shop', ShopSchema);
-
-export default ShopModel;
+export const Shop = model<ShopDocument>('Shop', ShopSchema);
