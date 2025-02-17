@@ -6,7 +6,7 @@ enum AdsPackageType {
   Video = 'video',
 }
 
-interface AdsPackageDocument extends Document {
+export interface AdsPackageDocument extends Document {
   type: AdsPackageType;
   name: string;
   duration: number;
@@ -20,6 +20,6 @@ const AdsPackageSchema = new Schema<AdsPackageDocument>({
   price: { type: Number, required: true },
 });
 
-const AdsPackageModel = model<AdsPackageDocument>('AdsPackage', AdsPackageSchema);
 
-export default AdsPackageModel;
+
+export const AdsPackageModel = model<AdsPackageDocument>('AdsPackage', AdsPackageSchema);

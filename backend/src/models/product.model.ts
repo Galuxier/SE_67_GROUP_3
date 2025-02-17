@@ -7,7 +7,7 @@ interface Variant {
   stock: number;
 }
 
-interface ProductDocument extends Document {
+export interface ProductDocument extends Document {
   shop_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Shops
   product_name: string;
   category: string;
@@ -30,6 +30,6 @@ const ProductSchema = new Schema<ProductDocument>({
   }],
 });
 
-const ProductModel = model<ProductDocument>('Product', ProductSchema);
 
-export default ProductModel;
+
+export const Product = model<ProductDocument>('Product', ProductSchema);

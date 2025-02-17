@@ -11,7 +11,7 @@ interface CartShop {
   items: CartItem[];
 }
 
-interface CartDocument extends Document {
+export interface CartDocument extends Document {
   user_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Users
   shops: CartShop[];
   total_price: number;
@@ -30,6 +30,6 @@ const CartSchema = new Schema<CartDocument>({
   total_price: { type: Number, required: true },
 });
 
-const CartModel = model<CartDocument>('Cart', CartSchema);
 
-export default CartModel;
+
+export const Cart = model<CartDocument>('Cart', CartSchema);

@@ -32,7 +32,7 @@ interface Address {
 }
 
 // กำหนด interface สำหรับ Gym document
-interface GymDocument extends Document {
+export interface GymDocument extends Document {
   owner_id: Schema.Types.ObjectId;
   gym_image_url: string[];
   facilities: Facility[];
@@ -64,6 +64,6 @@ const GymSchema = new Schema<GymDocument>({
 });
 
 // สร้างโมเดล Gym
-const GymModel = model<GymDocument>('Gym', GymSchema);
 
-export default GymModel;
+
+export const Gym = model<GymDocument>('Gym', GymSchema);

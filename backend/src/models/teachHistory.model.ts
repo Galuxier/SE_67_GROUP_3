@@ -6,7 +6,7 @@ enum TeachHistoryStatus {
   Completed = 'completed',
 }
 
-interface TeachHistoryDocument extends Document {
+export interface TeachHistoryDocument extends Document {
   trainer_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Users
   course_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Course
   status: TeachHistoryStatus;
@@ -18,6 +18,4 @@ const TeachHistorySchema = new Schema<TeachHistoryDocument>({
   status: { type: String, enum: Object.values(TeachHistoryStatus), required: true },
 });
 
-const TeachHistoryModel = model<TeachHistoryDocument>('TeachHistory', TeachHistorySchema);
-
-export default TeachHistoryModel;
+export const TeachHistory = model<TeachHistoryDocument>('TeachHistory', TeachHistorySchema);

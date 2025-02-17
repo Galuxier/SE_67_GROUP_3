@@ -83,7 +83,7 @@ interface Package {
 }
 
 // กำหนด interface สำหรับ Event document
-interface EventDocument extends Document {
+export interface EventDocument extends Document {
   organizer_id: Schema.Types.ObjectId;
   location_id: Schema.Types.ObjectId;
   event_name: string;
@@ -162,6 +162,6 @@ const EventSchema = new Schema<EventDocument>({
 });
 
 // สร้างโมเดล Event
-const EventModel = model<EventDocument>('Event', EventSchema);
 
-export default EventModel;
+
+export const Event = model<EventDocument>('Event', EventSchema);
