@@ -5,7 +5,7 @@ import {
     getGymByIdController,
     updateGymController,
     deleteGymController
-} from '../controllers/gym.controller';
+} from '../controllers/gym.controllers';
 
 const router = express.Router();
 

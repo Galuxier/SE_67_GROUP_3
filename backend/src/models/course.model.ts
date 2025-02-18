@@ -48,7 +48,7 @@ export interface CourseDocument extends Document {
 
 // สร้าง schema สำหรับ Course
 const CourseSchema = new Schema<CourseDocument>({
-  gym_id: { type: Schema.Types.ObjectId, required: true },
+  gym_id: { type: Schema.Types.ObjectId, ref: "Gym", required: true },
   course_name: { type: String, required: true },
   level: { type: String, required: true },
   start_date: { type: Date, required: true },
