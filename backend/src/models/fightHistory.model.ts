@@ -1,6 +1,6 @@
 import { Schema, model, Document } from 'mongoose';
 
-interface FightHistoryDocument extends Document {
+export interface FightHistoryDocument extends Document {
   user_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Users
   event_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Events
   weight_class_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Brackets
@@ -14,6 +14,4 @@ const FightHistorySchema = new Schema<FightHistoryDocument>({
   match_id: [{ type: Schema.Types.ObjectId, ref: 'Match', required: true }], // อ้างอิงไปที่ Matches
 });
 
-const FightHistoryModel = model<FightHistoryDocument>('FightHistory', FightHistorySchema);
-
-export default FightHistoryModel;
+export const FightHistory = model<FightHistoryDocument>('FightHistory', FightHistorySchema);
