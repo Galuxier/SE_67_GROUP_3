@@ -2,9 +2,9 @@ import { Schema, model, Document } from 'mongoose';
 
 // กำหนด enum สำหรับ status ใน courses
 enum CourseStatus {
-  Starting = 'starting',
+  Preparing = 'preparing',
   Ongoing = 'ongoing',
-  Finish = 'finish',
+  Finished = 'finished',
   Cancel = 'cancel',
 }
 
