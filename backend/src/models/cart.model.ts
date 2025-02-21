@@ -23,7 +23,7 @@ const CartSchema = new Schema<CartDocument>({
     shop_id: { type: Schema.Types.ObjectId, ref: 'Shop', required: true }, // อ้างอิงไปที่ Shops
     items: [{
       product_id: { type: Schema.Types.ObjectId, ref: 'Product', required: true }, // อ้างอิงไปที่ Products
-      variant_id: { type: Schema.Types.ObjectId, ref: 'Variant' }, // อ้างอิงไปที่ Variants (ถ้ามี)
+      variant_id: { type: Schema.Types.ObjectId}, // อ้างอิงไปที่ Variants (ถ้ามี)
       quantity: { type: Number, required: true },
     }],
   }],
