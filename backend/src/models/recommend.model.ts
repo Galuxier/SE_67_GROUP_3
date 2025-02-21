@@ -6,7 +6,7 @@ enum RecommendType {
   Course = 'course',
 }
 
-interface RecommendDocument extends Document {
+export interface RecommendDocument extends Document {
   type: RecommendType;
   relate_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Events, Products, หรือ Courses
   start_date: Date;
@@ -20,6 +20,6 @@ const RecommendSchema = new Schema<RecommendDocument>({
   end_date: { type: Date, required: true },
 });
 
-const RecommendModel = model<RecommendDocument>('Recommend', RecommendSchema);
 
-export default RecommendModel;
+
+export const Recommend = model<RecommendDocument>('Recommend', RecommendSchema);
