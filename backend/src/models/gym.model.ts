@@ -42,14 +42,14 @@ export interface GymDocument extends Document {
 
 // สร้าง schema สำหรับ Gym
 const GymSchema = new Schema<GymDocument>({
-  owner_id: { type: Schema.Types.ObjectId, required: true },
+  owner_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
   gym_image_url: { type: [String], required: true },
   facilities: [{
     facility_name: { type: String, required: true },
     facility_icon: { type: String, required: true },
   }],
   courses: [{
-    course_id: { type: Schema.Types.ObjectId, required: true },
+    course_id: { type: Schema.Types.ObjectId, ref: "course", required: true },
     status: { type: String, enum: Object.values(CourseStatus), required: true },
   }],
   address: {
