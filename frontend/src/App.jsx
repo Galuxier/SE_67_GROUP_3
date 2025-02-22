@@ -1,5 +1,4 @@
 import { useState } from 'react';
-
 const App = () => {
   const [teamMembers, setTeamMembers] = useState([
     { id: 1, name: 'John Doe', role: 'Frontend Developer', avatar: 'https://via.placeholder.com/150' },
@@ -19,7 +18,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen w-full bg-gray-100 flex flex-col items-center justify-center p-8">
-      <h1 className="text-4xl font-bold text-center text-blue-600 mb-8">
+      <h1 className="text-4xl font-bold text-center text-red-700 mb-8">
         Team Members
       </h1>
 
