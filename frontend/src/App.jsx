@@ -1,7 +1,7 @@
 import { useState } from 'react';
 const App = () => {
   const [teamMembers, setTeamMembers] = useState([
-    { id: 1, name: 'John Doe', role: 'Frontend Developer', avatar: 'https://via.placeholder.com/150' },
+    { id: 1, name: 'John Doeffff', role: 'Frontend Developer', avatar: 'https://via.placeholder.com/150' },
     { id: 2, name: 'Jane Smith', role: 'Backend Developer', avatar: 'https://via.placeholder.com/150' },
     { id: 3, name: 'Alice Johnson', role: 'UI/UX Designer', avatar: 'https://via.placeholder.com/150' },
   ]);
