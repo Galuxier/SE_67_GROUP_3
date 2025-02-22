@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/axios';
 
+import { Link } from "react-router-dom";
+;
+
 function Home() {
   const [message, setMessage] = useState('');
 
@@ -12,9 +15,10 @@ function Home() {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold">SE_67_GROUP_3 Frontend</h1>
+      <h1 className="text-2xl ">SE_67_GROUP_3 Frontend</h1>
       <p>Backend says: </p>
       <pre>{message}</pre>
+      <Link to="/register" className="text-blue-500 ">Register</Link>
     </div>
   );
 }
