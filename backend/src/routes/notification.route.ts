@@ -5,7 +5,7 @@ import {
     getNotificationByIdController,
     updateNotificationController,
     deleteNotificationController
-} from '../controllers/notification.controllers'
+} from '../controllers/notification.controller'
 
 const route = express.Router();
 
