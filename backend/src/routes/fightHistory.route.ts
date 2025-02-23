@@ -5,7 +5,7 @@ import {
     getFightHistoriesController,
     getFightHistoryByIdController,
     deleteFightHistoryController
-} from '../controllers/fightHistory.controllers'
+} from '../controllers/fightHistory.controller'
 
 const route = express.Router();
 
