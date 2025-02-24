@@ -8,10 +8,22 @@ enum EventStatus {
   Cancel = 'cancel',
 }
 
+enum PackageStatus {
+  Active = 'active',
+  Inactive = 'inactive',
+  Used = 'used',
+}
+
 // กำหนด enum สำหรับ result ใน qualifier และ matches
 enum MatchResult {
   Boxer1Win = 'boxer1_win',
   Boxer2Win = 'boxer2_win',
+  Draw = 'draw'
+}
+
+enum Level {
+  Beginner = 'beginner',
+  Fighter = 'fighter'
 }
 
 // กำหนด interface สำหรับ weight_classes
@@ -91,8 +103,6 @@ export interface EventDocument extends Document {
   start_date: Date;
   end_date: Date;
   weight_classes: WeightClass[];
-  brackets: string[];
-  applicants: string[];
   seat_zones: SeatZone[];
   status: EventStatus;
   packages: Package[];
@@ -103,7 +113,7 @@ const EventSchema = new Schema<EventDocument>({
   organizer_id: { type: Schema.Types.ObjectId, required: true },
   location_id: { type: Schema.Types.ObjectId, required: true },
   event_name: { type: String, required: true },
-  level: { type: String, required: true },
+  level: { type: String, enum: Object.values(Level), required: true },
   start_date: { type: Date, required: true },
   end_date: { type: Date, required: true },
   weight_classes: [{
@@ -114,8 +124,8 @@ const EventSchema = new Schema<EventDocument>({
     max_enrollment: { type: Number, required: true },
     matches: [{
       match_id: { type: Schema.Types.ObjectId, required: true },
-      boxer1_id: { type: Schema.Types.ObjectId, required: true },
-      boxer2_id: { type: Schema.Types.ObjectId, required: true },
+      boxer1_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+      boxer2_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
       match_date: { type: Date, required: true },
       match_time: { type: Date, required: true },
       result: { type: String, enum: Object.values(MatchResult), required: true },
@@ -123,7 +133,7 @@ const EventSchema = new Schema<EventDocument>({
       next_match: { type: Schema.Types.ObjectId },
     }],
     applicants: [{
-      applicant_id: { type: Schema.Types.ObjectId, required: true },
+      applicant_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
       first_name: { type: String, required: true },
       last_name: { type: String, required: true },
       weight: { type: Number, required: true },
@@ -131,8 +141,8 @@ const EventSchema = new Schema<EventDocument>({
     }],
     qualifiers: [{
       qualifier_id: { type: Schema.Types.ObjectId, required: true },
-      boxer1_id: { type: Schema.Types.ObjectId, required: true },
-      boxer2_id: { type: Schema.Types.ObjectId, required: true },
+      boxer1_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+      boxer2_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
       qualifier_date: { type: Date, required: true },
       qualifier_time: { type: Date, required: true },
       result: { type: String, enum: Object.values(MatchResult), required: true },
@@ -140,8 +150,6 @@ const EventSchema = new Schema<EventDocument>({
       next_qualifier: { type: Schema.Types.ObjectId },
     }],
   }],
-  brackets: { type: [String], required: true },
-  applicants: { type: [String], required: true },
   seat_zones: [{
     seat_zone_id: { type: Schema.Types.ObjectId, required: true },
     zone_name: { type: String, required: true },
@@ -157,7 +165,7 @@ const EventSchema = new Schema<EventDocument>({
     order_id: { type: Schema.Types.ObjectId, required: true },
     package_id: { type: Schema.Types.ObjectId, required: true },
     used_at: { type: Date, required: true },
-    status: { type: String, enum: Object.values(EventStatus), required: true },
+    status: { type: String, enum: Object.values(PackageStatus), required: true },
   }],
 });
 
