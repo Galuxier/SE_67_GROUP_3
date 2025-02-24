@@ -1,6 +1,7 @@
-import CourseForm from "./components/CourseForm.jsx";
-import ActivityTable from "./components/ActivityTable.jsx";
-import Button from "./components/Button.jsx";
+import CourseForm from "../components/CourseForm.jsx";
+import ActivityTable from "../components/ActivityTable.jsx";
+import Button from "../components/Button.jsx";
+
 
 const CreateCourse = () => {
   const handleBack = () => {
