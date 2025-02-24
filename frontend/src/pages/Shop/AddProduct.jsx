@@ -8,19 +8,17 @@ export default function AddProduct() {
     name: "",
     category: "",
     description: "",
-    baseImage: "",  // รูปหลักสินค้า
+    baseImage: "", 
     hasOptions: false,
-    // ถ้าผู้ใช้เลือก No => จะกรอก price, stock ในหน้านี้โดยตรง
-    price: "", // เพิ่มช่องเก็บราคาสำหรับกรณี No
-    stock: "", // เพิ่มช่องเก็บสต็อกสำหรับกรณี No
-    options: [], // [{ name: "Color", isMain: false, values: [] }, ...]
+    price: "", 
+    stock: "", 
+    options: [], 
     variants: []
   });
 
   const [newOption, setNewOption] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // ข้อมูล Variant แรกในกรณีเลือก Yes
   const [tempVariant, setTempVariant] = useState({
     image_url: "",
     price: "",
@@ -28,7 +26,6 @@ export default function AddProduct() {
     attribute: {}
   });
 
-  // อัปโหลดรูปหลัก
   const handleBaseImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -39,7 +36,6 @@ export default function AddProduct() {
     reader.readAsDataURL(file);
   };
 
-  // เพิ่ม Option (เช่น "Color", "Size")
   const addOption = () => {
     if (!newOption.trim()) return;
     setProduct((prev) => ({
@@ -49,7 +45,6 @@ export default function AddProduct() {
     setNewOption("");
   };
 
-  // เลือก Main Option
   const setAsMainOption = (index) => {
     setProduct((prev) => {
       const updatedOptions = prev.options.map((opt, i) => ({
@@ -60,9 +55,8 @@ export default function AddProduct() {
     });
   };
 
-  // กด Next
   const openModal = () => {
-    // ถ้าเลือก No => สร้าง Variant หลักตัวเดียวจาก price, stock (เพราะ user ใส่ในหน้าปกติ)
+    
     if (!product.hasOptions) {
       const mainVariant = {
         attribute: {},
@@ -73,17 +67,17 @@ export default function AddProduct() {
 
       const updatedProduct = {
         ...product,
-        variants: [mainVariant] // มี Variant เดียว
+        variants: [mainVariant] 
       };
       navigate("/summary", { state: { product: updatedProduct } });
       return;
     }
 
-    // ถ้า Yes => เปิด Modal สร้าง Variant แรก
+   
     setShowModal(true);
   };
 
-  // อัปโหลดรูป Variant ใน Modal
+  
   const handleVariantImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -94,9 +88,9 @@ export default function AddProduct() {
     reader.readAsDataURL(file);
   };
 
-  // Submit ใน Modal => ใส่ Variant นี้เข้าไปใน product แล้วไป Summary
+  
   const handleSubmit = () => {
-    // บังคับให้ต้องมีรูป Variant ถ้าเลือก Yes
+    
     if (!tempVariant.image_url) {
       alert("Please upload a variant image!");
       return;
@@ -122,7 +116,6 @@ export default function AddProduct() {
       <div className="bg-white p-6 shadow-lg rounded-lg max-w-lg w-full">
         <h2 className="text-xl font-bold mb-4">Add Product</h2>
 
-        {/* ชื่อสินค้า */}
         <label className="block mb-1">Product Name</label>
         <input
           type="text"
@@ -130,7 +123,6 @@ export default function AddProduct() {
           onChange={(e) => setProduct({ ...product, name: e.target.value })}
         />
 
-        {/* หมวดหมู่ */}
         <label className="block mb-1">Category</label>
         <input
           type="text"
@@ -138,14 +130,12 @@ export default function AddProduct() {
           onChange={(e) => setProduct({ ...product, category: e.target.value })}
         />
 
-        {/* คำอธิบาย */}
         <label className="block mb-1">Description</label>
         <textarea
           className="border p-2 w-full mb-4"
           onChange={(e) => setProduct({ ...product, description: e.target.value })}
         />
 
-        {/* รูปหลัก */}
         <label className="block font-semibold">Product Image</label>
         <input
           type="file"
@@ -154,7 +144,6 @@ export default function AddProduct() {
           onChange={handleBaseImageUpload}
         />
 
-        {/* เลือก Yes/No Product Options */}
         <label className="block mb-1">Product Options</label>
         <div className="mb-4 flex items-center gap-4">
           <label>
@@ -174,7 +163,7 @@ export default function AddProduct() {
                   ...product,
                   hasOptions: false,
                   options: [],
-                  // ล้างค่า price, stock กรณีเพิ่งสลับ
+                  
                   price: "",
                   stock: ""
                 })
@@ -184,7 +173,6 @@ export default function AddProduct() {
           </label>
         </div>
 
-        {/* ถ้าเลือก No => ใส่ price, stock ตั้งแต่หน้านี้ */}
         {!product.hasOptions && (
           <div className="mb-4 border p-2 rounded">
             <label className="block mb-1">Price</label>
@@ -203,7 +191,6 @@ export default function AddProduct() {
           </div>
         )}
 
-        {/* ถ้าเลือก Yes => เพิ่ม Options */}
         {product.hasOptions && (
           <div className="mb-4">
             <div className="flex gap-2 mb-2">
@@ -238,13 +225,11 @@ export default function AddProduct() {
         </button>
       </div>
 
-      {/* Modal => ถ้าเลือก Yes => กรอก Variant แรก */}
       {showModal && product.hasOptions && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-bold mb-4">Add Product Details</h2>
 
-            {/* Upload Variant Image */}
             <label className="block font-semibold">Upload Variant Image</label>
             <input
               type="file"
@@ -253,7 +238,6 @@ export default function AddProduct() {
               onChange={handleVariantImageUpload}
             />
 
-            {/* ใส่ attribute ตาม Options */}
             {product.options.map((opt, index) => (
               <div key={index}>
                 <label className="block font-semibold mb-2">{opt.name}</label>

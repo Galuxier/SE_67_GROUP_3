@@ -5,11 +5,9 @@ export default function Summary() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // รับ product จาก state
   const [product, setProduct] = useState(location.state?.product || {});
   const [showModal, setShowModal] = useState(false);
 
-  // Variant ใหม่ที่ผู้ใช้จะเพิ่มใน Summary
   const [tempVariant, setTempVariant] = useState({
     image_url: "",
     price: "",
@@ -17,7 +15,6 @@ export default function Summary() {
     attribute: {}
   });
 
-  // อัปโหลดรูป Variant
   const handleVariantImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -28,13 +25,8 @@ export default function Summary() {
     reader.readAsDataURL(file);
   };
 
-  // เพิ่ม Variant ใน Summary
   const handleAddVariant = () => {
-    // ถ้าอยากบังคับรูป => เช็คตรงนี้
-    // if (product.hasOptions && !tempVariant.image_url) {
-    //   alert("Please upload a variant image!");
-    //   return;
-    // }
+    
 
     const newVar = {
       attribute: { ...tempVariant.attribute },
@@ -50,7 +42,6 @@ export default function Summary() {
     setShowModal(false);
   };
 
-  // เมื่อกด Sell => POST ไป API
   const handleConfirm = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/products", {
@@ -73,7 +64,6 @@ export default function Summary() {
     <div className="p-6 bg-gray-100 min-h-screen">
       <h2 className="text-xl font-bold">Product Summary</h2>
 
-      {/* รูปหลักสินค้า */}
       {product.baseImage && (
         <img
           src={product.baseImage}
@@ -97,7 +87,6 @@ export default function Summary() {
             />
           )}
 
-          {/* แสดง attribute (Color, Size, etc.) */}
           {Object.entries(variant.attribute)
             .filter(([_, value]) => value)
             .map(([key, value]) => (
@@ -111,7 +100,6 @@ export default function Summary() {
         </div>
       ))}
 
-      {/* ปุ่มเพิ่ม Variant */}
       {product.hasOptions && (
         <button
           onClick={() => setShowModal(true)}
@@ -121,7 +109,6 @@ export default function Summary() {
         </button>
       )}
 
-      {/* ปุ่ม Sell => บันทึกจริง */}
       <button
         onClick={handleConfirm}
         className="mt-4 bg-pink-500 text-white px-4 py-2 rounded ml-4"
