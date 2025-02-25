@@ -5,7 +5,12 @@ import MainLayout from "../layouts/MainLayout";
 function CourseRoutes() {
   return (
       <Routes>
-        <Route path="/" element={<MainLayout><CourseHome /></MainLayout>} />
+        {/* มี Layout(Navbar) */}
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<CourseHome />} />
+        </Route>
+
+        {/* มี Layout(Navbar) */}
       </Routes>
   );
 }

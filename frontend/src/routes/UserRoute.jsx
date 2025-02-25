@@ -5,7 +5,12 @@ import MainLayout from "../layouts/MainLayout";
 function UserRoutes() {
   return (
       <Routes>
-        <Route path="/" element={<MainLayout><UserProfile /></MainLayout>} />
+        {/* มี Layout(Navbar) */}
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<UserProfile />} />
+        </Route>
+
+        {/* มี Layout(Navbar) */}
       </Routes>
   );
 }

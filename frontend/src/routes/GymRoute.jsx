@@ -6,13 +6,13 @@ import MainLayout from "../layouts/MainLayout";
 function GymRoutes() {
   return (
       <Routes>
+        {/* มี Layout(Navbar) */}
         <Route path="/" element={<MainLayout />}>
-          <Route/>
+          <Route index element={<GymHome />} />
         </Route>
 
-
-
-        <Route path="addgym" element={<MainLayout><AddGym /></MainLayout>} />
+        {/* ไม่มี Layout(Navbar) */}
+        <Route path="/addgym" element={<AddGym />} />
       </Routes>
   );
 }
