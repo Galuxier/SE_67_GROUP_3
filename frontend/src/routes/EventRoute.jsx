@@ -5,7 +5,13 @@ import MainLayout from "../layouts/MainLayout";
 function EventRoutes() {
   return (
       <Routes>
-        <Route path="/" element={<MainLayout><EventHome /></MainLayout>} />
+        {/* มี Layout(Navbar) */}
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<EventHome />} />
+        </Route>
+
+        {/* มี Layout(Navbar) */}
+        
       </Routes>
   );
 }
