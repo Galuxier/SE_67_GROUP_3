@@ -1,24 +1,34 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
-import Home from './pages/home';
-import CourseHome from './pages/courses/CourseHome';
-import GymHome from "./pages/gyms/GymHome";
-import EventHome from "./pages/events/EventHome";
-import ShopHome from "./pages/shops/ShopHome";
-import UserProfile from "./pages/users/UserProfile";
+import Home from './pages/Home';
+import Signup from './pages/Register';
+
+import GymRoutes from "./routes/GymRoute";
+import CourseRoutes from "./routes/CourseRoute";
+import EventRoutes from "./routes/EventRoute";
+import ShopRoutes from "./routes/ShopRoute";
+import UserRoutes from "./routes/UserRoute";
+
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Home />} />
-          <Route path="course" element={<CourseHome />} />
-          <Route path="gym" element={<GymHome />} />
-          <Route path="event" element={<EventHome />} />
-          <Route path="shop" element={<ShopHome />} />
-          <Route path="profile" element={<UserProfile />} />
-        </Route>
+        {/* Routes ที่ใช้ MainLayout */}
+        <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+
+        {/* Routes ที่ไม่มี Layout (Login/Signup) */}
+        {/* <Route path="/login" element={<Login />} /> */}
+        <Route path="/signup" element={<Signup />} />
+
+
+        {/* ใช้ Component ของแต่ละหมวด */}
+        <Route path="/gym/*" element={<GymRoutes />} />
+        <Route path="/course/*" element={<CourseRoutes />} />
+        <Route path="/event/*" element={<EventRoutes />} />
+        <Route path="/user/*" element={<UserRoutes />} />
+        <Route path="/shop/*" element={<ShopRoutes />} />
+
       </Routes>
     </Router>
   );
