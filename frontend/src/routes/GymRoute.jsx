@@ -12,7 +12,7 @@ function GymRoutes() {
         </Route>
 
         {/* ไม่มี Layout(Navbar) */}
-        <Route path="addgym" element={<AddGym />} />
+        <Route path="/addgym" element={<AddGym />} />
       </Routes>
   );
 }
