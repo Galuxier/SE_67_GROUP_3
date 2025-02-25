@@ -5,7 +5,12 @@ import MainLayout from "../layouts/MainLayout";
 function ShopRoutes() {
   return (
       <Routes>
-        <Route path="/" element={<MainLayout><ShopHome /></MainLayout>} />
+        {/* มี Layout(Navbar) */}
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<ShopHome />} />
+        </Route>
+
+        {/* มี Layout(Navbar) */}
       </Routes>
   );
 }

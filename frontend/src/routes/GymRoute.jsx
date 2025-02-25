@@ -6,7 +6,12 @@ import MainLayout from "../layouts/MainLayout";
 function GymRoutes() {
   return (
       <Routes>
-        <Route path="/" element={<MainLayout><GymHome /></MainLayout>} />
+        {/* มี Layout(Navbar) */}
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<GymHome />} />
+        </Route>
+
+        {/* ไม่มี Layout(Navbar) */}
         <Route path="addgym" element={<AddGym />} />
       </Routes>
   );

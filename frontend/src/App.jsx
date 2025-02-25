@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import Home from './pages/Home';
 import Signup from './pages/Register';
+import Login from './pages/Login';
 
 import GymRoutes from "./routes/GymRoute";
 import CourseRoutes from "./routes/CourseRoute";
@@ -15,10 +16,12 @@ const App = () => {
     <Router>
       <Routes>
         {/* Routes ที่ใช้ MainLayout */}
-        <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Home />} />
+        </Route>
 
         {/* Routes ที่ไม่มี Layout (Login/Signup) */}
-        {/* <Route path="/login" element={<Login />} /> */}
+        <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
 
