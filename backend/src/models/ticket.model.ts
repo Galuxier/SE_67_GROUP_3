@@ -6,7 +6,7 @@ enum TicketStatus {
   Cancelled = 'cancelled',
 }
 
-interface TicketDocument extends Document {
+export interface TicketDocument extends Document {
   user_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Users
   event_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Events
   seat_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Seats
@@ -22,6 +22,6 @@ const TicketSchema = new Schema<TicketDocument>({
   status: { type: String, enum: Object.values(TicketStatus), required: true },
 });
 
-const TicketModel = model<TicketDocument>('Ticket', TicketSchema);
 
-export default TicketModel;
+
+export const Ticket = model<TicketDocument>('Ticket', TicketSchema);

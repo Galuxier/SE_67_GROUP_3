@@ -1,14 +1,27 @@
-import { useState } from 'react';
-import Addgym from './pages/gyms/AddGym';
-import Login  from './pages/users/Login';
-const App = () => {
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import MainLayout from "./layouts/MainLayout";
+import Home from './pages/home';
+import CourseHome from './pages/courses/CourseHome';
+import GymHome from "./pages/gyms/GymHome";
+import EventHome from "./pages/events/EventHome";
+import ShopHome from "./pages/shops/ShopHome";
+import UserProfile from "./pages/users/UserProfile";
 
+const App = () => {
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-200">
-      <Addgym/>
-    </div>
-   
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Home />} />
+          <Route path="course" element={<CourseHome />} />
+          <Route path="gym" element={<GymHome />} />
+          <Route path="event" element={<EventHome />} />
+          <Route path="shop" element={<ShopHome />} />
+          <Route path="profile" element={<UserProfile />} />
+        </Route>
+      </Routes>
+    </Router>
+  );
 };
 
 export default App;

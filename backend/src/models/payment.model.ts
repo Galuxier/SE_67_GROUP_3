@@ -6,7 +6,7 @@ enum PaymentStatus {
   Failed = 'failed',
 }
 
-interface PaymentDocument extends Document {
+export interface PaymentDocument extends Document {
   order_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Orders
   user_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Users
   amount: number;
@@ -24,6 +24,4 @@ const PaymentSchema = new Schema<PaymentDocument>({
   paid_at: { type: Date },
 });
 
-const PaymentModel = model<PaymentDocument>('Payment', PaymentSchema);
-
-export default PaymentModel;
+export const Payment = model<PaymentDocument>('Payment', PaymentSchema);

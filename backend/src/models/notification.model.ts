@@ -22,7 +22,7 @@ const NotificationSchema = new Schema<NotificationDocument>({
   type: { type: String, enum: Object.values(NotificationType), required: true },
   title: { type: String, required: true },
   message: { type: String, required: true },
-  relate_id: { type: Schema.Types.ObjectId, refPath: 'notifications.relateModel' }, // อ้างอิงไปที่ collection ต่างๆ
+  relate_id: { type: Schema.Types.ObjectId}, // อ้างอิงไปที่ collection ต่างๆ
   order_id: {type: Schema.Types.ObjectId, ref: 'Order'},
   is_read: { type: Boolean, required: true },
   create_at: { type: Date, default: Date.now, required: true },
