@@ -21,7 +21,7 @@ const FilterMenu = ({ onFilter }) => {
     <div className="relative w-full max-w-6xl mx-auto px-4 mb-6">
       <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 border border-gray-300 rounded-md py-2 px-4 bg-white text-sm font-medium">
         <Filter size={16} />
-        <span>กรองข้อมูล</span>
+        <span>Filter information</span>
       </button>
       {isOpen && (
         <div className="absolute top-12 left-4 right-4 bg-white shadow-lg rounded-md p-4 z-10">
@@ -46,7 +46,7 @@ const FilterMenu = ({ onFilter }) => {
             </select>
           </div>
           <div className="flex justify-end mt-4 gap-2">
-            <button onClick={() => setIsOpen(false)} className="border rounded-md py-2 px-4 text-sm">ยกเลิก</button>
+            <button onClick={() => setIsOpen(false)} className="border rounded-md py-2 px-4 text-sm">cancle</button>
             <button onClick={applyFilters} className="bg-blue-600 text-white rounded-md py-2 px-4 text-sm">ใช้ตัวกรอง</button>
           </div>
         </div>
@@ -89,13 +89,13 @@ const CourseSection = ({ title, courses, showFilter = false, onFilter }) => {
       
 
 <div className="flex justify-center mt-6">
-  {title === "คอร์สแนะนำ" ? (
+  {title === "recommended courses" ? (
     <Link to="/course/courseTotal">
-      <button className="border rounded py-2 px-6 text-sm">คอร์สทั้งหมด</button>
+      <button className="border rounded py-2 px-6 text-sm">Total Course</button>
     </Link>
-  ) : title === "ค่ายแนะนำ" ? (
+  ) : title === "recommended camp" ? (
     <Link to="/course/createCourse">
-      <button className="border rounded py-2 px-6 text-sm">ดูเพิ่มเติม</button>
+      <button className="border rounded py-2 px-6 text-sm">see more</button>
     </Link>
   ) : null}
 </div>;
@@ -127,8 +127,8 @@ const CourseHome = () => {
           </Link>
         </div>
       </div>
-      <CourseSection title="คอร์สแนะนำ" courses={filteredCourses || recommendedCourses} showFilter={true} onFilter={handleFilter} />
-      <CourseSection title="ค่ายแนะนำ" courses={recommendedCourses} />
+      <CourseSection title="recommended courses" courses={filteredCourses || recommendedCourses} showFilter={true} onFilter={handleFilter} />
+      <CourseSection title="recommended camp" courses={recommendedCourses} />
     </div>
   );
 };

@@ -11,20 +11,22 @@ export default function Course() {
       <div className="w-[800px] p-11 shadow-lg bg-white rounded-lg">
         <div className="space-y-6">
           <div>
-            <label className="block text-lg font-medium text-gray-700">ชื่อคอร์ส</label>
-            <input type="text" placeholder="ระบุชื่อคอร์ส" className="w-full p-4 border rounded-lg" />
+            <label className="block text-lg font-medium text-gray-700">name</label>
+            <input type="text" placeholder="name of course" className="w-full p-4 border rounded-lg" />
+            <label className="block text-lg font-medium text-gray-700">date</label>
+            <input type="date" className="w-full p-4 border rounded-lg" />
           </div>
           <div>
-            <label className="block text-lg font-medium text-gray-700">กิจกรรม</label>
+            <label className="block text-lg font-medium text-gray-700">Activity</label>
             
           </div>
           <table className="w-full border-collapse border rounded-lg">
             <thead>
               <tr className="bg-gray-200">
-                <th className="p-4 border">เวลา</th>
-                <th className="p-4 border">กิจกรรม</th>
-                <th className="p-4 border">คำอธิบาย</th>
-                <th className="p-4 border">แก้ไข</th>
+                <th className="p-4 border">time</th>
+                <th className="p-4 border">activity</th>
+                <th className="p-4 border">description</th>
+                <th className="p-4 border">edit</th>
               </tr>
             </thead>
             <tbody>
@@ -46,9 +48,9 @@ export default function Course() {
             </tbody>
           </table>
           <div className="flex justify-between">
-            <button className="px-6 py-4 border rounded-lg">ย้อนกลับ</button>
+            <button className="px-6 py-4 border rounded-lg">back</button>
             <Link to = "/course/createCourse">
-            <button className="px-6 py-4 bg-rose-500 text-white rounded-lg hover:bg-red-600">สร้างคอร์ส</button>
+            <button className="px-6 py-4 bg-rose-500 text-white rounded-lg hover:bg-red-600">create course</button>
           </Link>
           </div>
         </div>
