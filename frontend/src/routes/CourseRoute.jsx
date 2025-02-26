@@ -3,6 +3,7 @@ import CourseHome from "../pages/courses/CourseHome";
 import MainLayout from "../layouts/MainLayout";
 import Course from "../pages/courses/Course";
 import CreateCourse from "../pages/courses/CreateCourse";
+import CourseTotal from "../pages/courses/CourseTotal";
 function CourseRoutes() {
   return (
       <Routes>
@@ -11,6 +12,7 @@ function CourseRoutes() {
           <Route index element={<CourseHome />} />
           <Route path ="courseFrom" element ={<Course />}  />
           <Route path ="createCourse" element={<CreateCourse />} />
+          <Route path ="courseTotal" element={<CourseTotal />} />
         </Route>
 
         {/* มี Layout(Navbar) */}
