@@ -20,10 +20,18 @@ function ProductList() {
         }
     ];
 
+    const handleProductClick = (product) => {
+        alert(`You clicked on ${product.product_name}`);
+    };
+
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {products.map((product) => (
-                <div key={product.id} className="max-w-xs rounded overflow-hidden shadow-lg">
+                <button 
+                    key={product.id} 
+                    className="max-w-xs rounded overflow-hidden shadow-lg bg-white text-left cursor-pointer transition transform hover:scale-105"
+                    onClick={() => handleProductClick(product)}
+                >
                     <img className="w-full aspect-[4/3] object-cover" src={product.image_url} alt={product.product_name} />
                     <div className="px-6 py-4">
                         <div className="text-gray-700 text-base font-medium mb-3">{product.product_name}</div>
@@ -32,7 +40,7 @@ function ProductList() {
                             <span className="text-gray-700 text-base">{product.price}</span>
                         </div>
                     </div>
-                </div>
+                </button>
             ))}
         </div>
     );

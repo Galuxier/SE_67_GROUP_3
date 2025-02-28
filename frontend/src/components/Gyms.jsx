@@ -31,11 +31,19 @@ function GymList() {
         }
     ];
 
+    const handleGymClick = (gym) => {
+        alert(`You clicked on ${gym.gym}`);
+    };
+
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {gyms.map((gym) => (
-                <div key={gym.id} className="max-w-xs rounded overflow-hidden shadow-lg">
-                    <img className="w-full aspect-[4/3] object-cover" src={gym.image_url} alt={gym.gym_name} />
+                <button 
+                    key={gym.id} 
+                    className="max-w-xs rounded overflow-hidden shadow-lg bg-white text-left cursor-pointer transition transform hover:scale-105"
+                    onClick={() => handleGymClick(gym)}
+                >
+                    <img className="w-full aspect-[4/3] object-cover" src={gym.image_url} alt={gym.gym} />
                     <div className="px-6 py-4">
                         <div className="text-gray-700 text-base mb-3">{gym.gym}</div>
                         <div className="flex items-center font-base text-lg mb-2">
@@ -44,7 +52,7 @@ function GymList() {
                             <span className="text-gray-700 text-base">{gym.location.province}</span>
                         </div>
                     </div>
-                </div>
+                </button>
             ))}
         </div>
     );

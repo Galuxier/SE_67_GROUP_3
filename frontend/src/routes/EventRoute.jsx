@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import EventHome from "../pages/events/EventHome";
 import MainLayout from "../layouts/MainLayout";
+import FormAddEvent from "../pages/events/Addevent";
 
 function EventRoutes() {
   return (
@@ -10,7 +11,8 @@ function EventRoutes() {
           <Route index element={<EventHome />} />
         </Route>
 
-        {/* มี Layout(Navbar) */}
+        {/* ไม่มี Layout(Navbar) */}
+        <Route path="/addEvent" element={<FormAddEvent />}/>
         
       </Routes>
   );
