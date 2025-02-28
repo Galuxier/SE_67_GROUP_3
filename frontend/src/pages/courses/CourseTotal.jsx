@@ -1,5 +1,6 @@
 
 import { ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const courses = [
   {
@@ -38,9 +39,11 @@ export default function MuayThaiCourses() {
           <h2 className="text-lg font-semibold mb-4">Filter</h2>
           {['จังหวัด', 'ประเภท', 'ระยะเวลา'].map((filter) => (
             <div key={filter} className="mb-4">
+              
               <button className="w-full flex justify-between items-center p-3 border rounded-lg text-left">
                 {filter} <ChevronDown size={18} />
               </button>
+             
             </div>
           ))}
         </div>
@@ -51,10 +54,12 @@ export default function MuayThaiCourses() {
             <div key={course.id} className="bg-white shadow-md rounded-lg overflow-hidden">
               <img src={course.image} alt={course.title} className="w-full h-48 object-cover" />
               <div className="p-4">
+              <Link to="/course/CourseDetail">
                 <h3 className="text-lg font-semibold">{course.title}</h3>
                 <p className="text-gray-600">{course.gym}</p>
                 <p className="text-sm text-gray-500">{course.level}</p>
                 <p className="text-red-500 font-bold mt-2">{course.price} / คอร์ส</p>
+              </Link>
               </div>
             </div>
           ))}
