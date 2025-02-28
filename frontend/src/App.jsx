@@ -5,7 +5,7 @@ import Signup from './pages/Register';
 import Login from './pages/Login';
 
 import GymRoutes from "./routes/GymRoute";
-import CourseRoutes from "./routes/CourseRoute";
+// import CourseRoutes from "./routes/CourseRoute";
 import EventRoutes from "./routes/EventRoute";
 import ShopRoutes from "./routes/ShopRoute";
 import UserRoutes from "./routes/UserRoute";
@@ -27,7 +27,7 @@ const App = () => {
 
         {/* ใช้ Component ของแต่ละหมวด */}
         <Route path="/gym/*" element={<GymRoutes />} />
-        <Route path="/course/*" element={<CourseRoutes />} />
+        {/* <Route path="/course/*" element={<CourseRoutes />} /> */}
         <Route path="/event/*" element={<EventRoutes />} />
         <Route path="/user/*" element={<UserRoutes />} />
         <Route path="/shop/*" element={<ShopRoutes />} />
