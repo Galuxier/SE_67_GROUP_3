@@ -20,7 +20,6 @@ function CourseList() {
             price: 2000 }
     ];
 
-    // ฟังก์ชันกำหนดสีตาม level
     const getLevelColor = (level) => {
         switch(level) {
             case "Forkids": return "text-blue-500";
@@ -30,10 +29,18 @@ function CourseList() {
         }
     };
 
+    const handleCourseClick = (course) => {
+        alert(`You clicked on ${course.course_name}`);
+    };
+
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {courses.map((course) => (
-                <div key={course.id} className="max-w-xs rounded overflow-hidden shadow-lg">
+                <button 
+                    key={course.id} 
+                    className="max-w-xs rounded overflow-hidden shadow-lg bg-white text-left cursor-pointer transition transform hover:scale-105"
+                    onClick={() => handleCourseClick(course)}
+                >
                     <img className="w-full aspect-[4/3] object-cover" src={course.image_url} alt={course.course_name} />
                     <div className="px-6 py-4">
                         <div className="font-semibold text-xl mb-2">{course.course_name}</div>
@@ -44,7 +51,7 @@ function CourseList() {
                             <span className="text-gray-700 text-base">/course</span>
                         </div>
                     </div>
-                </div>
+                </button>
             ))}
         </div>
     );

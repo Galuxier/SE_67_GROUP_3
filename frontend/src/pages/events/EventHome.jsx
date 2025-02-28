@@ -1,9 +1,15 @@
 import EventList from "../../components/Events";
+import { Link } from "react-router-dom";
 
 const EventHome = () => {
     return(
       <div>
         <h1>Welcome to Event Page</h1>
+        <Link to="/events/addEvent">
+        <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+          Add Gym
+        </button>
+      </Link>
         <EventList/>
       </div>
     );
