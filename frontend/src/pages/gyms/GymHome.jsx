@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { PlusCircleIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
+import GymList from "../../components/Gyms";
 function GymHome() {
 
   const [province,setProvince] = useState('Province');
@@ -66,8 +67,8 @@ function GymHome() {
         <div className="w-3/4">
           <p className="mt-4">List of gyms will be shown here...</p>
         </div>
-
-      </div>
+      {/* เนื้อหาอื่น ๆ */}
+      <GymList/>
     </div>
   );
 }
