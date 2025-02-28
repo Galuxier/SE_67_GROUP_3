@@ -2,7 +2,8 @@ import { useState } from "react";
 // import { api } from '../services/api';
  
 import "../index.css";
-import { IoMdEye, IoMdEyeOff } from "react-icons/io";
+import { IoMdEye, IoMdEyeOff,IoIosArrowRoundBack } from "react-icons/io";
+import { Link } from "react-router-dom";
 
 function RegisterForm() {
   const [formInput, setFormInput] = useState({
@@ -58,6 +59,7 @@ function RegisterForm() {
 
   return (
     <div className="flex flex-col items-center min-h-screen py-12">
+    <div className="flex justify-start"> <IoIosArrowRoundBack/></div>
       <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
         <h1 className="text-center text-2xl font-bold text-gray-900">
           Create a new account
