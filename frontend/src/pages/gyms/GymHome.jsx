@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import GymList from "../../components/Gyms";
 
 function GymHome() {
   return (
@@ -13,7 +14,7 @@ function GymHome() {
       </Link>
 
       {/* เนื้อหาอื่น ๆ */}
-      <p className="mt-4">List of gyms will be shown here...</p>
+      <GymList/>
     </div>
   );
 }
