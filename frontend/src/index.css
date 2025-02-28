@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* สไตล์สำหรับ input ที่มีข้อผิดพลาด */
+.input-error {
+    border-color: #ef4444; /* สีแดง */
+    box-shadow: 0 0 0 1px #ef4444; /* เงาสีแดง */
+  }
+  
+  /* สไตล์สำหรับข้อความผิดพลาด */
+  .error-message {
+    color: #ef4444; /* สีแดง */
+    font-size: 0.875rem; /* ขนาดข้อความเล็ก */
+    margin-top: 0.25rem; /* ระยะห่างด้านบน */
+  }
