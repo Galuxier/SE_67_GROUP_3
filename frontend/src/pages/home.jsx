@@ -15,6 +15,7 @@ function Home() {
     <div className="p-4">
       <h1 className="text-2xl ">SE_67_GROUP_3 Frontend</h1>
       <Link to="/signup" className="text-blue-500 "> Register </Link>
+      <Link to="/user/addRole" className="text-blue-500 "> Add role </Link>
       <p>Backend says: </p>
       <pre>{message}</pre>
     </div>
