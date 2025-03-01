@@ -27,7 +27,7 @@ function Navbar() {
             <Link to="/" className="hover:text-rose-500 text-xl">Home</Link>
           </div>
           <ul className="hidden md:flex space-x-5">
-            {/* <li><Link to="/course" className="rounded-md ml-5 py-2 text-xl font-medium hover:text-rose-600">Course</Link></li> */}
+            <li><Link to="/course" className="rounded-md ml-5 py-2 text-xl font-medium hover:text-rose-600">Course</Link></li>
             <li><Link to="/gym" className="rounded-md ml-5 py-2 text-xl font-medium hover:text-rose-600">Gym</Link></li>
             <li><Link to="/event" className="rounded-md ml-5 py-2 text-xl font-medium hover:text-rose-600">Event</Link></li>
             <li><Link to="/shop" className="rounded-md ml-5 py-2 text-xl font-medium hover:text-rose-600">Shop</Link></li>
@@ -86,7 +86,7 @@ function Navbar() {
 
       {/* Mobile Menu */}
       <ul className={`flex-col md:hidden ${isMenuOpen ? "block" : "hidden"}`}>
-        {/* <li className="py-1"><Link to="/course">Course</Link></li> */}
+        <li className="py-1"><Link to="/course">Course</Link></li>
         <li className="py-1"><Link to="/gym">Gym</Link></li>
         <li className="py-1"><Link to="/event">Event</Link></li>
         <li className="py-1"><Link to="/shop">Shop</Link></li>
