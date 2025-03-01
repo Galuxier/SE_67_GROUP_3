@@ -6,7 +6,7 @@ enum NotificationType {
   Shop = "shop"
 }
 
-interface NotificationDocument extends Document {
+export interface NotificationDocument extends Document {
   user_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Users
   type: NotificationType;
   title: string;
@@ -22,12 +22,10 @@ const NotificationSchema = new Schema<NotificationDocument>({
   type: { type: String, enum: Object.values(NotificationType), required: true },
   title: { type: String, required: true },
   message: { type: String, required: true },
-  relate_id: { type: Schema.Types.ObjectId, refPath: 'notifications.relateModel' }, // อ้างอิงไปที่ collection ต่างๆ
+  relate_id: { type: Schema.Types.ObjectId}, // อ้างอิงไปที่ collection ต่างๆ
   order_id: {type: Schema.Types.ObjectId, ref: 'Order'},
   is_read: { type: Boolean, required: true },
   create_at: { type: Date, default: Date.now, required: true },
 });
 
-const NotificationModel = model<NotificationDocument>('Notification', NotificationSchema);
-
-export default NotificationModel;
+export const Notification = model<NotificationDocument>('Notification', NotificationSchema);

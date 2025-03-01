@@ -29,9 +29,9 @@ function CourseList() {
         }
     };
 
-    const handleCourseClick = (course) => {
-        alert(`You clicked on ${course.course_name}`);
-    };
+    // const handleCourseClick = (course) => {
+    //     alert(`You clicked on ${course.course_name}`);
+    // };
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

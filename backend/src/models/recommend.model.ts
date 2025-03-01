@@ -2,24 +2,27 @@ import { Schema, model, Document } from 'mongoose';
 
 enum RecommendType {
   Event = 'event',
-  Product = 'product',
   Course = 'course',
 }
 
-interface RecommendDocument extends Document {
+export interface RecommendDocument extends Document {
   type: RecommendType;
-  relate_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Events, Products, หรือ Courses
+  relate_id: Schema.Types.ObjectId;
+  relateModel: string; // ฟิลด์นี้จะเป็นค่า refPath
   start_date: Date;
   end_date: Date;
 }
 
 const RecommendSchema = new Schema<RecommendDocument>({
   type: { type: String, enum: Object.values(RecommendType), required: true },
-  relate_id: { type: Schema.Types.ObjectId, refPath: 'recommend.relateModel', required: true }, // อ้างอิงไปที่ Events, Products, หรือ Courses
+  relateModel: { 
+    type: String, 
+    required: true, 
+    enum: ['Event', 'Course'] // ใส่ชื่อ collection ที่รองรับ
+  },
+  relate_id: { type: Schema.Types.ObjectId, refPath: 'relateModel', required: true },
   start_date: { type: Date, required: true },
   end_date: { type: Date, required: true },
 });
 
-const RecommendModel = model<RecommendDocument>('Recommend', RecommendSchema);
-
-export default RecommendModel;
+export const Recommend = model<RecommendDocument>('Recommend', RecommendSchema);

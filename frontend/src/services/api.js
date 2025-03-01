@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 export const api = axios.create({
@@ -6,4 +7,5 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
 

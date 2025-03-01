@@ -114,7 +114,6 @@ const Addgym = () => {
         </div>
       </div>
     </div>
-
   );
 };
 

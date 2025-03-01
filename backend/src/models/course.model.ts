@@ -8,6 +8,12 @@ enum CourseStatus {
   Cancel = 'cancel',
 }
 
+enum Level {
+  ForKid = 'for_kid',
+  Beginner = 'beginner',
+  Advance = 'advance',
+}
+
 // กำหนด enum สำหรับ status ใน packages
 enum PackageStatus {
   Active = 'active',
@@ -48,9 +54,9 @@ export interface CourseDocument extends Document {
 
 // สร้าง schema สำหรับ Course
 const CourseSchema = new Schema<CourseDocument>({
-  gym_id: { type: Schema.Types.ObjectId, required: true },
+  gym_id: { type: Schema.Types.ObjectId, ref: "Gym", required: true },
   course_name: { type: String, required: true },
-  level: { type: String, required: true },
+  level: { type: String, enum: Object.values(Level), required: true },
   start_date: { type: Date, required: true },
   end_date: { type: Date, required: true },
   price: { type: Number, required: true },
@@ -61,11 +67,11 @@ const CourseSchema = new Schema<CourseDocument>({
     description: { type: String, required: true },
     date: { type: Date, required: true },
     time: { type: String, required: true },
-    trainer: { type: [Schema.Types.ObjectId], required: true },
+    trainer: { type: [Schema.Types.ObjectId], ref: "User", required: true },
   }],
   packages: [{
     order_id: { type: Schema.Types.ObjectId, required: true },
-    package_id: { type: Schema.Types.ObjectId, required: true },
+    package_id: { type: Schema.Types.ObjectId, ref: "AdsPackage", required: true },
     used_at: { type: Date, required: true },
     status: { type: String, enum: Object.values(PackageStatus), required: true },
   }],
