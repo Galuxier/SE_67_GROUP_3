@@ -14,13 +14,13 @@ function CourseRoutes() {
         {/* มี Layout(Navbar) */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<MuayThaiCourses />} />
-          <Route path ="courseDetail" element={<CourseDetail />} />
-          <Route path ="createCourse" element={<CreateCourse />} />
-          <Route path ="courseFrom" element={<CourseFrom />} />
-          <Route path ="courseBuyFrom"  element={<CourseBuyFrom />} />
+          <Route path ="/courseDetail" element={<CourseDetail />} />
+          <Route path ="/courseFrom" element={<CourseFrom />} />
+          <Route path ="/courseBuyFrom"  element={<CourseBuyFrom />} />
         </Route>
 
-        {/* มี Layout(Navbar) */}
+        {/* ไม่มี Layout(Navbar) */}
+        <Route path ="/createCourse" element={<CreateCourse />} />
       </Routes>
   );
 }

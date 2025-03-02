@@ -1,4 +1,4 @@
-import {api} from "../api";
+import {api} from "../Axios";
 
 export async function loginUser(credentials) {
   try {

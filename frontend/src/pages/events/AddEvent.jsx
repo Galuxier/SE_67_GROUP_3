@@ -1,4 +1,4 @@
-function FormAddEvent(){
+const FormAddEvent = () => {
     return(
         <div>
             <h1>Add page</h1>

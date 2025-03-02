@@ -11,7 +11,7 @@ function UserRoutes() {
           <Route index element={<UserProfile />} />
         </Route>
 
-        {/* มี Layout(Navbar) */}
+        {/* ไม่มี Layout(Navbar) */}
         <Route path="/addRole" element={<AddRole />} />
       </Routes>
   );

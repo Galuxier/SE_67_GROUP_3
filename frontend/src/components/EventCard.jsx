@@ -1,4 +1,4 @@
-function EventList() {
+function EventCard() {
     const events = [
         { id: 1, 
             image_url: new URL("../assets/images/muaythai-001.jpg", import.meta.url).href, 
@@ -63,4 +63,4 @@ function EventList() {
     );
 }
 
-export default EventList;
+export default EventCard;

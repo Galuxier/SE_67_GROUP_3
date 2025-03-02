@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Trash2, Pencil, Plus } from "lucide-react";
 import ActivityModal from "../../components/courses/ActivityModal";
 import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+
 export default function CourseFrom() {
   const [activities, setActivities] = useState([
     {
@@ -11,6 +13,11 @@ export default function CourseFrom() {
       description: "โค้ดเป็นไงบ้าง",
     },
   ]);
+  const { state } = useLocation(); // ใช้เพื่อดึงข้อมูลจาก state
+  const { courseData } = state || {}; // ถ้ามีข้อมูลก็จะรับมา
+  console.log(courseData); // คุณสามารถ log ข้อมูลที่ได้รับมาได้
+
+  // console.log("From locl storage", localStorage.getItem("courseData"))
 
   // State สำหรับ modal เพิ่มกิจกรรม
   const [isAddActivityModalOpen, setIsAddActivityModalOpen] = useState(false);
@@ -23,7 +30,7 @@ export default function CourseFrom() {
     <div className="flex justify-center items-center min-h-screen bg-white">
       <div className="w-[700px] p-6 shadow-lg bg-white rounded-lg relative">
         <div className="flex justify-center mb-6 flex-col items-center">
-          <label className="block text-base font-medium text-gray-700 transform -translate-x-20">
+          <label className="block text-base font  -medium text-gray-700 transform -translate-x-20">
             ชื่อคอร์ส:
           </label>
 

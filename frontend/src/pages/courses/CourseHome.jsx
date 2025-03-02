@@ -1,6 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
-import CourseList from "../../components/Courses";
+import CourseList from "../../components/CourseCard";
 
 
 
