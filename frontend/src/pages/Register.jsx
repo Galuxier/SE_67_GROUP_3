@@ -2,6 +2,8 @@ import { useState } from "react";
 import "../index.css";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { signupUser } from "../services/api/AuthApi"; // นำเข้า signupUser จาก AuthApi
+import { MdOutlineKeyboardBackspace } from "react-icons/md";
+import { useNavigate } from "react-router-dom"; // ใช้สำหรับ redirect
 
 function RegisterForm() {
   const [formInput, setFormInput] = useState({
@@ -132,9 +134,20 @@ function RegisterForm() {
     }
   };
 
+  const navigate = useNavigate(); // ใช้สำหรับ redirect
+    // ฟังก์ชันสำหรับปุ่ม Cancel
+    const handleCancel = () => {
+      navigate("/"); // Redirect ไปยังหน้า Home
+    };
+
   return (
     <div className="flex flex-col items-center min-h-screen py-12">
       <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+      <div className="flex items-center gap-2 text-rose-600 hover:text-rose-500 cursor-pointer"
+        onClick={handleCancel}
+      ><MdOutlineKeyboardBackspace /> Back
+      </div>
+
         <h1 className="text-center text-2xl font-bold text-gray-900">
           Create a new account
         </h1>
@@ -320,7 +333,7 @@ function RegisterForm() {
 
         <p className="mt-4 text-center text-sm text-gray-500">
           Already have an account?{" "}
-          <a href="#" className="text-rose-600 hover:text-rose-500">
+          <a href="/login" className="text-rose-600 hover:text-rose-500">
             Login
           </a>
         </p>
