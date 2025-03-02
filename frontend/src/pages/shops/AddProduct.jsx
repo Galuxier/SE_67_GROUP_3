@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import VariantModal from "../../components/VariantModal";
 
 export default function AddProduct() {
   const navigate = useNavigate();
@@ -8,24 +9,20 @@ export default function AddProduct() {
     name: "",
     category: "",
     description: "",
-    baseImage: "", 
+    baseImage: "",
     hasOptions: false,
-    price: "", 
-    stock: "", 
-    options: [], 
+    price: "",
+    stock: "",
+    options: [],
     variants: []
   });
 
   const [newOption, setNewOption] = useState("");
+
+  // state สำหรับโชว์/ซ่อน Modal
   const [showModal, setShowModal] = useState(false);
 
-  const [tempVariant, setTempVariant] = useState({
-    image_url: "",
-    price: "",
-    stock: "",
-    attribute: {}
-  });
-
+  // อัปโหลดรูปหลักสินค้า
   const handleBaseImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -36,6 +33,7 @@ export default function AddProduct() {
     reader.readAsDataURL(file);
   };
 
+  // เพิ่ม Option
   const addOption = () => {
     if (!newOption.trim()) return;
     setProduct((prev) => ({
@@ -45,6 +43,7 @@ export default function AddProduct() {
     setNewOption("");
   };
 
+  // เลือก Main Option (หากต้องการ)
   const setAsMainOption = (index) => {
     setProduct((prev) => {
       const updatedOptions = prev.options.map((opt, i) => ({
@@ -55,8 +54,9 @@ export default function AddProduct() {
     });
   };
 
+  // เมื่อกดปุ่ม Next
   const openModal = () => {
-    
+    // ถ้าไม่มี Options => user เลือก No => ทำ Variant เดียว
     if (!product.hasOptions) {
       const mainVariant = {
         attribute: {},
@@ -64,55 +64,39 @@ export default function AddProduct() {
         price: parseFloat(product.price) || 0,
         stock: parseInt(product.stock) || 0
       };
-
       const updatedProduct = {
         ...product,
-        variants: [mainVariant] 
+        variants: [mainVariant]
       };
-      navigate("/summary", { state: { product: updatedProduct } });
+      navigate("/shop/summary", { state: { product: updatedProduct } });
       return;
     }
 
-   
+    // ถ้า Yes => เปิด Modal
     setShowModal(true);
   };
 
-  
-  const handleVariantImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setTempVariant((prev) => ({ ...prev, image_url: reader.result }));
-    };
-    reader.readAsDataURL(file);
-  };
-
-  
-  const handleSubmit = () => {
-    
-    if (!tempVariant.image_url) {
-      alert("Please upload a variant image!");
-      return;
-    }
-
-    const newVar = {
-      attribute: { ...tempVariant.attribute },
-      image_url: tempVariant.image_url || product.baseImage,
-      price: parseFloat(tempVariant.price) || 0,
-      stock: parseInt(tempVariant.stock) || 0
-    };
-
+  // เมื่อ user กด Submit ใน Modal => เพิ่ม variant แรกแล้วไป summary
+  const handleSubmitVariant = (newVar) => {
+    // รวม variant ใหม่
     const updatedProduct = {
       ...product,
       variants: [...product.variants, newVar]
     };
-
-    navigate("/summary", { state: { product: updatedProduct } });
+    // ปิด Modal
+    setShowModal(false);
+    // ไป summary
+    navigate("/shop/summary", { state: { product: updatedProduct } });
   };
 
   return (
     <div className="bg-gray-100 min-h-screen flex justify-center items-center p-4">
+      <div className="absolute top-4 left-4">
+        <Link to="/shop" className="text-blue-500">
+          ← Back
+        </Link>
+      </div>
+
       <div className="bg-white p-6 shadow-lg rounded-lg max-w-lg w-full">
         <h2 className="text-xl font-bold mb-4">Add Product</h2>
 
@@ -163,7 +147,6 @@ export default function AddProduct() {
                   ...product,
                   hasOptions: false,
                   options: [],
-                  
                   price: "",
                   stock: ""
                 })
@@ -173,6 +156,7 @@ export default function AddProduct() {
           </label>
         </div>
 
+        {/* ถ้า No => ให้ใส่ price / stock ของสินค้าได้เลย */}
         {!product.hasOptions && (
           <div className="mb-4 border p-2 rounded">
             <label className="block mb-1">Price</label>
@@ -191,6 +175,7 @@ export default function AddProduct() {
           </div>
         )}
 
+        {/* ถ้า Yes => ให้เพิ่ม Option ได้ */}
         {product.hasOptions && (
           <div className="mb-4">
             <div className="flex gap-2 mb-2">
@@ -201,7 +186,10 @@ export default function AddProduct() {
                 value={newOption}
                 onChange={(e) => setNewOption(e.target.value)}
               />
-              <button onClick={addOption} className="bg-blue-500 text-white px-4 py-2 rounded">
+              <button
+                onClick={addOption}
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
                 ➕
               </button>
             </div>
@@ -214,67 +202,29 @@ export default function AddProduct() {
                   name="mainOption"
                   onChange={() => setAsMainOption(index)}
                   checked={opt.isMain}
-                /> Main Option
+                />{" "}
+                Main Option
               </div>
             ))}
           </div>
         )}
 
-        <button onClick={openModal} className="w-full bg-pink-500 text-white py-2 rounded-lg">
+        <button
+          onClick={openModal}
+          className="w-full bg-pink-500 text-white py-2 rounded-lg"
+        >
           Next
         </button>
       </div>
 
-      {showModal && product.hasOptions && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Add Product Details</h2>
-
-            <label className="block font-semibold">Upload Variant Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              className="border p-2 w-full mb-4"
-              onChange={handleVariantImageUpload}
-            />
-
-            {product.options.map((opt, index) => (
-              <div key={index}>
-                <label className="block font-semibold mb-2">{opt.name}</label>
-                <input
-                  type="text"
-                  className="border p-2 w-full mb-4"
-                  placeholder={`Enter ${opt.name}`}
-                  onChange={(e) => {
-                    setTempVariant((prev) => ({
-                      ...prev,
-                      attribute: { ...prev.attribute, [opt.name]: e.target.value }
-                    }));
-                  }}
-                />
-              </div>
-            ))}
-
-            <label className="block mb-1">Price</label>
-            <input
-              type="number"
-              className="border p-2 w-full mb-4"
-              onChange={(e) => setTempVariant((prev) => ({ ...prev, price: e.target.value }))}
-            />
-
-            <label className="block mb-1">Stock Quantity</label>
-            <input
-              type="number"
-              className="border p-2 w-full mb-4"
-              onChange={(e) => setTempVariant((prev) => ({ ...prev, stock: e.target.value }))}
-            />
-
-            <button onClick={handleSubmit} className="w-full bg-pink-500 text-white py-2 rounded-lg">
-              Submit
-            </button>
-          </div>
-        </div>
-      )}
+      {/* เรียกใช้ VariantModal (component) */}
+      <VariantModal
+        show={showModal && product.hasOptions} // ถ้า Yes => แสดง
+        onClose={() => setShowModal(false)}    // ปิด Modal
+        productOptions={product.options}       // ส่ง options ไปให้ Modal
+        baseImage={product.baseImage}          // ส่งรูปหลัก
+        onSubmitVariant={(newVar) => handleSubmitVariant(newVar)} // เมื่อกด Submit ใน Modal
+      />
     </div>
   );
 }
