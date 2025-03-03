@@ -70,6 +70,7 @@ function GymHome() {
       {/* เนื้อหาอื่น ๆ */}
       <GymList/>
     </div>
+  </div>
   );
 }
 
