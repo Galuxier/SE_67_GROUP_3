@@ -1,7 +1,11 @@
 import { Routes, Route } from "react-router-dom";
 import EventHome from "../pages/events/EventHome";
 import MainLayout from "../layouts/MainLayout";
+<<<<<<< HEAD
+import FormAddEvent from "../pages/events/AddEvent/AddEvent";
+=======
 import FormAddEvent from "../pages/events/AddEvent";
+>>>>>>> main
 
 function EventRoutes() {
   return (
