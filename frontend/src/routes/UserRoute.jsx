@@ -5,16 +5,16 @@ import AddRole from "../pages/users/AddRole";
 
 function UserRoutes() {
   return (
-      <Routes>
-        {/* มี Layout(Navbar) */}
-        <Route path="/" element={<MainLayout />}>
-          {/* <Route index element={<UserProfile />} /> */}
-          <Route path="/profile" element={<UserProfile />}/>
-        </Route>
+    <Routes>
+      {/* มี Layout(Navbar) */}
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<UserProfile />} />
+        <Route path="/profile" element={<UserProfile />} />
+      </Route>
 
-        {/* มี Layout(Navbar) */}
-        <Route path="/addRole" element={<AddRole />} />
-      </Routes>
+      {/* ไม่มี Layout(Navbar) */}
+      <Route path="/addRole" element={<AddRole />} />
+    </Routes>
   );
 }
 

@@ -1,15 +1,30 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BsList, BsPersonCircle, BsSearch } from "react-icons/bs";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { BellIcon } from "@heroicons/react/24/outline";
+import { useAuth } from "../context/AuthContext";
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login"); // เปลี่ยนเส้นทางไปที่หน้า Home หลังจาก logout
+  };
+
+  const path = [
+    { name: "Course", path: "/course" },
+    { name: "Gym", path: "/gym" },
+    { name: "Event", path: "/event" },
+    { name: "Shop", path: "/shop" },
+  ]
 
   return (
     <nav className="p-4 shadow-md">
@@ -18,11 +33,18 @@ function Navbar() {
           <div className="text-rose-600 font-bold">
             <Link to="/" className="hover:text-rose-500 text-xl">Home</Link>
           </div>
-          <ul className="hidden md:flex space-x-5">
-            <li><Link to="/course" className="rounded-md ml-5 py-2 text-xl font-medium hover:text-rose-600">Course</Link></li>
-            <li><Link to="/gym" className="rounded-md ml-5 py-2 text-xl font-medium hover:text-rose-600">Gym</Link></li>
-            <li><Link to="/event" className="rounded-md ml-5 py-2 text-xl font-medium hover:text-rose-600">Event</Link></li>
-            <li><Link to="/shop" className="rounded-md ml-5 py-2 text-xl font-medium hover:text-rose-600">Shop</Link></li>
+                <ul className="hidden md:flex space-x-5">
+            {path.map((item) => (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={`rounded-md ml-5 py-2 text-xl font-medium hover:text-rose-600 
+                    ${location.pathname === item.path ? "text-rose-600 font-bold" : ""}`}
+                >
+                  {item.name}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 
@@ -37,24 +59,54 @@ function Navbar() {
             </div>
           </form>
 
-          {/* Notification */}
-          <button type="button" className="relative rounded-full p-1 mr-2 hover:text-rose-600 focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-rose-600">
-            <BellIcon className="size-8" />
-          </button>
+         {/* Profile dropdown หรือปุ่ม Login/Signup */}
+          {user ? (
+            <>
+              {/* Notification */}
+              <button type="button" className="relative rounded-full p-1 mr-2 hover:text-rose-600 focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-rose-600">
+                <BellIcon className="size-8" />
+              </button>
 
-          {/* Profile dropdown */}
-          <Menu as="div" className="relative">
-            <MenuButton className="flex rounded-full hover:text-rose-600 focus:ring-2 focus:ring-rose focus:ring-offset-2 focus:ring-offset-rose-600">
-              <BsPersonCircle className="size-7" />
-            </MenuButton>
-            <MenuItems className="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none">
-              <MenuItem><Link to="/profile" className="block px-4 py-1 text-sm text-gray-700">Your Profile</Link></MenuItem>
-              <MenuItem><Link to="/settings" className="block px-4 py-1 text-sm text-gray-700">Settings</Link></MenuItem>
-              <MenuItem><Link to="/contact" className="block px-4 py-1 text-sm text-gray-700">Contact us</Link></MenuItem>
-              <hr className="border-gray-300" />
-              <MenuItem><Link to="/logout" className="block px-4 py-1 text-sm text-gray-700">Sign out</Link></MenuItem>
-            </MenuItems>
-          </Menu>
+              <Menu as="div" className="relative">
+                <MenuButton className="flex rounded-full hover:text-rose-600 focus:ring-2 focus:ring-rose focus:ring-offset-2 focus:ring-offset-rose-600">
+                  <BsPersonCircle className="size-7" />
+                </MenuButton>
+                <MenuItems className="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none">
+                  <MenuItem>
+                    <Link to="/user/profile" className="block px-4 py-1 text-sm text-gray-700 hover:bg-gray-100">
+                      Your Profile
+                    </Link>
+                  </MenuItem>
+                  <MenuItem>
+                    <Link to="/settings" className="block px-4 py-1 text-sm text-gray-700 hover:bg-gray-100">
+                      Settings
+                    </Link>
+                  </MenuItem>
+                  <MenuItem>
+                    <Link to="/contact" className="block px-4 py-1 text-sm text-gray-700 hover:bg-gray-100">
+                      Contact us
+                    </Link>
+                  </MenuItem>
+                  <hr className="border-gray-300" />
+                  <MenuItem>
+                    <button onClick={handleLogout} className="block w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-100">
+                      Sign out
+                    </button>
+                  </MenuItem>
+                </MenuItems>
+              </Menu>
+            </>
+          ) : (
+            <div className="flex space-x-4">
+              <Link to="/signup" className="border border-rose-600 text-rose-600 px-4 py-2 rounded-md hover:bg-rose-600 hover:text-white">
+                Signup
+              </Link>
+              <Link to="/login" className="bg-rose-600 text-white px-4 py-2 rounded-md hover:bg-rose-700">
+                Login
+              </Link>
+            </div>
+          )}
+
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">

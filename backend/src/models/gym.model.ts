@@ -34,7 +34,10 @@ interface Address {
 // กำหนด interface สำหรับ Gym document
 export interface GymDocument extends Document {
   owner_id: Schema.Types.ObjectId;
+  gym_name: string;
   gym_image_url: string[];
+  contact?: { [key: string]: any };
+  description: string;
   facilities: Facility[];
   courses: Course[];
   address: Address;
@@ -43,14 +46,17 @@ export interface GymDocument extends Document {
 // สร้าง schema สำหรับ Gym
 const GymSchema = new Schema<GymDocument>({
   owner_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  gym_image_url: { type: [String], required: true },
+  gym_name: { type: String, required: true }, 
+  gym_image_url: { type: [String] },
+  contact: { type: Schema.Types.Mixed },
+  description: { type: String},
   facilities: [{
-    facility_name: { type: String, required: true },
-    facility_icon: { type: String, required: true },
+    facility_name: { type: String },
+    facility_icon: { type: String },
   }],
   courses: [{
-    course_id: { type: Schema.Types.ObjectId, ref: "course", required: true },
-    status: { type: String, enum: Object.values(CourseStatus), required: true },
+    course_id: { type: Schema.Types.ObjectId, ref: "course" },
+    status: { type: String, enum: Object.values(CourseStatus) },
   }],
   address: {
     province: { type: String, required: true },

@@ -1,4 +1,4 @@
-import { Button } from "../../components/Course/Button";
+import { Link } from "react-router-dom";
 
 export default function CourseDetail() {
   return (
@@ -9,12 +9,14 @@ export default function CourseDetail() {
           <h1 className="text-3xl font-bold">คอร์สฝึกมวยไทยเริ่มต้น</h1>
           <p className="text-lg text-gray-600 mt-1">Phuket Fight Club</p>
         </div>
-        <Button className="bg-red-500 text-white text-lg px-8 py-3 rounded-xl">
+        <Link to="/course/courseBuyFrom">
+        <button className="bg-red-500 text-white text-lg px-8 py-3 rounded-xl hover:bg-red-600">
           ซื้อคอร์ส
-        </Button>
+        </button>
+        </Link>
       </div>
 
-      {/* แก้ไขจาก <image> เป็น <img> */}
+      {/* รูปภาพคอร์ส */}
       <div>
         <img
           src="https://th.bing.com/th/id/R.7a9ce588169aaa49a671c591aca1b3ce?rik=kynuvjoQisKShw&riu=http%3a%2f%2fwww.asiaculturaltravel.co.uk%2fwp-content%2fuploads%2f2017%2f03%2f%e6%b3%b0%e5%b1%b103-1024x538.jpg&ehk=3B%2bln8lAbYbZ6PHWlz6%2bDPd%2bAHxwJq6hwpZUS3Yz1Os%3d&risl=&pid=ImgRaw&r=0"
@@ -26,20 +28,11 @@ export default function CourseDetail() {
       <h2 className="mt-12 text-2xl font-semibold">รายละเอียดคอร์ส</h2>
 
       <div className="mt-8 flex space-x-10">
-        {[
-          { name: "โค้ชนาย", img: "/coach1.jpg" },
-          { name: "โค้ชปิงปอง", img: "/coach2.jpg" },
-          { name: "โค้ชสมชาย", img: "/coach3.jpg" },
-        ].map((coach, index) => (
-          <div key={index} className="flex flex-col items-center">
-            <img
-              src={coach.img}
-              alt={coach.name}
-              className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
-            />
-            <p className="mt-3 text-lg font-medium">{coach.name}</p>
-          </div>
-        ))}
+        <p className="text-lg text-gray-600">
+          componat for user
+        </p>  
+
+        
       </div>
 
       <div className="mt-8 flex items-center space-x-2 text-lg">

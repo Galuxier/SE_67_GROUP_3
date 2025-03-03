@@ -32,8 +32,8 @@ const UserSchema = new Schema<UserDocument>({
   profile_picture_url: { type: String },
   first_name: { type: String, required: true },
   last_name: { type: String, required: true },
-  nickname: { type: String, required: true },
-  bio: { type: String, required: true },
+  nickname: { type: String },
+  bio: { type: String },
   licenses: [{
     license_type: { type: String, required: true },
     license: { type: String, required: true },

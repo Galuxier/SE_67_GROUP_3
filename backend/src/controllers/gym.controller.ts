@@ -4,6 +4,7 @@ import GymService from '../services/gym.service';
 // สร้างโรงยิมใหม่
 export const createGymController = async (req: Request, res: Response) => {
   try {
+    console.log(req.body);
     const newGym = await GymService.add(req.body);
     res.status(201).json(newGym);
   } catch (err) {

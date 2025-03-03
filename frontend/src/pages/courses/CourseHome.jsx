@@ -1,250 +1,52 @@
-import { useState } from "react";
-import { Trash2, Pencil, Plus } from "lucide-react";
-import PropTypes from "prop-types";
-import CreateCourse from "./CreateCourse";
+import { ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import CourseList from "../../components/CourseCard";
 
-export default function Course({ isModalOpen, setIsModalOpen }) {
-  // Modal state for CreateCourse
-  const [createCourseModalOpen, setCreateCourseModalOpen] = useState(false);
-  const [activities, setActivities] = useState([
-    {
-      id: 1,
-      time: "09:00-9:30",
-      name: "วัด, กำลัพ",
-      description: "โค้ดเป็นไงบ้าง",
-    },
-  ]);
 
-  // State for new activity modal
-  const [isAddActivityModalOpen, setIsAddActivityModalOpen] = useState(false);
-  const [newActivity, setNewActivity] = useState({
-    time: "",
-    name: "",
-    description: "",
-  });
 
-  const handleCreateCourseClick = () => {
-    setCreateCourseModalOpen(true);
-    setIsModalOpen(false); // Close the Course modal when opening CreateCourse
-  };
 
-  const handleAddActivityClick = () => {
-    setIsAddActivityModalOpen(true);
-  };
-
-  const handleAddActivitySubmit = (e) => {
-    e.preventDefault();
-    // Add new activity to activities array
-    const newId =
-      activities.length > 0 ? Math.max(...activities.map((a) => a.id)) + 1 : 1;
-    setActivities([...activities, { id: newId, ...newActivity }]);
-
-    // Reset form and close modal
-    setNewActivity({ time: "", name: "", description: "" });
-    setIsAddActivityModalOpen(false);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewActivity({ ...newActivity, [name]: value });
-  };
-
-  const handleDeleteActivity = (id) => {
-    setActivities(activities.filter((activity) => activity.id !== id));
-  };
-
+export default function MuayThaiCourses() {
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
-          <div className="w-[700px] p-6 shadow-lg bg-white rounded-lg relative">
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-3 right-3 text-gray-600 hover:text-black text-sm"
-            >
-              ✕
+    <div className="bg-white-500 min-h-screen">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex justify-center relative mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">คอร์สเรียนมวยไทย</h1>
+          <Link to="/course/createCourse">
+            <button className="bg-rose-600 hover:bg-rose-600 rounded-full w-8 h-8 flex items-center justify-center absolute right-0">
+              <span className="text-xl text-white py-2 px-4">+</span>
             </button>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-base font-medium text-gray-700">
-                  ชื่อคอร์ส:
-                </label>
-                <input
-                  type="text"
-                  placeholder="Name of course"
-                  className="w-full p-3 border rounded-lg text-sm"
-                />
-                <label className="block text-base font-medium text-gray-700 mt-3">
-                  ระยะเวลา:
-                </label>
-                <input
-                  type="date"
-                  className="w-full p-3 border rounded-lg text-sm"
-                />
-              </div>
+          </Link>
+        </div>
 
-              <div>
-                <div className="flex items-center mb-2">
-                  <h3 className="text-base font-medium">กิจกรรม</h3>
-
-                  <div className="flex-grow flex justify-center">
-                    <input
-                      type="date"
-                      className="px-4 py-1 border rounded-lg text-sm focus:ring-2 focus:ring-blue-400"
-                    />
-                  </div>
-
-                  <button className="px-4 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm transition-all">
-                    ถัดไป
+        {/* Sidebar and CourseList */}
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Sidebar */}
+          <div className="w-full md:w-64 bg-white rounded-lg shadow-lg flex-shrink-0">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="font-medium text-gray-700">Filter</h2>
+            </div>
+            <div className="p-2">
+              {["ประเภท", "Model", "ระดับ"].map((filter) => (
+                <div key={filter} className="py-2 px-2 border-b border-gray-100">
+                  <button className="flex justify-between items-center w-full text-left">
+                    <span className="text-gray-700">{filter}</span>
+                    <ChevronDown className="h-4 w-4 text-gray-500" />
                   </button>
                 </div>
-
-                <table className="w-full border-collapse border rounded-lg text-sm">
-                  <thead>
-                    <tr className="bg-gray-200">
-                      <th className="p-2 border">Time</th>
-                      <th className="p-2 border">Activity</th>
-                      <th className="p-2 border">Description</th>
-                      <th className="p-2 border">Edit</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activities.map((act) => (
-                      <tr key={act.id} className="text-center">
-                        <td className="p-2 border">{act.time}</td>
-                        <td className="p-2 border">{act.name}</td>
-                        <td className="p-2 border">{act.description}</td>
-                        <td className="p-2 border">
-                          <button className="text-blue-500 mr-2">
-                            <Pencil size={16} />
-                          </button>
-                          <button
-                            className="text-red-500"
-                            onClick={() => handleDeleteActivity(act.id)}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                {/* Add activity button */}
-                <div className="flex justify-center mt-3">
-                  <button
-                    onClick={handleAddActivityClick}
-                    className="p-1 rounded-full bg-gray-200 hover:bg-gray-300"
-                  >
-                    <Plus size={20} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex justify-between">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border rounded-lg text-sm"
-                >
-                  ย้อนกลับ
-                </button>
-
-                <button
-                  onClick={handleCreateCourseClick}
-                  className="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-red-600 text-sm"
-                >
-                  สร้างคอร์ส
-                </button>
-              </div>
+              ))}
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Add Activity Modal */}
-      {isAddActivityModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-20">
-          <div className="w-[450px] p-4 shadow-lg bg-white rounded-lg relative">
-            <button
-              onClick={() => setIsAddActivityModalOpen(false)}
-              className="absolute top-3 right-3 text-gray-600 hover:text-black text-sm"
-            >
-              ✕
-            </button>
-            <h3 className="text-base font-medium mb-3">เพิ่มกิจกรรม</h3>
-            <form onSubmit={handleAddActivitySubmit} className="space-y-3">
-              <div>
-                <label className="block text-sm text-gray-700">เวลา</label>
-                <input
-                  type="text"
-                  name="time"
-                  placeholder="e.g. 09:00-9:30"
-                  value={newActivity.time}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded-lg text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-700">
-                  ชื่อกิจกรรม
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="ชื่อกิจกรรม"
-                  value={newActivity.name}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded-lg text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-700">
-                  รายละเอียด
-                </label>
-                <input
-                  type="text"
-                  name="description"
-                  placeholder="รายละเอียดกิจกรรม"
-                  value={newActivity.description}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded-lg text-sm"
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddActivityModalOpen(false)}
-                  className="px-3 py-1 border rounded-lg text-sm"
-                >
-                  ยกเลิก
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
-                >
-                  เพิ่ม
-                </button>
-              </div>
-            </form>
+          
+          <div className="flex-grow">
+            <Link to ="/course/courseDetail">
+            <CourseList />
+            </Link>
           </div>
-        </div>
-      )}
 
-      {/* CreateCourse modal - only render when createCourseModalOpen is true */}
-      {createCourseModalOpen && (
-        <CreateCourse
-          isOpen={createCourseModalOpen}
-          setIsOpen={setCreateCourseModalOpen}
-          onSuccessfulCreate={() => setIsModalOpen(true)} // Reopen Course modal on successful creation if needed
-        />
-      )}
+        </div>
+      </div>
     </div>
   );
 }
-
-Course.propTypes = {
-  isModalOpen: PropTypes.bool.isRequired,
-  setIsModalOpen: PropTypes.func.isRequired,
-};

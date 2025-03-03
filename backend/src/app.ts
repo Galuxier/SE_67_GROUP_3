@@ -16,6 +16,7 @@ import productRoutes from './routes/product.route';
 import recommendRoutes from './routes/recommend.route';
 import teachHistoryRoutes from './routes/teachHistory.route';
 import ticketRoutes from './routes/ticket.route';
+import authRoutes from './routes/auth.route';
 
 const app: Application = express();
 
@@ -37,6 +38,7 @@ app.use('/api', productRoutes);
 app.use('/api', recommendRoutes);
 app.use('/api', teachHistoryRoutes);
 app.use('/api', ticketRoutes);
+app.use('/api', authRoutes);
 
 
 export default app;

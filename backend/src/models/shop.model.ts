@@ -34,8 +34,8 @@ const ShopSchema = new Schema<ShopDocument>({
   owner_id: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // อ้างอิงไปยังโมเดล User
   shop_name: { type: String, required: true },
   license: { type: String },
-  description: { type: String, required: true },
-  logo_url: { type: String, required: true },
+  description: { type: String },
+  logo_url: { type: String },
   contacts: { type: Schema.Types.Mixed, required: true }, // ใช้ Mixed type สำหรับ key-value pairs
   address: {
     province: { type: String },
