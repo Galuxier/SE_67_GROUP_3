@@ -8,7 +8,8 @@ function UserRoutes() {
       <Routes>
         {/* มี Layout(Navbar) */}
         <Route path="/" element={<MainLayout />}>
-          <Route index element={<UserProfile />} />
+          {/* <Route index element={<UserProfile />} /> */}
+          <Route path="/profile" element={<UserProfile />}/>
         </Route>
 
         {/* มี Layout(Navbar) */}
