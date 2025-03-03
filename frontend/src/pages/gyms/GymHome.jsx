@@ -52,7 +52,7 @@ function GymHome() {
           </div>
 
           {/* ตามแบบของมีน */}
-          {/* <div className="mb-4 justify-center relative py-10">
+          <div className="mb-4 justify-center relative py-10">
             <select
               className="w-full rounded py-2 px-3 justify-center flex items-center"
               value={selectedProvince}
@@ -66,7 +66,7 @@ function GymHome() {
               ))}
             </select>
             <hr />
-          </div> */}
+          </div>
 
           {/* สิ่งอำนวยความจะดวก */}
           <div className="mb-4 justify-center relative py-10">
@@ -96,7 +96,7 @@ function GymHome() {
           </div> */}
 
         </div>
-        
+
         {/* กล่องทางด้านขวา */}
         <div className="w-5/6">
           {/* เนื้อหาอื่น ๆ */}
