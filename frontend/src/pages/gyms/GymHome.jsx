@@ -33,9 +33,9 @@ function GymHome() {
                   <button 
                     key={index}
                     onClick={() => {
-                      setProvince=(provinceName);
+                      setProvince(provinceName);
                       setIsOpen(false);
-                    }}
+                    }}                    
                     className="w-full rounded py-2 px-3 justify-center flex items-center"
                   >
                     {provinceName}
