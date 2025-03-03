@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import VariantModal from "../../components/VariantModal";
+import VariantModal from "../../components/shops/VariantModal";
 
 export default function AddProduct() {
   const navigate = useNavigate();
@@ -19,10 +19,8 @@ export default function AddProduct() {
 
   const [newOption, setNewOption] = useState("");
 
-  // state สำหรับโชว์/ซ่อน Modal
   const [showModal, setShowModal] = useState(false);
 
-  // อัปโหลดรูปหลักสินค้า
   const handleBaseImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -33,7 +31,6 @@ export default function AddProduct() {
     reader.readAsDataURL(file);
   };
 
-  // เพิ่ม Option
   const addOption = () => {
     if (!newOption.trim()) return;
     setProduct((prev) => ({
@@ -43,7 +40,6 @@ export default function AddProduct() {
     setNewOption("");
   };
 
-  // เลือก Main Option (หากต้องการ)
   const setAsMainOption = (index) => {
     setProduct((prev) => {
       const updatedOptions = prev.options.map((opt, i) => ({
@@ -54,9 +50,7 @@ export default function AddProduct() {
     });
   };
 
-  // เมื่อกดปุ่ม Next
   const openModal = () => {
-    // ถ้าไม่มี Options => user เลือก No => ทำ Variant เดียว
     if (!product.hasOptions) {
       const mainVariant = {
         attribute: {},
@@ -72,28 +66,26 @@ export default function AddProduct() {
       return;
     }
 
-    // ถ้า Yes => เปิด Modal
     setShowModal(true);
   };
 
-  // เมื่อ user กด Submit ใน Modal => เพิ่ม variant แรกแล้วไป summary
   const handleSubmitVariant = (newVar) => {
-    // รวม variant ใหม่
     const updatedProduct = {
       ...product,
       variants: [...product.variants, newVar]
     };
-    // ปิด Modal
     setShowModal(false);
-    // ไป summary
     navigate("/shop/summary", { state: { product: updatedProduct } });
   };
 
   return (
     <div className="bg-gray-100 min-h-screen flex justify-center items-center p-4">
       <div className="absolute top-4 left-4">
-        <Link to="/shop" className="text-blue-500">
-          ← Back
+        <Link 
+          to="/shop" 
+          className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
+        >
+          Back
         </Link>
       </div>
 
@@ -156,7 +148,6 @@ export default function AddProduct() {
           </label>
         </div>
 
-        {/* ถ้า No => ให้ใส่ price / stock ของสินค้าได้เลย */}
         {!product.hasOptions && (
           <div className="mb-4 border p-2 rounded">
             <label className="block mb-1">Price</label>
@@ -175,7 +166,6 @@ export default function AddProduct() {
           </div>
         )}
 
-        {/* ถ้า Yes => ให้เพิ่ม Option ได้ */}
         {product.hasOptions && (
           <div className="mb-4">
             <div className="flex gap-2 mb-2">
@@ -188,7 +178,7 @@ export default function AddProduct() {
               />
               <button
                 onClick={addOption}
-                className="bg-blue-500 text-white px-4 py-2 rounded"
+                className="bg-rose-600 text-white px-4 py-2 rounded"
               >
                 ➕
               </button>
@@ -211,19 +201,18 @@ export default function AddProduct() {
 
         <button
           onClick={openModal}
-          className="w-full bg-pink-500 text-white py-2 rounded-lg"
+          className="w-full bg-rose-600 text-white py-2 rounded-lg"
         >
           Next
         </button>
       </div>
 
-      {/* เรียกใช้ VariantModal (component) */}
       <VariantModal
-        show={showModal && product.hasOptions} // ถ้า Yes => แสดง
-        onClose={() => setShowModal(false)}    // ปิด Modal
-        productOptions={product.options}       // ส่ง options ไปให้ Modal
-        baseImage={product.baseImage}          // ส่งรูปหลัก
-        onSubmitVariant={(newVar) => handleSubmitVariant(newVar)} // เมื่อกด Submit ใน Modal
+        show={showModal && product.hasOptions}
+        onClose={() => setShowModal(false)}
+        productOptions={product.options}
+        baseImage={product.baseImage}
+        onSubmitVariant={(newVar) => handleSubmitVariant(newVar)}
       />
     </div>
   );
