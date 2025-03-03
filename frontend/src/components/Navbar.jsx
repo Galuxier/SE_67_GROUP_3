@@ -16,7 +16,7 @@ function Navbar() {
 
   const handleLogout = () => {
     logout();
-    navigate("/login"); // Redirect ไปยังหน้า login หลังจากล็อกเอาท์
+    navigate("/login"); // เปลี่ยนเส้นทางไปที่หน้า Home หลังจาก logout
   };
 
   return (
@@ -45,10 +45,12 @@ function Navbar() {
             </div>
           </form>
 
-          {/* Notification */}
-          <button type="button" className="relative rounded-full p-1 mr-2 hover:text-rose-600 focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-rose-600">
-            <BellIcon className="size-8" />
-          </button>
+          {/* Notification (แสดงเฉพาะเมื่อ login) */}
+          {user && (
+            <button type="button" className="relative rounded-full p-1 mr-2 hover:text-rose-600 focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-rose-600">
+              <BellIcon className="size-8" />
+            </button>
+          )}
 
           {/* Profile dropdown หรือปุ่ม Login/Signup */}
           {user ? (
@@ -57,7 +59,7 @@ function Navbar() {
                 <BsPersonCircle className="size-7" />
               </MenuButton>
               <MenuItems className="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none">
-                <MenuItem><Link to="/profile" className="block px-4 py-1 text-sm text-gray-700">Your Profile</Link></MenuItem>
+                <MenuItem><Link to="/user/profile" className="block px-4 py-1 text-sm text-gray-700">Your Profile</Link></MenuItem>
                 <MenuItem><Link to="/settings" className="block px-4 py-1 text-sm text-gray-700">Settings</Link></MenuItem>
                 <MenuItem><Link to="/contact" className="block px-4 py-1 text-sm text-gray-700">Contact us</Link></MenuItem>
                 <hr className="border-gray-300" />
