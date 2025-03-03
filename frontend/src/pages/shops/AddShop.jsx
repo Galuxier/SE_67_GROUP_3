@@ -284,7 +284,7 @@ export default function AddShopForm() {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-pink-500 text-white py-2 rounded-lg"
+          className="w-full bg-rose-600 text-white py-2 rounded-lg"
         >
           Submit
         </button>

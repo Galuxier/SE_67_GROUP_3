@@ -19,3 +19,10 @@ export async function getAllGyms() {
         throw error;
     }
 }
+
+// export async function getGymFromId(id) {
+//     try{
+//         const response = await api.get()
+//     }
+    
+// }

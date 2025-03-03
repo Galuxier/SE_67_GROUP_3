@@ -23,15 +23,12 @@ function UserProfile() {
             </h3>
             <p className="text-gray-600 mt-1">({user.role})</p>
           </div>
-
-          {/* ✅ Contact Box (อยู่ขวาสุด) */}
           <div className="contact ml-auto bg-gray-100 px-5 py-3 rounded-lg shadow-md max-w-56">
             <p className="text-gray-700 font-semibold">Contact</p>
             <div className="text-gray-600 text-sm whitespace-pre-line">
               <p>{user.email}</p>
               <p>{user.phone}</p>
               <p>{user.profile?.contact_info}</p>
-              <p>Facebook: Waranya P</p>
             </div>
           </div>
         </div>

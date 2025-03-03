@@ -136,15 +136,15 @@ function RegisterForm() {
 
   const navigate = useNavigate(); // ใช้สำหรับ redirect
     // ฟังก์ชันสำหรับปุ่ม Cancel
-    const handleCancel = () => {
-      navigate("/"); // Redirect ไปยังหน้า Home
+    const handleBack = () => {
+      navigate(-1); // Redirect ไปยังหน้า Home
     };
 
   return (
     <div className="flex flex-col items-center min-h-screen py-12">
       <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
       <div className="flex items-center gap-2 text-rose-600 hover:text-rose-500 cursor-pointer"
-        onClick={handleCancel}
+        onClick={handleBack}
       ><MdOutlineKeyboardBackspace /> Back
       </div>
 

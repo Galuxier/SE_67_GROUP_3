@@ -30,7 +30,7 @@ function CourseList() {
     };
 
     const handleCourseClick = (course) => {
-        alert(`You clicked on ${course.course_name}`);
+
     };
 
     return (
