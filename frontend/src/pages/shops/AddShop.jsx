@@ -4,9 +4,9 @@ import { Link } from "react-router-dom";
 export default function AddShopForm() {
   const [formData, setFormData] = useState({
     shop_name: "",
-    license: "",       // รูป license
+    license: "",
     description: "",
-    logo_url: "",      // รูปโปรไฟล์ร้าน
+    logo_url: "",
     contacts: "",
     address: {
       province: "",
@@ -20,7 +20,6 @@ export default function AddShopForm() {
     }
   });
 
-  // ฟังก์ชันอัปเดตฟิลด์ทั่วไป
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -29,7 +28,6 @@ export default function AddShopForm() {
     }));
   };
 
-  // ฟังก์ชันอัปเดตฟิลด์ address
   const handleAddressChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -41,7 +39,6 @@ export default function AddShopForm() {
     }));
   };
 
-  // ฟังก์ชันอัปโหลดรูป (license หรือ logo_url)
   const handleFileChange = (e, field) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -55,7 +52,6 @@ export default function AddShopForm() {
     reader.readAsDataURL(file);
   };
 
-  // ฟังก์ชัน Submit → POST ไป Backend ตรง ๆ
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -68,7 +64,6 @@ export default function AddShopForm() {
 
       alert("Shop created successfully!");
       console.log("Server response:", result);
-      // สามารถ redirect ไปหน้า /shop หรือหน้าอื่นตามต้องการ
     } catch (error) {
       console.error("Error creating shop:", error);
       alert("Failed to create shop!");
@@ -77,16 +72,20 @@ export default function AddShopForm() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 relative">
-      {/* ปุ่ม Back to Home */}
       <div className="absolute top-4 left-4">
-        <Link to="/shop" className="text-blue-500">← Back</Link>
+        <Link 
+          to="/shop" 
+          className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
+        >
+          Back
+        </Link>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white p-8 shadow-lg rounded-xl max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-6">Add Shop</h2>
 
-        {/* Shop Name */}
-        <label className="block font-semibold">Shop Name</label>
+      <form onSubmit={handleSubmit} className="bg-white p-8 shadow-lg rounded-xl max-w-md w-full">
+        <h2 className="text-xl font-bold mb-4">Add Shop</h2>
+
+        <label className="block mb-1">Shop Name</label>
         <input
           name="shop_name"
           onChange={handleChange}
@@ -94,8 +93,7 @@ export default function AddShopForm() {
           required
         />
 
-        {/* License (รูป) */}
-        <label className="block font-semibold">License</label>
+        <label className="block mb-1">License</label>
         <input
           type="file"
           accept="image/*"
@@ -103,8 +101,7 @@ export default function AddShopForm() {
           className="mb-4 p-2 w-full border"
         />
 
-        {/* Description */}
-        <label className="block font-semibold">Description</label>
+        <label className="block mb-1">Description</label>
         <input
           name="description"
           onChange={handleChange}
@@ -112,8 +109,7 @@ export default function AddShopForm() {
           required
         />
 
-        {/* Shop Profile (logo) */}
-        <label className="block font-semibold">Shop Profile</label>
+        <label className="block mb-1">Shop Profile</label>
         <input
           type="file"
           accept="image/*"
@@ -121,8 +117,7 @@ export default function AddShopForm() {
           className="mb-4 p-2 w-full border"
         />
 
-        {/* Contacts */}
-        <label className="block font-semibold">Contacts</label>
+        <label className="block mb-1">Contacts</label>
         <input
           name="contacts"
           onChange={handleChange}
@@ -130,52 +125,51 @@ export default function AddShopForm() {
           required
         />
 
-        {/* Location */}
-        <h3 className="text-xl font-bold mb-2">Location</h3>
+        <h3 className="text-xl font-bold mb-4">Location</h3>
 
-        <label className="block font-semibold">Province</label>
+        <label className="block mb-1">Province</label>
         <input
           name="province"
           onChange={handleAddressChange}
           className="mb-4 p-2 w-full border"
         />
 
-        <label className="block font-semibold">District</label>
+        <label className="block mb-1">District</label>
         <input
           name="district"
           onChange={handleAddressChange}
           className="mb-4 p-2 w-full border"
         />
 
-        <label className="block font-semibold">Subdistrict</label>
+        <label className="block mb-1">Subdistrict</label>
         <input
           name="subdistrict"
           onChange={handleAddressChange}
           className="mb-4 p-2 w-full border"
         />
 
-        <label className="block font-semibold">Street</label>
+        <label className="block mb-1">Street</label>
         <input
           name="street"
           onChange={handleAddressChange}
           className="mb-4 p-2 w-full border"
         />
 
-        <label className="block font-semibold">Postal Code</label>
+        <label className="block mb-1">Postal Code</label>
         <input
           name="postal_code"
           onChange={handleAddressChange}
           className="mb-4 p-2 w-full border"
         />
 
-        <label className="block font-semibold">Latitude</label>
+        <label className="block mb-1">Latitude</label>
         <input
           name="latitude"
           onChange={handleAddressChange}
           className="mb-4 p-2 w-full border"
         />
 
-        <label className="block font-semibold">Longitude</label>
+        <label className="block mb-1">Longitude</label>
         <input
           name="longitude"
           onChange={handleAddressChange}
@@ -191,10 +185,9 @@ export default function AddShopForm() {
           View on Google Maps
         </a>
 
-        {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-pink-500 text-white py-2 rounded-lg"
+          className="w-full bg-rose-600 text-white py-2 rounded-lg"
         >
           Submit
         </button>

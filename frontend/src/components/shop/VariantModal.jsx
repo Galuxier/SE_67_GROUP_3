@@ -25,7 +25,6 @@ export default function VariantModal({
   };
 
   const handleSubmit = () => {
-    // ถ้าอยากบังคับรูป
     if (!tempVariant.image_url) {
       alert("Please upload a variant image!");
       return;
@@ -38,10 +37,10 @@ export default function VariantModal({
       stock: parseInt(tempVariant.stock) || 0
     };
 
-    onSubmitVariant(newVar); // ส่ง newVar กลับไปให้ parent (Summary.jsx)
+    onSubmitVariant(newVar);
   };
 
-  if (!show) return null; // ไม่แสดงถ้า show=false
+  if (!show) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -95,7 +94,7 @@ export default function VariantModal({
         <div className="flex gap-2">
           <button
             onClick={handleSubmit}
-            className="bg-pink-500 text-white py-2 px-4 rounded-lg"
+            className="bg-rose-600 text-white py-2 px-4 rounded-lg"
           >
             Submit
           </button>
