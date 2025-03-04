@@ -20,6 +20,7 @@ export default function EditShopModal({ show, onClose, shopData, onSave }) {
       postal_code: shopData?.address?.postal_code || "",
       latitude: shopData?.address?.latitude || "",
       longitude: shopData?.address?.longitude || "",
+      information: shopData?.address?.information || "",
     },
   }));
 
@@ -130,7 +131,6 @@ export default function EditShopModal({ show, onClose, shopData, onSave }) {
                   required
                 />
               </div>
-
               {/* Line ID */}
               <div className="flex items-center">
                 <label className="w-24 text-gray-700">Line ID:</label>
