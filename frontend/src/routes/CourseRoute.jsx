@@ -15,11 +15,11 @@ function CourseRoutes() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<MuayThaiCourses />} />
           <Route path ="/courseDetail" element={<CourseDetail />} />
-          <Route path ="/courseFrom" element={<CourseFrom />} />
           <Route path ="/courseBuyFrom"  element={<CourseBuyFrom />} />
         </Route>
 
         {/* ไม่มี Layout(Navbar) */}
+        <Route path ="/courseFrom" element={<CourseFrom />} />
         <Route path ="/createCourse" element={<CreateCourse />} />
       </Routes>
   );
