@@ -8,7 +8,7 @@ import Signup from "./pages/Register";
 import Login from "./pages/Login";
 
 import GymRoutes from "./routes/GymRoute";
-import CourseRoutes from "./routes/CourseRoute";
+// import CourseRoutes from "./routes/CourseRoute";
 import EventRoutes from "./routes/EventRoute";
 import ShopRoutes from "./routes/ShopRoute";
 import UserRoutes from "./routes/UserRoute";

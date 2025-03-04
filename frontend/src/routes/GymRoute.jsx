@@ -13,9 +13,9 @@ function GymRoutes() {
           <Route path="/detail/:id" element={<GymDetail />} />
         </Route>
 
-        {/* ไม่มี Layout(Navbar) */}
-        <Route path="/addgym" element={<AddGym />} />
-      </Routes>
+      {/* ไม่มี Layout(Navbar) */}
+      <Route path="/addgym" element={<AddGym />} />
+    </Routes>
   );
 }
 

@@ -20,7 +20,6 @@ function GymCard({ gyms }) {
             className="w-full aspect-[4/3] object-cover"
             // src={gym.image_url}
             src={new URL("../assets/images/muaythai-001.jpg", import.meta.url).href}
-
           />
           <div className="px-6 py-4">
             <div className="text-gray-700 text-base mb-3">{gym.gym_name}</div>
