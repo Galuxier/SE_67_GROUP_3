@@ -1,7 +1,7 @@
 // src/pages/gyms/GymProfile.js
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { gyms } from "../../components/GymCard";
+import GymCard from "../../components/GymCard";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import TrainerList from "../../components/Trainer";
 import axios from "axios";
