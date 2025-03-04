@@ -1,52 +1,70 @@
-import { ChevronDown } from "lucide-react";
+
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import CourseList from "../../components/CourseCard";
 
-
-
-
 export default function MuayThaiCourses() {
+  const [location, setLocation] = useState("");
+  const [type, setType] = useState("");
+  const [time, setTime] = useState("");
+
   return (
-    <div className="bg-white-500 min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex justify-center relative mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">คอร์สเรียนมวยไทย</h1>
-          <Link to="/course/createCourse">
-            <button className="bg-rose-600 hover:bg-rose-600 rounded-full w-8 h-8 flex items-center justify-center absolute right-0">
-              <span className="text-xl text-white py-2 px-4">+</span>
-            </button>
-          </Link>
-        </div>
-
-        {/* Sidebar and CourseList */}
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Sidebar */}
-          <div className="w-full md:w-64 bg-white rounded-lg shadow-lg flex-shrink-0">
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="font-medium text-gray-700">Filter</h2>
-            </div>
-            <div className="p-2">
-              {["ประเภท", "Model", "ระดับ"].map((filter) => (
-                <div key={filter} className="py-2 px-2 border-b border-gray-100">
-                  <button className="flex justify-between items-center w-full text-left">
-                    <span className="text-gray-700">{filter}</span>
-                    <ChevronDown className="h-4 w-4 text-gray-500" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
+    <div className="container mx-auto px-4 py-8 flex flex-col md:flex-row gap-6">
+      {/* Sidebar */}
+      <div className="w-full md:w-1/4 bg-white rounded-lg shadow-md p-4">
+        <Link to="/course/createCourse" className="block mb-6 text-center bg-rose-600 text-white py-2 rounded-lg ">
+          + Create Course
+        </Link>
+        
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-2">Filter</h3>
           
-          <div className="flex-grow">
-            <Link to ="/course/courseDetail">
-            <CourseList />
-            </Link>
+          <div className="mb-4">
+            <label className="block mb-1">Location</label>
+            <select 
+              className="w-full p-2 border rounded-md"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            >
+              <option value="">-- Select --</option>
+              <option value="nakhompathom">Nakhompathom</option>
+              <option value="bangkok">Bangkok</option>
+            </select>
           </div>
-
+          
+          <div className="mb-4">
+            <label className="block mb-1">Type</label>
+            <select 
+              className="w-full p-2 border rounded-md"
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+            >
+              <option value="">-- Select --</option>
+              <option value="forkid">For Kid</option>
+              <option value="beginner">Beginner</option>
+              <option value="advance">Advance</option>
+            </select>
+          </div>
+          
+          <div className="mb-4">
+            <label className="block mb-1">Time</label>
+            <select 
+              className="w-full p-2 border rounded-md"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            >
+              <option value="">-- Select --</option>
+              <option value="morning">Morning</option>
+              <option value="afternoon">Afternoon</option>
+            </select>
+          </div>
         </div>
       </div>
+      <Link to ="/course/courseDetail" >
+      <div className="w-full md:w-3/4">
+        <CourseList />
+      </div>
+      </Link>
     </div>
   );
 }
