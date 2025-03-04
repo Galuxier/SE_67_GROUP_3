@@ -17,7 +17,7 @@ const GymProfile = () => {
   useEffect(() => {
     const fetchGym = async () => {
       try {
-        const response = await axios.get(`http://10.35.145.93/api/gyms/${id}`);
+        const response = await axios.get(`http://10.35.145.93/api/gym/${id}`);
         setGym(response.data);
       } catch (error) {
         console.error("Error fetching gym profile:", error);
