@@ -1,11 +1,12 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { products } from "./ProductsData.jsx";
+import { products } from "./ProductsData";
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // หา product จาก id
   const productId = parseInt(id, 10);
   const product = products.find((p) => p.id === productId);
 
@@ -23,8 +24,10 @@ export default function ProductDetail() {
     );
   }
 
+  // ตรวจว่าเป็นสินค้ามี variants ?
   const hasVariants = !!product.variants && !!product.options;
 
+  // แยก mainOption / secondaryOptions
   let mainOption = null;
   let secondaryOptions = [];
   if (hasVariants) {
@@ -37,15 +40,18 @@ export default function ProductDetail() {
     return { ...product.variants[0].attribute };
   });
 
-  let currentVariant = null;
-  if (hasVariants) {
-    currentVariant =
+  const findCurrentVariant = () => {
+    if (!hasVariants) return null;
+    return (
       product.variants.find((variant) =>
         Object.entries(selectedAttrs).every(
           ([k, v]) => variant.attribute[k] === v
         )
-      ) || product.variants[0];
-  }
+      ) || product.variants[0]
+    );
+  };
+
+  const currentVariant = hasVariants ? findCurrentVariant() : null;
 
   const displayImage = hasVariants
     ? currentVariant.variantImage_url
@@ -53,64 +59,66 @@ export default function ProductDetail() {
   const displayPrice = hasVariants ? currentVariant.price : product.price;
   const displayStock = hasVariants ? currentVariant.stock : product.stock;
 
-  const getMainOptionValues = () => {
-    if (!hasVariants || !mainOption) return [];
-    const mainAttrName = mainOption.name;
-    const setVal = new Set(
-      product.variants.map((v) => v.attribute[mainAttrName])
-    );
-    return Array.from(setVal);
-  };
-
-  const getSecondaryOptionValues = (optionName) => {
-    if (!hasVariants || !mainOption) return [];
-    const mainAttrName = mainOption.name;
-    const mainAttrValue = selectedAttrs[mainAttrName];
-    const filtered = product.variants.filter(
-      (v) => v.attribute[mainAttrName] === mainAttrValue
-    );
-    const setVal = new Set(filtered.map((v) => v.attribute[optionName]));
-    return Array.from(setVal);
-  };
-
   const handleChangeAttr = (attrKey, attrValue) => {
     setSelectedAttrs((prev) => {
       const newAttrs = { ...prev, [attrKey]: attrValue };
 
-      if (hasVariants && mainOption && attrKey === mainOption.name) {
-
+      if (mainOption && attrKey === mainOption.name) {
         for (const opt of secondaryOptions) {
-          const possibleVals = getSecondaryOptionValues(opt.name).sort();
-          const currentVal = newAttrs[opt.name];
-          if (currentVal && !possibleVals.includes(currentVal)) {
+          const possibleVals = getPossibleValues(opt.name, {
+            ...newAttrs,
+            [attrKey]: attrValue,
+          });
+          
+          if (!possibleVals.includes(newAttrs[opt.name])) {
             if (possibleVals.length > 0) {
-              newAttrs[opt.name] = possibleVals[0]; 
+              newAttrs[opt.name] = possibleVals[0];
             } else {
               delete newAttrs[opt.name];
             }
           }
         }
       }
-
       return newAttrs;
     });
+  };
+
+  const getMainOptionValues = () => {
+    if (!hasVariants || !mainOption) return [];
+    const mainKey = mainOption.name;
+    const setVal = new Set(
+      product.variants.map((v) => v.attribute[mainKey])
+    );
+    return Array.from(setVal);
+  };
+
+  const getPossibleValues = (attrKey, testAttrs = selectedAttrs) => {
+    if (!hasVariants || !mainOption) return [];
+    const mainKey = mainOption.name;
+    const mainVal = testAttrs[mainKey];
+    const filtered = product.variants.filter(
+      (v) => v.attribute[mainKey] === mainVal
+    );
+    const setVal = new Set(filtered.map((v) => v.attribute[attrKey]));
+    return Array.from(setVal);
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-6 relative">
       <div className="absolute top-4 left-4">
-        <Link 
-          to="/shop" 
-          className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
-        >
-          Back
-        </Link>
-      </div>
+      <button
+        onClick={() => navigate(-1)}
+        className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
+      >
+        Back
+      </button>
+    </div>
 
       <div className="max-w-3xl mx-auto bg-white p-8 shadow-md rounded">
         <h2 className="text-2xl font-bold mb-4">{product.product_name}</h2>
 
         <div className="flex flex-col md:flex-row gap-6">
+          {/* รูปหลัก */}
           <div className="flex-1">
             <div className="w-full max-w-md h-96 overflow-hidden mx-auto">
               <img
@@ -121,6 +129,7 @@ export default function ProductDetail() {
             </div>
           </div>
 
+          {/* กล่องขวา */}
           <div className="md:w-1/3 bg-white p-4 shadow-md flex flex-col justify-between">
             <div>
               <p className="text-lg font-bold mb-2">Price: {displayPrice} THB</p>
@@ -150,7 +159,7 @@ export default function ProductDetail() {
 
                   {/* แสดง secondary options */}
                   {secondaryOptions.map((opt) => {
-                    const possibleVals = getSecondaryOptionValues(opt.name).sort();
+                    const possibleVals = getPossibleValues(opt.name);
                     return (
                       <div key={opt.name} className="mb-4">
                         <p className="font-semibold capitalize">{opt.name}:</p>
@@ -170,7 +179,7 @@ export default function ProductDetail() {
                           ))}
                           {possibleVals.length === 0 && (
                             <span className="text-sm text-gray-500">
-                              No options available
+                              No {opt.name} available
                             </span>
                           )}
                         </div>

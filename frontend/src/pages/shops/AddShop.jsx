@@ -96,7 +96,12 @@ export default function AddShopForm() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100 relative">
       {/* ปุ่ม Back to Home */}
       <div className="absolute top-4 left-4">
-        <Link to="/shop" className="text-blue-500">← Back</Link>
+        <Link 
+          to="/shop" 
+          className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
+        >
+          Back
+        </Link>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white p-8 shadow-lg rounded-xl max-w-md w-full">
