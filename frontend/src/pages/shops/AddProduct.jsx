@@ -81,13 +81,13 @@ export default function AddProduct() {
   return (
     <div className="bg-gray-100 min-h-screen flex justify-center items-center p-4">
       <div className="absolute top-4 left-4">
-        <Link 
-          to="/shop" 
-          className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
-        >
-          Back
-        </Link>
-      </div>
+      <button
+        onClick={() => navigate(-1)}
+        className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
+      >
+        Back
+      </button>
+    </div>
 
       <div className="bg-white p-6 shadow-lg rounded-lg max-w-lg w-full">
         <h2 className="text-xl font-bold mb-4">Add Product</h2>
@@ -180,7 +180,7 @@ export default function AddProduct() {
                 onClick={addOption}
                 className="bg-rose-600 text-white px-4 py-2 rounded"
               >
-                ➕
+                +
               </button>
             </div>
 

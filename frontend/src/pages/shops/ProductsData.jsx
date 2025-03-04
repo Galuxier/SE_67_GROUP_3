@@ -1,7 +1,7 @@
 export const products = [
   {
     id: 1,
-    product_name: "Fancy Boxing Gloves",
+    product_name: "Universal Gloves Tight-Fit Design",
     image_url: new URL("../../assets/images/product-001.webp", import.meta.url).href,
     options: [
       { name: "color", isMain: true },
@@ -33,7 +33,7 @@ export const products = [
         stock: 12,
       },
     ],
-    description: "High-quality boxing gloves with multi-color options.",
+    description: "Limited Edition : Fairtex X Future LAB Boxing Shorts",
   },
   {
     id: 2,
@@ -57,7 +57,7 @@ export const products = [
         stock: 6,
       },
     ],
-    description: "Durable Muay Thai shorts for everyday training.",
+    description: "Finger Tape for BJJ and MMA",
   },
   {
     id: 3,
