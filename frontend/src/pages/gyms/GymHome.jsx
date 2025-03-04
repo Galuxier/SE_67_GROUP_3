@@ -5,11 +5,12 @@ import { getAllGyms } from "../../services/api/GymApi";
 import GymCard from "../../components/GymCard";
 
 function GymHome() {
-  const [province, setProvince] = useState("Province");
+ // const [province, setProvince] = useState("Province");
   const [isOpen, setIsOpen] = useState(false);
   const [gyms, setGyms] = useState([]);
   const [filteredGyms, setFilteredGyms] = useState([]);
-
+  const [selectedProvince,setSelectedProvince] = useState('Province');
+  const [selectedFacilities,setSelectedFacilities] = useState('');
   useEffect(() => {
     const fetchGyms = async () => {
       try {
@@ -26,6 +27,7 @@ function GymHome() {
   }, []);
 
   const provinces = ["Test", "Test2"];
+  const facilities = ['test1', 'test2'];
 
   // ฟังก์ชันกรองข้อมูล gyms ตามจังหวัด
   const filterGymsByProvince = (provinceName) => {
@@ -38,53 +40,28 @@ function GymHome() {
       setFilteredGyms(filtered); // แสดงข้อมูลที่กรองแล้ว
     }
   };
+  const handleProvinceChange = (e) => {
+    setSelectedProvince(e.target.value);
+  }
 
+  const handleFacilitiesChange = (e) => {
+    setSelectedFacilities(e.target.value);
+  }
   return (
-    <div className="min-h-screen p-6">
-      <h1 className="text-3xl font-bold text-center mb-6">All Gym</h1>
-      <div className="gap-6 flex items-center">
+    <div className="min-h-screen flex bg-gray-100">
+      
         {/* กล่องทางด้านซ๊าย */}
-        <div className="w-1/6 justify-center mt-10">
-          <h2 className="text-4xl font-semibold mb-4 text-center">Filter</h2>
+        <div className="w-1/6 bg-white p-4 shadow-md">
+          <h2 className="text-lg font-semibold mb-4 text-center">Filter</h2>
           {/* จังหวัด */}
-          <div className="mb-4 justify-center relative py-10">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="w-full rounded py-2 px-3 justify-center flex items-center"
-            >
-              <span className="text-gray-500 text-3xl">{province}</span>
-              <ChevronDownIcon
-                onClick={() => setIsOpen(!isOpen)}
-                className="h-10 w-10 cursor-pointer absolute right-2"
-              />
-            </button>
-            {isOpen && (
-              <div className="wabsolute w-full mt-1 bg-white border border-gray-300 rounded shadow-md max-h-60 overflow-y-auto z-10">
-                {provinces.map((provinceName, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setProvince(provinceName);
-                      setIsOpen(false);
-                    }}
-                    className="w-full rounded py-2 px-3 justify-center flex items-center"
-                  >
-                    {provinceName}
-                  </button>
-                ))}
-              </div>
-            )}
-            <hr />
-          </div>
-
-          {/* ตามแบบของมีน */}
-          {/* <div className="mb-4 justify-center relative py-10">
+          <div className="mb-4">
+            <label className="block mb-1">Province</label>
             <select
-              className="w-full rounded py-2 px-3 justify-center flex items-center"
+              className="p-2 border w-full"
               value={selectedProvince}
               onChange={handleProvinceChange}
             >
-              <option value={provinces}>Province</option>
+              <option value=''>Selected Province</option>
               {provinces.map((provinceName, index) => (
                 <option key={index} value={provinceName}>
                   {provinceName}
@@ -92,14 +69,23 @@ function GymHome() {
               ))}
             </select>
             <hr />
-          </div> */}
+          </div>
 
           {/* สิ่งอำนวยความจะดวก */}
-          <div className="mb-4 justify-center relative py-10">
-            <button className="w-full rounded py-2 px-3 justify-center flex items-center">
-              <span className="text-gray-500 text-3xl">Facilities</span>
-              <ChevronDownIcon className="h-10 w-10 cursor-pointer absolute right-2" />
-            </button>
+          <div className="mb-4">
+            <label className="block mb-1">Facilities</label>
+            <select
+              className="p-2 border w-full"
+              value={selectedFacilities}
+              onChange={handleFacilitiesChange}
+            >
+              <option value=''>Selected Facilities</option>
+              {facilities.map((facilitiesName, index) => (
+                <option key={index} value={facilitiesName}>
+                  {facilitiesName}
+                </option>
+              ))}
+            </select>
             <hr />
           </div>
 
@@ -112,21 +98,13 @@ function GymHome() {
             </Link>
           </div>
 
-          {/* <div className="justify-center flex items-center">
-            <Link to="../users/UserProfile.jsx">
-              <button className="px-4 py-2 text-black rounded-md">
-                <PlusCircleIcon className="h-10 w-10" />
-              </button>
-            </Link>
-          </div> */}
-
         </div>
-
+        
         {/* กล่องทางด้านขวา */}
-        <div className="w-3/4">
+        <div className="flex-1 p-4">
+          <h1 className="text-3xl font-bold text-center mb-6">All Gym</h1>
           <GymCard gyms={filteredGyms} />
         </div>
-      </div>
     </div>
   );
 }
