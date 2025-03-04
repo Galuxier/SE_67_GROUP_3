@@ -1,4 +1,5 @@
 import { useState } from "react";
+import AddressForm from "../AddressForm";
 
 export default function EditShopModal({ show, onClose, shopData, onSave }) {
   const [formData, setFormData] = useState(() => ({
@@ -99,101 +100,66 @@ export default function EditShopModal({ show, onClose, shopData, onSave }) {
             className="mb-4 p-2 w-full border"
           />
 
-          <h4 className="text-lg font-medium mb-2">Contact Info</h4>
-          <div className="flex flex-col gap-2 mb-4">
-            <input
-              type="email"
-              name="email"
-              value={formData.contacts.email}
-              onChange={handleContactChange}
-              placeholder="Email"
-              className="p-2 border"
-            />
-            <input
-              type="tel"
-              name="tel"
-              value={formData.contacts.tel}
-              onChange={handleContactChange}
-              placeholder="Tel"
-              className="p-2 border"
-            />
-            <input
-              type="text"
-              name="line"
-              value={formData.contacts.line}
-              onChange={handleContactChange}
-              placeholder="Line"
-              className="p-2 border"
-            />
-            <input
-              type="text"
-              name="facebook"
-              value={formData.contacts.facebook}
-              onChange={handleContactChange}
-              placeholder="Facebook"
-              className="p-2 border"
-            />
+          <div className="mb-6">
+            <label className="block text-lg font-medium mb-2">Contact</label>
+            <div className="space-y-4">
+              {/* Email */}
+              <div className="flex items-center">
+                <label className="w-24 text-gray-700">Email:</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.contacts.email}
+                  onChange={handleContactChange}
+                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
+                  placeholder="Enter email (Required)"
+                  required
+                />
+              </div>
+
+              {/* Tel */}
+              <div className="flex items-center">
+                <label className="w-24 text-gray-700">Tel:</label>
+                <input
+                  type="tel"
+                  name="tel"
+                  value={formData.contacts.tel}
+                  onChange={handleContactChange}
+                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
+                  placeholder="Enter telephone number (Required)"
+                  required
+                />
+              </div>
+
+              {/* Line ID */}
+              <div className="flex items-center">
+                <label className="w-24 text-gray-700">Line ID:</label>
+                <input
+                  type="text"
+                  name="line"
+                  value={formData.contacts.line}
+                  onChange={handleContactChange}
+                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
+                  placeholder="Enter Line ID (Optional)"
+                />
+              </div>
+
+              {/* Facebook */}
+              <div className="flex items-center">
+                <label className="w-24 text-gray-700">Facebook:</label>
+                <input
+                  type="text"
+                  name="facebook"
+                  value={formData.contacts.facebook}
+                  onChange={handleContactChange}
+                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
+                  placeholder="Enter Facebook (Optional)"
+                />
+              </div>
+            </div>
           </div>
 
-          <h4 className="text-lg font-medium mb-2">Address</h4>
-          <div className="space-y-2 mb-4">
-            <input
-              type="text"
-              name="province"
-              value={formData.address.province}
-              onChange={handleAddressChange}
-              placeholder="Province"
-              className="p-2 border w-full"
-            />
-            <input
-              type="text"
-              name="district"
-              value={formData.address.district}
-              onChange={handleAddressChange}
-              placeholder="District"
-              className="p-2 border w-full"
-            />
-            <input
-              type="text"
-              name="subdistrict"
-              value={formData.address.subdistrict}
-              onChange={handleAddressChange}
-              placeholder="Subdistrict"
-              className="p-2 border w-full"
-            />
-            <input
-              type="text"
-              name="street"
-              value={formData.address.street}
-              onChange={handleAddressChange}
-              placeholder="Street"
-              className="p-2 border w-full"
-            />
-            <input
-              type="text"
-              name="postal_code"
-              value={formData.address.postal_code}
-              onChange={handleAddressChange}
-              placeholder="Postal Code"
-              className="p-2 border w-full"
-            />
-            <input
-              type="text"
-              name="latitude"
-              value={formData.address.latitude}
-              onChange={handleAddressChange}
-              placeholder="Latitude"
-              className="p-2 border w-full"
-            />
-            <input
-              type="text"
-              name="longitude"
-              value={formData.address.longitude}
-              onChange={handleAddressChange}
-              placeholder="Longitude"
-              className="p-2 border w-full"
-            />
-          </div>
+          <AddressForm/>
 
           <button
             onClick={handleSubmit}

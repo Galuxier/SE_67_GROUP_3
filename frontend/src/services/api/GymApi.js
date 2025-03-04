@@ -20,9 +20,13 @@ export async function getAllGyms() {
     }
 }
 
-// export async function getGymFromId(id) {
-//     try{
-//         const response = await api.get()
-//     }
+export async function getGymFromId(id) {
+    try{
+        const response = await api.get(`/gym/${id}`)
+        return response.data;
+    } catch (error){
+        console.error('Get All Gym Failed: ',error);
+        throw error;
+    }
     
-// }
+}

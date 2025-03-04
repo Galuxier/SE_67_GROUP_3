@@ -82,14 +82,12 @@ function GymHome() {
                 </select>
               </div>
 
-              <div className="mb-2 justify-center relative py-2">
+              {/* <div className="mb-2 justify-center relative py-2">
                 <label className="block mb-1">Facilities</label>
                 <select className="border p-2 w-full">
                   <option>-- Select --</option>
-                  <option>Low - High</option>
-                  <option>High - Low</option>
                 </select>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -100,6 +98,6 @@ function GymHome() {
       </div>
     </div>
   );
-}
+} 
 
 export default GymHome;
