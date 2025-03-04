@@ -9,8 +9,7 @@ function GymHome() {
   const [province, setProvince] = useState("All");
   const [gyms, setGyms] = useState([]);
   const [filteredGyms, setFilteredGyms] = useState([]);
-  const [selectedProvince,setSelectedProvince] = useState('Province');
-  const [selectedFacilities,setSelectedFacilities] = useState('');
+
   useEffect(() => {
     const fetchGyms = async () => {
       try {
@@ -24,7 +23,7 @@ function GymHome() {
 
     fetchGyms();
   }, []);
-  
+
   useEffect(() => {
     filterGymsByProvince(province);
   }, [province]);
@@ -39,9 +38,6 @@ function GymHome() {
       setFilteredGyms(filtered);
     }
   };
-  const handleProvinceChange = (e) => {
-    setSelectedProvince(e.target.value);
-  }
 
   const handleProvinceSelect = (provinceNameTh) => {
     setProvince(provinceNameTh);
@@ -101,6 +97,7 @@ function GymHome() {
             <GymCard gyms={filteredGyms} />
           </div>
         </div>
+      </div>
     </div>
   );
 }
