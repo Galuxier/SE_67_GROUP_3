@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { registerShop } from '../../services/api/ShopApi';
+import AddressForm from "../../components/AddressForm";
 
 export default function AddShopForm() {
-  const [formData, setFormData] = useState({
+  const navigate = useNavigate();
+
+  const [shopData, setShopData] = useState({
     shop_name: "",
     license: "", // รูป license
     description: "",
@@ -14,22 +17,13 @@ export default function AddShopForm() {
       line: "",
       facebook: "",
     },
-    address: {
-      province: "",
-      district: "",
-      subdistrict: "",
-      street: "",
-      postal_code: "",
-      latitude: "",
-      longitude: "",
-      information: "",
-    },
+    address: {},
   });
 
   // ฟังก์ชันอัปเดตฟิลด์ทั่วไป
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setShopData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -38,7 +32,7 @@ export default function AddShopForm() {
   // ฟังก์ชันอัปเดตฟิลด์ contacts
   const handleContactChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setShopData((prev) => ({
       ...prev,
       contacts: {
         ...prev.contacts,
@@ -48,15 +42,8 @@ export default function AddShopForm() {
   };
 
   // ฟังก์ชันอัปเดตฟิลด์ address
-  const handleAddressChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      address: {
-        ...prev.address,
-        [name]: value,
-      },
-    }));
+  const handleAddressChange = (address) => {
+    setShopData((prev) => ({ ...prev, address }));
   };
 
   // ฟังก์ชันอัปโหลดรูป (license หรือ logo_url)
@@ -65,7 +52,7 @@ export default function AddShopForm() {
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => {
-      setFormData((prev) => ({
+      setShopData((prev) => ({
         ...prev,
         [field]: reader.result,
       }));
@@ -86,17 +73,17 @@ export default function AddShopForm() {
 
       const shopData = {
         owner_id,
-        shop_name: formData.shop_name,
-        license: formData.license,
-        description: formData.description,
-        logo_url: formData.logo_url,
-        contacts: formData.contacts,
-        address: formData.address
+        shop_name: shopData.shop_name,
+        license: shopData.license,
+        description: shopData.description,
+        logo_url: shopData.logo_url,
+        contacts: shopData.contacts,
+        address: shopData.address
       };
 
       const response = await registerShop(shopData);
 
-      alert("Shop created successfully!");
+      navigate(-1);
       console.log("Server response:", response);
       // สามารถ redirect ไปหน้า /shop หรือหน้าอื่นตามต้องการ
     } catch (error) {
@@ -119,7 +106,7 @@ export default function AddShopForm() {
         <label className="block font-semibold">Shop Name</label>
         <input
           name="shop_name"
-          value={formData.shop_name}
+          value={shopData.shop_name}
           onChange={handleChange}
           className="mb-4 p-2 w-full border"
           required
@@ -138,7 +125,7 @@ export default function AddShopForm() {
         <label className="block font-semibold">Description</label>
         <textarea
           name="description"
-          value={formData.description}
+          value={shopData.description}
           onChange={handleChange}
           className="mb-4 p-2 w-full border"
           required
@@ -154,7 +141,7 @@ export default function AddShopForm() {
               <input
                 type="email"
                 name="email"
-                value={formData.contacts.email}
+                value={shopData.contacts.email}
                 onChange={handleContactChange}
                 className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
                 placeholder="Enter email (Required)"
@@ -168,7 +155,7 @@ export default function AddShopForm() {
               <input
                 type="tel"
                 name="tel"
-                value={formData.contacts.tel}
+                value={shopData.contacts.tel}
                 onChange={handleContactChange}
                 className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
                 placeholder="Enter telephone number (Required)"
@@ -182,7 +169,7 @@ export default function AddShopForm() {
               <input
                 type="text"
                 name="line"
-                value={formData.contacts.line}
+                value={shopData.contacts.line}
                 onChange={handleContactChange}
                 className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
                 placeholder="Enter Line ID (Optional)"
@@ -195,7 +182,7 @@ export default function AddShopForm() {
               <input
                 type="text"
                 name="facebook"
-                value={formData.contacts.facebook}
+                value={shopData.contacts.facebook}
                 onChange={handleContactChange}
                 className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
                 placeholder="Enter Facebook (Optional)"
@@ -214,72 +201,18 @@ export default function AddShopForm() {
         />
 
         {/* Location */}
-        <h3 className="text-xl font-bold mb-2">Location</h3>
-
-        <label className="block font-semibold">Province</label>
-        <input
-          name="province"
-          value={formData.address.province}
-          onChange={handleAddressChange}
-          className="mb-4 p-2 w-full border"
+        <AddressForm
+            onChange={handleAddressChange}
         />
 
-        <label className="block font-semibold">District</label>
-        <input
-          name="district"
-          value={formData.address.district}
-          onChange={handleAddressChange}
-          className="mb-4 p-2 w-full border"
-        />
-
-        <label className="block font-semibold">Subdistrict</label>
-        <input
-          name="subdistrict"
-          value={formData.address.subdistrict}
-          onChange={handleAddressChange}
-          className="mb-4 p-2 w-full border"
-        />
-
-        <label className="block font-semibold">Street</label>
-        <input
-          name="street"
-          value={formData.address.street}
-          onChange={handleAddressChange}
-          className="mb-4 p-2 w-full border"
-        />
-
-        <label className="block font-semibold">Postal Code</label>
-        <input
-          name="postal_code"
-          value={formData.address.postal_code}
-          onChange={handleAddressChange}
-          className="mb-4 p-2 w-full border"
-        />
-
-        <label className="block font-semibold">Latitude</label>
-        <input
-          name="latitude"
-          value={formData.address.latitude}
-          onChange={handleAddressChange}
-          className="mb-4 p-2 w-full border"
-        />
-
-        <label className="block font-semibold">Longitude</label>
-        <input
-          name="longitude"
-          value={formData.address.longitude}
-          onChange={handleAddressChange}
-          className="mb-4 p-2 w-full border"
-        />
-
-        <a
+        {/* <a
           href={`https://www.google.com/maps/search/?api=1&query=${formData.address.latitude},${formData.address.longitude}`}
           target="_blank"
           rel="noopener noreferrer"
           className="block text-blue-500 underline text-center mb-4"
         >
           View on Google Maps
-        </a>
+        </a> */}
 
         {/* Submit */}
         <button
