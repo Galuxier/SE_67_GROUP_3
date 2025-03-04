@@ -15,7 +15,7 @@ import UserRoutes from "./routes/UserRoute";
 
 const App = () => {
   return (
-    <Router> {/* ✅ แก้ให้ Router ครอบ AuthProvider */}
+    <Router> 
       <AuthProvider>
         <ScrollToTop />
 
