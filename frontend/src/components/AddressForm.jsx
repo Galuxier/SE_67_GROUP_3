@@ -71,12 +71,15 @@ const AddressForm = ({ onChange }) => {
 
     return (
         <div className="mb-6">
-            <label className="block text-lg font-medium mb-2">Location</label>
+            <label className="block text-lg font-medium mb-2">Address</label>
             <div className="space-y-4">
-                <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-900">Province</label>
-                    <select value={selectedProvince?.provinceCode || ""} onChange={(e) => handleProvinceChange(e.target.value)} 
-                        className="mt-1 block w-full h-10 px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500">
+                <div className="flex items-center">
+                    <label className="w-24 text-gray-700">Province:</label>
+                    <select 
+                        value={selectedProvince?.provinceCode || ""} 
+                        onChange={(e) => handleProvinceChange(e.target.value)} 
+                        className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
+                    >
                         <option value="">Please Select</option>
                         {provinces.map((p) => (
                             <option key={p.provinceCode} value={p.provinceCode}>
@@ -86,11 +89,14 @@ const AddressForm = ({ onChange }) => {
                     </select>
                 </div>
 
-                <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-900">District</label>
-                    <select value={selectedDistrict?.districtCode || ""} onChange={(e) => handleDistrictChange(e.target.value)} 
-                        className="input mt-1 block w-full h-10 px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" 
-                        disabled={!selectedProvince}>
+                <div className="flex items-center">
+                    <label className="w-24 text-gray-700">District:</label>
+                    <select 
+                        value={selectedDistrict?.districtCode || ""} 
+                        onChange={(e) => handleDistrictChange(e.target.value)} 
+                        className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500" 
+                        disabled={!selectedProvince}
+                    >
                         <option value="">Select Province</option>
                         {districts.map((d) => (
                             <option key={d.districtCode} value={d.districtCode}>
@@ -100,11 +106,14 @@ const AddressForm = ({ onChange }) => {
                     </select>
                 </div>
 
-                <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-900">Sub-District</label>
-                    <select value={selectedSubDistrict?.subdistrictCode || ""} onChange={(e) => handleSubDistrictChange(e.target.value)} 
-                        className="input mt-1 block w-full h-10 px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" 
-                        disabled={!selectedDistrict}>
+                <div className="flex items-center">
+                    <label className="w-24 text-gray-700">Sub-District:</label>
+                    <select 
+                        value={selectedSubDistrict?.subdistrictCode || ""} 
+                        onChange={(e) => handleSubDistrictChange(e.target.value)} 
+                        className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500" 
+                        disabled={!selectedDistrict}
+                    >
                         <option value="">Select District</option>
                         {subDistricts.map((s) => (
                             <option key={s.subdistrictCode} value={s.subdistrictCode}>
@@ -114,13 +123,17 @@ const AddressForm = ({ onChange }) => {
                     </select>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-900">Postal Code</label>
-                    <input type="text" value={postalCode || "Please select sub-district"} readOnly 
-                        className="mt-1 py-2 px-2 block border rounded-md bg-gray-200 text-sm text-grey-500" />
+                <div className="flex items-center">
+                    <label className="w-24 text-gray-700">Postal Code:</label>
+                    <input 
+                        type="text" 
+                        value={postalCode || "Please select sub-district"} 
+                        readOnly 
+                        className="flex-1 border border-gray-300 rounded-lg py-2 px-4 bg-gray-200 text-gray-500" 
+                    />
                 </div>
 
-                <div className="flex items-center">
+                {/* <div className="flex items-center">
                     <label className="w-24 text-gray-700">Latitude:</label>
                     <input 
                         type="number" 
@@ -129,7 +142,8 @@ const AddressForm = ({ onChange }) => {
                         onChange={handleAddressChange} 
                         className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500" 
                         placeholder="Enter latitude" 
-                        required />
+                        required 
+                    />
                 </div>
                 <div className="flex items-center">
                     <label className="w-24 text-gray-700">Longitude:</label>
@@ -142,7 +156,7 @@ const AddressForm = ({ onChange }) => {
                         placeholder="Enter longitude" 
                         required 
                     />
-                </div>
+                </div> */}
                 <div className="flex items-center">
                     <label className="w-24 text-gray-700">Information:</label>
                     <input 
@@ -151,7 +165,8 @@ const AddressForm = ({ onChange }) => {
                         value={addressData.information} 
                         onChange={handleAddressChange} 
                         className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500" 
-                        placeholder="Enter additional information" />
+                        placeholder="Enter additional information" 
+                    />
                 </div>
             </div>
         </div>

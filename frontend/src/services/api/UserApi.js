@@ -1,4 +1,4 @@
-import { api } from "../api";
+import { api } from "../Axios";
 
 export async function getUser(_id) {
     try{
@@ -10,4 +10,14 @@ export async function getUser(_id) {
         throw error;
     }
     
+}
+
+export async function updateUser(userId, userData) { 
+    try {
+        const response = await api.put(`/user/${userId}`, userData);
+        return response.data;
+    } catch(error) {
+        console.error('Update User Failed: ', error);
+        throw error;
+    }   
 }

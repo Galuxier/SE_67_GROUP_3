@@ -6,32 +6,26 @@ import { FaMapMarkerAlt } from "react-icons/fa";
 import TrainerList from "../../components/Trainer";
 import { PlusCircleIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import EditGymModal from "../../components/gyms/EditGymModal";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { getGymFromId } from "../../services/api/GymApi";
 
 const GymProfile = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [gym, setGym] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
   useEffect(() => {
     const fetchGym = async () => {
       try {
-        const response = await axios.get(`http://10.35.145.93/api/gym/${id}`);
-        setGym(response.data);
+        const response = await getGymFromId(id);
+        console.log(response);
+        setGym(response);
       } catch (error) {
         console.error("Error fetching gym profile:", error);
       }
     };
     fetchGym();
-  }, [id]);
-
-  console.log("Gymprofile Loaded");
-  useEffect(() => {
-    console.log("Gym ID from URL:", id);
-    const foundGym = gyms.find((g) => g.id === Number(id));
-    console.log("Found Gym:", foundGym);
-    setGym(foundGym);
   }, [id]);
 
   if (!gym) return <div>Loading...</div>;
@@ -58,7 +52,8 @@ const GymProfile = () => {
       <div className="grid grid-rows-2">
         {/* ส่วนของรูปภาพ */}
         <div className="bg-blue-100 w-full max-w-4xl mx-auto my-auto">
-          <img src={gym.image_url} className="object-cover w-full h-full" />
+          <img src={new URL("../../assets/images/muaythai-001.jpg", import.meta.url).href} 
+            className="object-cover w-full h-full" />
         </div>
 
         <div className="bg-gray-100 grid grid-cols-[300px_1500px_300px] gap-3">
@@ -95,10 +90,10 @@ const GymProfile = () => {
               </div>
             </div>
 
-            <div className="mt-4 w-full">
+            {/* <div className="mt-4 w-full">
               <p className="text-2xl font-semibold">Facilities</p>
               <div className="w-full h-64 bg-gray-300 rounded-md">the best</div>
-            </div>
+            </div> */}
           </div>
 
           <div className="bg-white p-1 rounded-lg justify-center w-full">
