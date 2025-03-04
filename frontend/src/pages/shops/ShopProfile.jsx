@@ -22,6 +22,7 @@ export default function ShopProfile() {
           postal_code: "83000",
           latitude: "7.884",
           longitude: "98.391",
+          information:"Open at 9 to 5",
         },
       });
 
@@ -68,6 +69,7 @@ export default function ShopProfile() {
               {shop.contacts.tel && <p>Tel: {shop.contacts.tel}</p>}
               {shop.contacts.line && <p>Line: {shop.contacts.line}</p>}
               {shop.contacts.facebook && <p>FB: {shop.contacts.facebook}</p>}
+              {shop.contacts.information && <p>Information: {shop.contacts.information}</p>}
             </div>
           </div>
         </div>

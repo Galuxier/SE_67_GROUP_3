@@ -19,6 +19,7 @@ export default function EditShopModal({ show, onClose, shopData, onSave }) {
       postal_code: shopData?.address?.postal_code || "",
       latitude: shopData?.address?.latitude || "",
       longitude: shopData?.address?.longitude || "",
+      information: shopData?.address?.information || "",
     },
   }));
 
@@ -191,6 +192,14 @@ export default function EditShopModal({ show, onClose, shopData, onSave }) {
               value={formData.address.longitude}
               onChange={handleAddressChange}
               placeholder="Longitude"
+              className="p-2 border w-full"
+            />
+            <input
+              type="text"
+              name="information"
+              value={formData.address.information}
+              onChange={handleAddressChange}
+              placeholder="Information"
               className="p-2 border w-full"
             />
           </div>
