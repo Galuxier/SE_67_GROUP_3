@@ -3,31 +3,29 @@ import { Trash2, Pencil, Plus } from "lucide-react";
 import ActivityModal from "../../components/courses/ActivityModal";
 import { useLocation, useNavigate } from "react-router-dom";
 
-export default function CourseFrom() {
+export default function EditCourseFrom() {
   const { state } = useLocation();
   const navigate = useNavigate();
   
   // รับค่าข้อมูลคอร์สจาก state หรือ localStorage
-  const courseData = state?.formDataEdit || JSON.parse(localStorage.getItem("courseData"));
+  const courseD = state?.formDataEdit || JSON.parse(localStorage.getItem("formDataEdit"));
   
-  const [activities, setActivities] = useState([]);
+  const [activities, setActivities] = useState(courseD?.activities || []);
   const [currentDay, setCurrentDay] = useState(1);
   const [isAddActivityModalOpen, setIsAddActivityModalOpen] = useState(false);
   const [totalDays, setTotalDays] = useState(1);
   const [courseDates, setCourseDates] = useState([]);
-  
-  // สร้าง newActivity state ในหน้า CourseFrom โดยตรง
   const [newActivity, setNewActivity] = useState({
-    startTime: "",
-    endTime: "",
-    description: "",
+    startTime: "", 
+    endTime: "", 
+    description: "", 
     trainer: [],
-    day: currentDay
+    day: currentDay 
   });
   
   // คำนวณวันทั้งหมดของคอร์สและสร้างรายการวันที่
   useEffect(() => {
-    if (courseData?.startDate && courseData?.endDate) {
+    if (courseD?.startDate && courseD?.endDate) {
       // ฟังก์ชันสำหรับแปลงรูปแบบวันที่
       const parseDateString = (dateStr) => {
         // ตรวจสอบรูปแบบวันที่ DD/MM
@@ -35,43 +33,55 @@ export default function CourseFrom() {
           const [day, month] = dateStr.split('/');
           const currentYear = new Date().getFullYear();
           return new Date(currentYear, parseInt(month) - 1, parseInt(day));
-        } 
+        }
         // รูปแบบอื่นๆ
         return new Date(dateStr);
       };
       
-      const startDate = parseDateString(courseData.startDate);
-      const endDate = parseDateString(courseData.endDate);
+      const startDate = parseDateString(courseD.startDate);
+      const endDate = parseDateString(courseD.endDate);
       
       // คำนวณความต่างของวันและบวก 1 (เพื่อรวมวันเริ่มต้น)
       const diffTime = Math.abs(endDate - startDate);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      if (diffDays  !== Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1) {
-       setTotalDays(diffDays);
-      }
-      
-      // สร้างรายการวันที่ในรูปแบบ DD/MM
+      setTotalDays(diffDays);
+
+      // สร้างรายการวันที่ในรูปแบบ DD/MM และ YYYY-MM-DD
       const dates = [];
+      const isoDateFormat = [];
       for (let i = 0; i < diffDays; i++) {
         const date = new Date(startDate);
         date.setDate(startDate.getDate() + i);
         
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        
         dates.push(`${day}/${month}`);
+        isoDateFormat.push(`${year}-${month}-${day}`);
       }
-      
-      setCourseDates(dates);
+
+      // ตั้งค่ารายการวันที่
+      setCourseDates({
+        display: dates,
+        iso: isoDateFormat
+      });
     }
-  }, [courseData]);
-  
+  }, [courseD]);
+
   // โหลดกิจกรรมที่บันทึกไว้
   useEffect(() => {
-    const savedActivities = JSON.parse(localStorage.getItem("activities")) || [];
-    setActivities(savedActivities);
-  }, []);
-  
-  // อัพเดต day ใน newActivity เมื่อ currentDay เปลี่ยน
+    // ถ้ามีกิจกรรมใน courseD ใช้กิจกรรมนั้น
+    if (courseD?.activities && courseD.activities.length > 0) {
+      setActivities(courseD.activities);
+    } else {
+      // ถ้าไม่มี โหลดจาก localStorage
+      const savedActivities = JSON.parse(localStorage.getItem("activities")) || [];
+      setActivities(savedActivities);
+    }
+  }, [courseD]);
+
+  // อัพเดต newActivity เมื่อ currentDay เปลี่ยน
   useEffect(() => {
     setNewActivity(prev => ({
       ...prev,
@@ -105,46 +115,47 @@ export default function CourseFrom() {
   
   const handleCreateCourse = () => {
     // เตรียมข้อมูลสำหรับสร้างคอร์สเรียน
-    const finalCourseData = {
-      ...courseData,
-      activities: activities
-    };
+    // แปลงรูปแบบกิจกรรมให้ตรงตามที่ต้องการ
+    const formattedActivities = activities.map(activity => ({
+      description: activity.description,
+      date: courseDates.iso[activity.day - 1] || "2025-01-01", // ใช้ ISO format
+      time: `${activity.startTime} - ${activity.endTime}`,
+      trainer: activity.coachDetails ? activity.coachDetails.map(coach => coach.name) : []
+    }));
     
+    const finalcourseD = {
+      ...courseD,
+      activities: formattedActivities
+    };
+    console.log(finalcourseD);
     // บันทึกข้อมูลคอร์สที่สมบูรณ์
-    localStorage.setItem("completeCourse", JSON.stringify(finalCourseData));
-    console.log(finalCourseData);
+    localStorage.setItem("completeCourse", JSON.stringify(finalcourseD));
+    
     // นำทางไปยังหน้าแสดงรายการคอร์ส
     navigate("/course");
     
     // ล้างข้อมูลชั่วคราว
-    localStorage.removeItem("courseData");
+    localStorage.removeItem("formDataEdit");
     localStorage.removeItem("activities");
   };
 
   // กรองกิจกรรมตามวันที่แสดง
-  const filteredActivities = activities.filter(activity => {
-    return activity.day === currentDay || !activity.day; // แสดงกิจกรรมตามวันปัจจุบัน
-  });
+  const filteredActivities = activities.filter(activity => 
+    activity.day === currentDay || !activity.day
+  );
 
   // ดึงวันที่ปัจจุบัน
-  const currentDateString = courseDates[currentDay - 1] || "";
-
-  // ฟังก์ชันช่วยแสดงชื่อโค้ชในรูปแบบที่ต้องการ - แสดงชื่อจริง
-  const formatCoachDisplay = (coachString) => {
-    if (!coachString) return "";
-    
-    return coachString;
-  };
+  const currentDateString = courseDates.display ? courseDates.display[currentDay - 1] : "";
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-white">
       <div className="w-[1000px] p-10 shadow-lg bg-white rounded-lg relative">
         <div className="flex flex-col items-center mb-6">
           <label className="block text-lg font-semibold text-gray-700">
-            Course : {courseData?.courseName || "ไม่พบชื่อคอร์ส"}
+            Course : {courseD?.courseName || "ไม่พบชื่อคอร์ส"}
           </label>
           <label className="block text-sm text-gray-600">
-           time : {courseData?.startDate} - {courseData?.endDate}
+           time : {courseD?.startDate} - {courseD?.endDate}
           </label>
         </div>
         <br></br>
@@ -158,7 +169,7 @@ export default function CourseFrom() {
               {currentDay > 1 && (
                 <button 
                   onClick={handlePrevDay}
-                  className="px-4 py-1 bg-rose-600 text-white rounded-lg  text-sm"
+                  className="px-4 py-1 bg-rose-600 text-white rounded-lg text-sm"
                 >
                   back
                 </button>
@@ -166,7 +177,7 @@ export default function CourseFrom() {
               {currentDay < totalDays && (
                 <button 
                   onClick={handleNextDay}
-                  className="px-4 py-1 bg-rose-600 text-white rounded-lg  text-sm"
+                  className="px-4 py-1 bg-rose-600 text-white rounded-lg text-sm"
                 >
                   next
                 </button>
@@ -190,7 +201,9 @@ export default function CourseFrom() {
                     {act.startTime} - {act.endTime}
                   </td>
                   <td className="p-2 border">{act.description}</td>
-                  <td className="p-2 border">{formatCoachDisplay(act.coach)}</td>
+                  <td className="p-2 border">
+                    {act.coach || (act.trainer ? act.trainer.join(", ") : "")}
+                  </td>
                   <td className="p-2 border">
                     <button className="text-blue-500 mr-2">
                       <Pencil size={16} />
@@ -239,8 +252,8 @@ export default function CourseFrom() {
         setIsOpen={setIsAddActivityModalOpen}
         setActivities={setActivities}
         currentDay={currentDay}
-        newActivity={newActivity}       
-        setNewActivity={setNewActivity} 
+        newActivity={newActivity}
+        setNewActivity={setNewActivity}
       />
     </div>
   );
