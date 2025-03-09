@@ -1,55 +1,32 @@
-import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { trainer } from "../Trainer"; // Import the trainer data from TrainerList
 
-export default function ActivityModal({ isOpen, setIsOpen, setActivities, currentDay }) {
-  const [newActivity, setNewActivity] = useState({
-    startTime: "", 
-    endTime: "",
-    description: "",
-    coach: "",
-    coaches: [], // Array to store multiple coaches
-    day: currentDay
-  });
-  
+export default function ActivityModal({ 
+  isOpen, 
+  setIsOpen, 
+  setActivities, 
+  currentDay,
+  newActivity,
+  setNewActivity 
+}) {
   const [isCoachSelectOpen, setIsCoachSelectOpen] = useState(false);
-  const [trainers, setTrainers] = useState([]);
   const [existingActivities, setExistingActivities] = useState([]);
   
-  // Load trainers and existing activities on component mount
+  // Load existing activities on component mount
   useEffect(() => {
-    // Load trainers data
-    setTrainers([
-      {
-        id: 1,
-        image_url: "../assets/images/coach1.jpg",
-        firstName: "นายเก้า",
-        lastName: "เท็นสิบ",
-        Nickname: "โค้ชนาย",
-        gym: "Phuket Fight Club",
-      },
-      {
-        id: 2,
-        image_url: "../assets/images/coach2.jpg",
-        firstName: "นายสิบ",
-        lastName: "สิบสาม",
-        Nickname: "โค้ชอ้วน",
-        gym: "Bangkok Fight Club",
-      },
-      {
-        id: 3,
-        image_url: "../assets/images/coach3.jpg",
-        firstName: "นายสิบเอ็ด",
-        lastName: "เจ็ดแปดเก้า",
-        Nickname: "โค้ชเก่ง",
-        gym: "Chiang Mai Fight Club",
-      },
-    ]);
-    
     // Load existing activities from localStorage
     const savedActivities = JSON.parse(localStorage.getItem("activities")) || [];
     setExistingActivities(savedActivities);
   }, [isOpen]); // Reload when modal opens
+
+  useEffect(() => {
+    // Make sure newActivity has the current day
+    if (newActivity && currentDay !== newActivity.day) {
+      setNewActivity(prev => ({ ...prev, day: currentDay }));
+    }
+  }, [currentDay, newActivity, setNewActivity]);
 
   if (!isOpen) return null; // Don't render if modal is closed
 
@@ -58,18 +35,26 @@ export default function ActivityModal({ isOpen, setIsOpen, setActivities, curren
     setNewActivity((prev) => ({ ...prev, [name]: value }));
   };
   
-  const handleAddCoach = (trainer) => {
+  const handleAddCoach = (trainerItem) => {
+    // Check if trainer array exists
+    if (!newActivity.trainer) {
+      setNewActivity(prev => ({
+        ...prev,
+        trainer: []
+      }));
+    }
+    
     // Check if coach is already selected
-    if (!newActivity.coaches.some(coach => coach.id === trainer.id)) {
+    if (!newActivity.trainer.some(coach => coach.id === trainerItem.id)) {
       const coachInfo = {
-        id: trainer.id,
-        name: trainer.Nickname,
-        gym: trainer.gym
+        id: trainerItem.id,
+        name: trainerItem.Nickname,
+        gym: trainerItem.gym
       };
       
       setNewActivity(prev => ({
         ...prev,
-        coaches: [...prev.coaches, coachInfo]
+        trainer: [...(prev.trainer || []), coachInfo]
       }));
     }
     
@@ -79,7 +64,7 @@ export default function ActivityModal({ isOpen, setIsOpen, setActivities, curren
   const handleRemoveCoach = (coachId) => {
     setNewActivity(prev => ({
       ...prev,
-      coaches: prev.coaches.filter(coach => coach.id !== coachId)
+      trainer: prev.trainer.filter(coach => coach.id !== coachId)
     }));
   };
 
@@ -131,24 +116,24 @@ export default function ActivityModal({ isOpen, setIsOpen, setActivities, curren
     }
     
     // Validate coach selection
-    if (newActivity.coaches.length === 0 && !newActivity.coach) {
-      alert("กรุณาเพิ่มโค้ชอย่างน้อย 1 คน หรือระบุชื่อโค้ช");
+    if (!newActivity.trainer || newActivity.trainer.length === 0) {
+      alert("กรุณาเพิ่มโค้ชอย่างน้อย 1 คน");
       return;
     }
 
-    // Format coaches for display
-    const formattedCoaches = newActivity.coaches.length > 0 
-      ? newActivity.coaches.map(coach => coach.name).join(", ")
-      : newActivity.coach;
+    // Format trainer for display
+    const formattedtrainer = newActivity.trainer.map(coach => coach.name).join(", ");
 
     const newActivityData = {
       id: Date.now(),
       startTime: newActivity.startTime,
       endTime: newActivity.endTime,
       description: newActivity.description,
-      coach: formattedCoaches,
-      coachDetails: newActivity.coaches,
-      day: currentDay
+      coach: formattedtrainer,
+      coachDetails: newActivity.trainer,
+      day: currentDay,
+      // Additional fields to match the required format later
+      trainer: newActivity.trainer.map(coach => coach.name)
     };
 
     setActivities((prevActivities) => {
@@ -162,8 +147,7 @@ export default function ActivityModal({ isOpen, setIsOpen, setActivities, curren
       startTime: "", 
       endTime: "", 
       description: "", 
-      coach: "", 
-      coaches: [],
+      trainer: [],
       day: currentDay 
     });
     setIsOpen(false);
@@ -172,12 +156,6 @@ export default function ActivityModal({ isOpen, setIsOpen, setActivities, curren
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-20">
       <div className="w-[700px] p-10 shadow-lg bg-white rounded-lg relative">
-        {/* <button
-          onClick={() => setIsOpen(false)}
-          className="absolute top-3 right-3 text-gray-600 hover:text-black text-sm"
-        >
-          ✕
-        </button> */}
         <h3 className="text-base font-medium mb-3">เพิ่มกิจกรรม - วันที่ {currentDay}</h3>
         <form onSubmit={handleAddActivitySubmit} className="space-y-3">
           <div className="flex gap-4">
@@ -186,7 +164,7 @@ export default function ActivityModal({ isOpen, setIsOpen, setActivities, curren
               <input
                 type="time"
                 name="startTime"
-                value={newActivity.startTime}
+                value={newActivity.startTime || ""}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded-lg text-sm"
                 required
@@ -197,7 +175,7 @@ export default function ActivityModal({ isOpen, setIsOpen, setActivities, curren
               <input
                 type="time"
                 name="endTime"
-                value={newActivity.endTime}
+                value={newActivity.endTime || ""}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded-lg text-sm"
                 required
@@ -211,7 +189,7 @@ export default function ActivityModal({ isOpen, setIsOpen, setActivities, curren
               type="text"
               name="description"
               placeholder="รายละเอียด"
-              value={newActivity.description}
+              value={newActivity.description || ""}
               onChange={handleInputChange}
               className="w-full p-2 border rounded-lg text-sm"
               required
@@ -230,10 +208,10 @@ export default function ActivityModal({ isOpen, setIsOpen, setActivities, curren
               </button>
             </div>
             
-            {/* Display selected coaches */}
-            {newActivity.coaches.length > 0 && (
+            {/* Display selected trainer */}
+            {newActivity.trainer && newActivity.trainer.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
-                {newActivity.coaches.map(coach => (
+                {newActivity.trainer.map(coach => (
                   <div key={coach.id} className="flex items-center bg-gray-100 rounded-full px-3 py-1 text-xs">
                     <span>{coach.name}</span>
                     <button 
@@ -247,16 +225,6 @@ export default function ActivityModal({ isOpen, setIsOpen, setActivities, curren
                 ))}
               </div>
             )}
-            
-            {/* Optional manual coach input */}
-            {/* <input
-              type="text"
-              name="coach"
-              placeholder="หรือระบุชื่อโค้ช"
-              value={newActivity.coach}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded-lg text-sm mt-2"
-            /> */}
           </div>
           
           <div className="flex justify-end space-x-2">
@@ -290,20 +258,20 @@ export default function ActivityModal({ isOpen, setIsOpen, setActivities, curren
             <h3 className="text-base font-medium mb-4">เลือกโค้ช</h3>
             
             <div className="grid grid-cols-3 gap-3">
-              {trainers.map(trainer => (
+              {trainer.map(trainerItem => (
                 <button
-                  key={trainer.id}
+                  key={trainerItem.id}
                   type="button"
                   className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50"
-                  onClick={() => handleAddCoach(trainer)}
+                  onClick={() => handleAddCoach(trainerItem)}
                 >
                   <img
-                    src={trainer.image_url}
-                    alt={trainer.Nickname}
+                    src={trainerItem.image_url}
+                    alt={trainerItem.Nickname}
                     className="w-16 h-16 rounded-full object-cover border-2 border-gray-300"
                   />
-                  <p className="mt-1 text-sm font-semibold">{trainer.Nickname}</p>
-                  <p className="text-xs text-gray-500">{trainer.gym}</p>
+                  <p className="mt-1 text-sm font-semibold">{trainerItem.Nickname}</p>
+                  <p className="text-xs text-gray-500">{trainerItem.gym}</p>
                 </button>
               ))}
             </div>
@@ -318,5 +286,7 @@ ActivityModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   setIsOpen: PropTypes.func.isRequired,
   setActivities: PropTypes.func.isRequired,
-  currentDay: PropTypes.number.isRequired
+  currentDay: PropTypes.number.isRequired,
+  newActivity: PropTypes.object.isRequired,
+  setNewActivity: PropTypes.func.isRequired
 };

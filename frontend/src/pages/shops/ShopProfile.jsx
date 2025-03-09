@@ -1,39 +1,85 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import { BsShop } from "react-icons/bs";
 import ProductCard from "../../components/ProductCard";
 import EditShopModal from "../../components/shops/EditShopModal";
 
 export default function ShopProfile() {
-    const [shop, setShop] = useState({
-        shop_name: "Muay Thai Shop",
-        logo_url: new URL("../../assets/images/Shop_logo.jpg", import.meta.url).href,
-        description: "We offer the best Muay Thai gear in Phuket.",
-        contacts: {
-          email: "muaythaishop@gmail.com",
-          tel: "089-xxx-xxxx",
-          line: "muaythailine",
-          facebook: "muaythaiFB",
-        },
-        address: {
-          province: "Phuket",
-          district: "Mueang",
-          subdistrict: "Talad Yai",
-          street: "Fight St.",
-          postal_code: "83000",
-          latitude: "7.884",
-          longitude: "98.391",
-          information:"Open at 9 to 5",
-        },
-      });
+  const { id } = useParams(); 
+  const shops = [
+    {
+      owner_id: "1",
+      shop_name: "Muay Thai Shop",
+      logo_url: new URL("../../assets/images/Shop_logo.jpg", import.meta.url).href,
+      description: "We offer the best Muay Thai gear in Phuket.",
+      contacts: {
+        email: "muaythaishop@gmail.com",
+        tel: "089-xxx-xxxx",
+        line: "muaythailine",
+        facebook: "muaythaiFB",
+      },
+      address: {
+        province: "Phuket",
+        district: "Mueang",
+        subdistrict: "Talad Yai",
+        street: "Fight St.",
+        postal_code: "83000",
+        latitude: "7.884",
+        longitude: "98.391",
+        information: "Open at 9 to 5",
+      },
+    },
+    {
+      owner_id: "2",
+      shop_name: "Thai Boxing Gear",
+      logo_url: new URL("../../assets/images/Shop_logo2.jpg", import.meta.url).href,
+      description: "Your one-stop shop for Thai Boxing equipment.",
+      contacts: {
+        email: "boxinggear@gmail.com",
+        tel: "090-xxx-xxxx",
+        line: "boxingline",
+        facebook: "boxingFB",
+      },
+      address: {
+        province: "Bangkok",
+        district: "Siam",
+        subdistrict: "Siam Square",
+        street: "Boxing St.",
+        postal_code: "10110",
+        latitude: "13.7563",
+        longitude: "100.5018",
+        information: "Open 24 hours",
+      },
+    },
+  ];
 
+  const foundShop = shops.find((shop) => shop.owner_id === id);
+  const initialShopData = foundShop || {
+    owner_id: id,
+    shop_name: "",
+    logo_url: "",
+    description: "",
+    contacts: {},
+    address: {},
+  };
+
+  const [shop, setShop] = useState(initialShopData);
   const [showEditModal, setShowEditModal] = useState(false);
+
   const handleOpenModal = () => setShowEditModal(true);
   const handleCloseModal = () => setShowEditModal(false);
-
   const handleSaveShop = (newShopData) => {
     setShop((prev) => ({ ...prev, ...newShopData }));
     setShowEditModal(false);
   };
+
+  if (!shop.shop_name) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-6 flex justify-center items-center">
+        <h1 className="text-2xl font-semibold">Shop not found</h1>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -61,6 +107,7 @@ export default function ShopProfile() {
               {shop.shop_name || "No Shop Name"}
             </h3>
             <p className="text-gray-600 mt-1">{shop.description}</p>
+            <p className="text-gray-500 text-sm mt-1">Owner ID: {shop.owner_id}</p>
           </div>
           <div className="ml-auto bg-gray-100 px-5 py-3 rounded-lg shadow-md max-w-sm">
             <p className="text-gray-700 font-semibold mb-2">Contact</p>
