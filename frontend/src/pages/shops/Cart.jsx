@@ -10,7 +10,7 @@ export default function Cart() {
         {
           product_id: "p001",
           variant_id: "v001",
-          product_name: "Boxing Gloves",
+          product_name: "Universal Gloves Tight-Fit Design",
           price: 800,
           attribute: { color: "Black", size: "M" },
           quantity: 1,
@@ -19,7 +19,7 @@ export default function Cart() {
         {
           product_id: "p002",
           variant_id: "v002",
-          product_name: "Muay Thai Shorts",
+          product_name: "Limited Edition : Fairtex X Future LAB Boxing Shorts",
           price: 550,
           attribute: { color: "Black", size: "M" },
           quantity: 2,
@@ -34,7 +34,7 @@ export default function Cart() {
         {
           product_id: "p003",
           variant_id: "v003",
-          product_name: "Shin Guards",
+          product_name: "Finger Tape for BJJ and MMA",
           price: 400,
           attribute: { color: "White", size: "M" },
           quantity: 1,
@@ -111,7 +111,6 @@ export default function Cart() {
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <h1 className="text-2xl font-bold mb-6">My Cart</h1>
-
       <div className="flex flex-col md:flex-row gap-6">
         {/* Shop List */}
         <div className="flex-1">

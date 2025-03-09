@@ -63,8 +63,8 @@ const GymSchema = new Schema<GymDocument>({
     district: { type: String, required: true },
     subdistrict: { type: String, required: true },
     postal_code: { type: String, required: true },
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true },
+    latitude: { type: Number },
+    longitude: { type: Number },
     information: { type: String },
   },
 });

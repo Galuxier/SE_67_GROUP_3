@@ -43,12 +43,14 @@ export default function Summary() {
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen relative">
-        <Link 
-          to="/shop" 
-          className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
-        >
-          ← Back
-        </Link>
+        <div className="absolute top-4 left-4">
+      <button
+        onClick={() => navigate(-1)}
+        className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
+      >
+        Back
+      </button>
+    </div>
 
       <div className="max-w-3xl mx-auto bg-white p-8 shadow-md rounded">
         <h2 className="text-2xl font-bold mb-6">{product.product_name}</h2>

@@ -29,13 +29,13 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     // เคลียร์ข้อความ error
     setFormError({
       identifier: "",
       password: "",
     });
-
+  
     // ตรวจสอบความถูกต้องของฟอร์ม
     if (!formInput.identifier || !formInput.password) {
       setFormError({
@@ -44,36 +44,34 @@ const Login = () => {
       });
       return;
     }
-
+  
     setIsLoading(true); // เริ่ม Loading
-
+  
     try {
       // เรียกใช้ฟังก์ชัน loginUser
       const { token, user } = await loginUser({
         identifier: formInput.identifier,
         password: formInput.password,
       });
-
+  
       if (!token || !user) {
         throw new Error("Invalid response from server");
       }
-
+  
       // บันทึก token ลงใน localStorage
       localStorage.setItem("token", token);
-
-      // อัปเดตสถานะการล็อกอิน
+  
       login(user);
 
-      // แสดง Toast Notification
       toast.success("Login สำเร็จ!", {
         position: "top-right",
-        autoClose: 300, // ปิดอัตโนมัติหลังจาก 2 วินาที
-        onClose: () => navigate(-1), // Redirect หลังจาก Toast ปิด
+        autoClose: 1000,
       });
+
+      navigate(-1);
     } catch (error) {
       console.error("Login failed:", error);
-      setIsLoading(false); // หยุด Loading
-
+  
       // จัดการข้อผิดพลาด
       if (error.response?.data?.message) {
         const errorMessage = error.response.data.message;
@@ -99,6 +97,8 @@ const Login = () => {
           password: "",
         });
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
