@@ -24,9 +24,14 @@ export default function ShopHome() {
             Cart
           </button>
         </Link>
-        <Link to="/shop/shopProfile">
+        <Link to="/shop/shopProfile/1">
           <button className="bg-rose-600 text-white px-4 py-2 rounded w-full mb-8">
-            Shop Profile
+            Shop Profile (Owner 1)
+          </button>
+        </Link>
+        <Link to="/shop/shopProfile/2">
+          <button className="bg-rose-600 text-white px-4 py-2 rounded w-full mb-8">
+            Shop Profile (Owner 2)
           </button>
         </Link>
 

@@ -25,7 +25,7 @@ function ProductCard() {
   ];
 
   const handleProductClick = (p) => {
-    navigate(`/shop/${p.id}`);
+    navigate(`/shop/product/${p.id}`);
   };
 
   return (
