@@ -16,7 +16,7 @@ function ShopRoutes() {
           <Route index element={<ShopHome />} />
           <Route path="/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/shopProfile" element={<ShopProfile />} />
+          <Route path="/profile/:id" element={<ShopProfile />} />
         </Route>
           
         {/* ไม่มี Layout(Navbar) */}

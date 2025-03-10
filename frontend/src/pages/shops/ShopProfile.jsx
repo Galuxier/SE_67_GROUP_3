@@ -1,39 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { BsShop } from "react-icons/bs";
 import ProductCard from "../../components/ProductCard";
 import EditShopModal from "../../components/shops/EditShopModal";
+import { getShopFromId } from "../../services/api/ShopApi"; // นำเข้า API service
 
 export default function ShopProfile() {
-    const [shop, setShop] = useState({
-        shop_name: "Muay Thai Shop",
-        logo_url: new URL("../../assets/images/Shop_logo.jpg", import.meta.url).href,
-        description: "We offer the best Muay Thai gear in Phuket.",
-        contacts: {
-          email: "muaythaishop@gmail.com",
-          tel: "089-xxx-xxxx",
-          line: "muaythailine",
-          facebook: "muaythaiFB",
-        },
-        address: {
-          province: "Phuket",
-          district: "Mueang",
-          subdistrict: "Talad Yai",
-          street: "Fight St.",
-          postal_code: "83000",
-          latitude: "7.884",
-          longitude: "98.391",
-          information:"Open at 9 to 5",
-        },
-      });
-
+  const { id } = useParams(); // ดึง ID จาก URL
+  const [shop, setShop] = useState(null); // เก็บข้อมูลร้านค้า
   const [showEditModal, setShowEditModal] = useState(false);
+
+  // ดึงข้อมูลร้านค้า
+  useEffect(() => {
+    const fetchShop = async () => {
+      try {
+        const response = await getShopFromId(id); // เรียก API
+        setShop(response); // ตั้งค่าข้อมูลร้านค้า
+      } catch (error) {
+        console.error("Error fetching shop:", error);
+      }
+    };
+    fetchShop();
+  }, [id]);
+
   const handleOpenModal = () => setShowEditModal(true);
   const handleCloseModal = () => setShowEditModal(false);
 
   const handleSaveShop = (newShopData) => {
-    setShop((prev) => ({ ...prev, ...newShopData }));
+    setShop((prev) => ({ ...prev, ...newShopData })); // อัปเดตข้อมูลร้านค้า
     setShowEditModal(false);
   };
+
+  if (!shop) return <div>Loading...</div>; // แสดง Loading ถ้ายังไม่ได้รับข้อมูล
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -50,7 +48,7 @@ export default function ShopProfile() {
           {shop.logo_url ? (
             <img
               alt="Shop Logo"
-              src={shop.logo_url}
+              src={new URL("../../assets/images/Shop_logo.jpg", import.meta.url).href} // แสดงรูปภาพจาก API
               className="shadow-xl rounded-full h-32 w-32 border-4 border-white object-cover"
             />
           ) : (
@@ -69,17 +67,34 @@ export default function ShopProfile() {
               {shop.contacts.tel && <p>Tel: {shop.contacts.tel}</p>}
               {shop.contacts.line && <p>Line: {shop.contacts.line}</p>}
               {shop.contacts.facebook && <p>FB: {shop.contacts.facebook}</p>}
-              {shop.contacts.information && <p>Information: {shop.contacts.information}</p>}
             </div>
           </div>
         </div>
 
+        {/* ที่อยู่ */}
+        <div className="mt-6 bg-gray-100 p-4 rounded-lg">
+          <h4 className="text-xl font-semibold mb-2">Address</h4>
+          <div className="text-gray-600 text-sm">
+            <p>
+              {shop.address.street}, {shop.address.subdistrict},{" "}
+              {shop.address.district}, {shop.address.province},{" "}
+              {shop.address.postal_code}
+            </p>
+            <p>
+              Latitude: {shop.address.latitude}, Longitude: {shop.address.longitude}
+            </p>
+            <p>Information: {shop.address.information}</p>
+          </div>
+        </div>
+
+        {/* สินค้า */}
         <div className="mt-6 border-t border-gray-300 pt-4">
           <h4 className="text-xl font-semibold mb-4">Products</h4>
-          <ProductCard />
+          {/* <ProductCard /> */}
         </div>
       </div>
 
+      {/* Modal สำหรับแก้ไข */}
       <EditShopModal
         show={showEditModal}
         onClose={handleCloseModal}

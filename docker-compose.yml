@@ -10,7 +10,7 @@ services:
     volumes:
       - ./frontend:/app
     environment:
-      - TZ=Asia/Bankok
+      - TZ=Asia/Bangkok
     depends_on:
       - backend
 
@@ -22,6 +22,7 @@ services:
       - "3000:3000"
     volumes:
       - ./backend:/app
+      - ./backend/src/uploads:/app/src/uploads
     environment:
-      - TZ=Asia/Bankok
+      - TZ=Asia/Bangkok
 

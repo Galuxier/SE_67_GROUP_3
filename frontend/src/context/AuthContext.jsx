@@ -18,8 +18,8 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setIsLoggedIn(false);
     setUser(null);
-    localStorage.removeItem("user"); // ลบข้อมูลผู้ใช้จาก localStorage
-    localStorage.removeItem("isLoggedIn"); // ลบสถานะการล็อกอินจาก localStorage
+    localStorage.removeItem("user"); 
+    localStorage.removeItem("isLoggedIn"); 
   };
 
   // โหลดข้อมูลจาก localStorage เมื่อ component ถูกโหลด
@@ -38,7 +38,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, user, login, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );

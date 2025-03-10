@@ -3,7 +3,8 @@ import provinceData from "../data/thailand/address/provinces.json";
 import districtData from "../data/thailand/address/districts.json";
 import subDistrictData from "../data/thailand/address/subdistricts.json";
 
-const AddressForm = ({ onChange }) => {
+const AddressForm = ({ onChange, initialData }) => {
+    console.log("In Address Form: ", initialData);
     const [selectedProvince, setSelectedProvince] = useState(null);
     const [selectedDistrict, setSelectedDistrict] = useState(null);
     const [selectedSubDistrict, setSelectedSubDistrict] = useState(null);
@@ -23,9 +24,36 @@ const AddressForm = ({ onChange }) => {
         information: "",
     });
 
+    // ตั้งค่าข้อมูลเริ่มต้นเมื่อโหลดคอมโพเนนต์
     useEffect(() => {
         setProvinces(provinceData);
-    }, []);
+
+        if (initialData) {
+            // ตั้งค่าข้อมูลเริ่มต้น
+            setAddressData(initialData);
+
+            // ค้นหาจังหวัด อำเภอ และตำบลจากข้อมูลเริ่มต้น
+            const province = provinceData.find((p) => p.provinceNameTh === initialData.province);
+            if (province) {
+                setSelectedProvince(province);
+                const filteredDistricts = districtData.filter((d) => d.provinceCode === province.provinceCode);
+                setDistricts(filteredDistricts);
+
+                const district = filteredDistricts.find((d) => d.districtNameTh === initialData.district);
+                if (district) {
+                    setSelectedDistrict(district);
+                    const filteredSubDistricts = subDistrictData.filter((s) => s.districtCode === district.districtCode);
+                    setSubDistricts(filteredSubDistricts);
+
+                    const subDistrict = filteredSubDistricts.find((s) => s.subdistrictNameTh === initialData.subdistrict);
+                    if (subDistrict) {
+                        setSelectedSubDistrict(subDistrict);
+                        setPostalCode(subDistrict.postalCode);
+                    }
+                }
+            }
+        }
+    }, [initialData]);
 
     const updateAddress = (newData) => {
         const updatedData = { ...addressData, ...newData };
@@ -157,6 +185,7 @@ const AddressForm = ({ onChange }) => {
                         required 
                     />
                 </div> */}
+
                 <div className="flex items-center">
                     <label className="w-24 text-gray-700">Information:</label>
                     <input 

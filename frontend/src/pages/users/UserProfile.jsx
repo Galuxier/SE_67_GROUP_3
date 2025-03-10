@@ -7,12 +7,9 @@ import { updateUser } from "../../services/api/UserApi";
 
 
 function UserProfile() {
-  // const { user, setUser } = useAuth(); // ใช้ setUser เพื่ออัปเดตข้อมูล user ใน state
   const { user, setUser } = useAuth();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // ✅ ป้องกัน error ถ้า user.profile เป็น null
   useEffect(() => {
     if (user) {
       setFormData({

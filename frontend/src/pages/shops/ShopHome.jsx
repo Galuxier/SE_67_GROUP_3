@@ -24,11 +24,6 @@ export default function ShopHome() {
             Cart
           </button>
         </Link>
-        <Link to="/shop/shopProfile">
-          <button className="bg-rose-600 text-white px-4 py-2 rounded w-full mb-8">
-            Shop Profile
-          </button>
-        </Link>
 
         <h2 className="font-bold text-lg mb-4">Filter</h2>
         <div className="mb-4">

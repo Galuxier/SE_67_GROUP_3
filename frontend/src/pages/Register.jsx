@@ -117,7 +117,7 @@ function RegisterForm() {
 
       const response = await signupUser(userData);
       console.log("Registration successful:", response);
-
+      navigate(-1);
       setFormError({ ...formError, general: "Registration successful!" });
 
     } catch (error) {
