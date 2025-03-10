@@ -60,11 +60,11 @@ export default function MuayThaiCourses() {
           </div>
         </div>
       </div>
-      <Link to ="/course/courseDetail" >
+      
       <div className="w-full md:w-3/4">
         <CourseList />
       </div>
-      </Link>
+      
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { products } from "../../data/ProductsData";
 import ProductCard from "../../components/ProductCard";
 
 export default function ShopHome() {
@@ -25,6 +26,17 @@ export default function ShopHome() {
           </button>
         </Link>
 
+        <Link to="/shop/shopProfile/1">
+          <button className="bg-rose-600 text-white px-4 py-2 rounded w-full mb-4">
+            Shop Profile (Owner 1)
+          </button>
+        </Link>
+        <Link to="/shop/shopProfile/2">
+          <button className="bg-rose-600 text-white px-4 py-2 rounded w-full mb-8">
+            Shop Profile (Owner 2)
+          </button>
+        </Link>
+
         <h2 className="font-bold text-lg mb-4">Filter</h2>
         <div className="mb-4">
           <label className="block mb-1">Category</label>
@@ -44,6 +56,7 @@ export default function ShopHome() {
         </div>
       </div>
 
+      {/* ส่วนแสดงสินค้า */}
       <div className="flex-1 p-4">
         <div className="flex justify-end items-center gap-2 mb-4">
           <span>Sort by:</span>
@@ -51,7 +64,8 @@ export default function ShopHome() {
           <button className="bg-gray-300 p-2 rounded">↓</button>
         </div>
 
-        <ProductCard />
+        {/* ส่ง products ไปให้ ProductCard */}
+        <ProductCard products={products} />
       </div>
     </div>
   );
