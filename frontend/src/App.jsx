@@ -6,12 +6,14 @@ import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import Signup from "./pages/Register";
 import Login from "./pages/Login";
+import Ticket from "./pages/Ticket";
 
 import GymRoutes from "./routes/GymRoute";
 import CourseRoutes from "./routes/CourseRoute";
 import EventRoutes from "./routes/EventRoute";
 import ShopRoutes from "./routes/ShopRoute";
 import UserRoutes from "./routes/UserRoute";
+
 
 const App = () => {
   return (
@@ -28,6 +30,7 @@ const App = () => {
           {/* Routes ที่ไม่มี Layout (Login/Signup) */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/ticket" element={<Ticket/>} />
 
           {/* ใช้ Component ของแต่ละหมวด */}
           <Route path="/gym/*" element={<GymRoutes />} />
