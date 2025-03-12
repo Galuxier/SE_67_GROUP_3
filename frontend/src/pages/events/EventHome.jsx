@@ -15,7 +15,7 @@ const EventHome = () => {
           Add result
         </button>
       </Link>
-        <EventList/>
+        <EventCard/>
       </div>
     );
   };
