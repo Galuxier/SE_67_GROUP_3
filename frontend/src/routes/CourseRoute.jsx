@@ -7,20 +7,27 @@ import CreateCourse from "../pages/courses/CreateCourse";
 import CourseFrom from "../pages/courses/CourseFrom";
 import CourseBuyFrom from "../pages/courses/CourseBuyFrom";
 import MuayThaiCourses from "../pages/courses/CourseHome";
-
+import  Checkout from "../pages/courses/CourseCheck"; //หน้าก่อนการซื้อ
+import CourseCheck from "../pages/courses/CourseBuyCheck"; //วซ์้อแล้ว
+import EditCourse from "../pages/courses/EditCourse";
+import EditCourseFrom from "../pages/courses/EditCourseFrom";
 function CourseRoutes() {
   return (
       <Routes>
         {/* มี Layout(Navbar) */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<MuayThaiCourses />} />
-          <Route path ="courseDetail" element={<CourseDetail />} />
-          <Route path ="createCourse" element={<CreateCourse />} />
-          <Route path ="courseFrom" element={<CourseFrom />} />
-          <Route path ="courseBuyFrom"  element={<CourseBuyFrom />} />
+          <Route path ="/courseDetail" element={<CourseDetail />} />
+          <Route path ="/courseBuyFrom"  element={<CourseBuyFrom />} />
         </Route>
 
-        {/* มี Layout(Navbar) */}
+        {/* ไม่มี Layout(Navbar) */}
+        <Route path ="/editCourseFrom" element={<EditCourseFrom />} />
+        <Route path ="/editCourse" element={<EditCourse />} />
+        <Route path ="/courseBuyCheckout" element={<CourseCheck />} />
+        <Route path ="/courseCheck" element={< Checkout />} />  
+        <Route path ="/courseFrom" element={<CourseFrom />} />
+        <Route path ="/createCourse" element={<CreateCourse />} />
       </Routes>
   );
 }

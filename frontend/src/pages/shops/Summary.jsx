@@ -1,39 +1,30 @@
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
-import VariantModal from "../../components/VariantModal";
+import VariantModal from "../../components/shops/VariantModal";
+import { creatProduct} from "../../services/api/ShopApi";
 
 export default function Summary() {
   const location = useLocation();
   const navigate = useNavigate();
 
+
+
   // รับข้อมูล product จาก AddProduct
   const [product, setProduct] = useState(location.state?.product || {});
-
-  // คุม Modal
+  console.log(product);
   const [showModal, setShowModal] = useState(false);
 
-  // เมื่อกด Sell -> POST ไป API
   const handleConfirm = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(product),
-      });
-      if (response.ok) {
-        alert("Product added successfully!");
-        navigate("/shop"); // ไปหน้า shop หรือหน้าอื่น
-      } else {
-        console.error("Failed to add product");
-      }
+      const response = await creatProduct(product);
+      console.log('Create Product Success: ', response);
+      navigate("/shop");
     } catch (error) {
       console.error("Error adding product:", error);
     }
   };
 
-  // เมื่อกด Add Variant -> เปิด Modal
   const handleOpenModal = () => {
-    // ถ้าต้องการเช็ค hasOptions
     if (!product.hasOptions) {
       alert("This product has no options!");
       return;
@@ -41,9 +32,7 @@ export default function Summary() {
     setShowModal(true);
   };
 
-  // เมื่อกด Submit ใน VariantModal
   const handleSubmitVariant = (newVar) => {
-    // เพิ่ม variant ใหม่ใน product
     const updatedProduct = {
       ...product,
       variants: [...(product.variants || []), newVar]
@@ -54,69 +43,89 @@ export default function Summary() {
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen relative">
-      {/* ปุ่มกลับ หรืออื่น ๆ */}
-      <div className="absolute top-4 left-4">
-        <Link to="/shop" className="text-blue-500">
-          ← Back
-        </Link>
+        <div className="absolute top-4 left-4">
+      <button
+        onClick={() => navigate(-1)}
+        className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
+      >
+        Back
+      </button>
+    </div>
+
+      <div className="max-w-3xl mx-auto bg-white p-8 shadow-md rounded">
+        <h2 className="text-2xl font-bold mb-6">{product.product_name}</h2>
+
+        {/* รูปหลักสินค้า */}
+        {product.baseImage && (
+          <div className="w-40 h-40 mx-auto mb-6">
+            <img
+              src={product.baseImage}
+              alt="Product"
+              className="w-full h-full object-cover rounded"
+            />
+          </div>
+        )}
+
+        <div className="mb-6">
+          <p className="mb-2">
+            <strong>Name:</strong> {product.name}
+          </p>
+          <p className="mb-2">
+            <strong>Category:</strong> {product.category}
+          </p>
+          <p className="mb-2">
+            <strong>Description:</strong> {product.description}
+          </p>
+        </div>
+
+        <h3 className="text-xl font-bold mb-4">Variants</h3>
+        <div className="space-y-4">
+          {(product.variants || []).map((variant, index) => (
+            <div key={index} className="border p-4 rounded flex gap-4 items-center">
+              {variant.image_url && (
+                <img
+                  src={variant.image_url}
+                  alt="Variant"
+                  className="w-20 h-20 object-cover rounded"
+                />
+              )}
+              <div className="flex-1">
+                {Object.entries(variant.attribute || {})
+                  .filter(([_, val]) => val)
+                  .map(([key, val]) => (
+                    <p key={key} className="text-sm text-gray-700">
+                      <strong>{key}:</strong> {val}
+                    </p>
+                  ))}
+                <p className="text-sm text-gray-700">
+                  <strong>Price:</strong> {variant.price} THB
+                </p>
+                <p className="text-sm text-gray-700">
+                  <strong>Stock:</strong> {variant.stock}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end items-center gap-4 mt-6">
+          {product.hasOptions && (
+            <button
+              onClick={handleOpenModal}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+            >
+              Add Variant
+            </button>
+          )}
+          <button
+            onClick={handleConfirm}
+            className="bg-rose-600 text-white px-6 py-2 rounded hover:bg-rose-700 transition"
+          >
+            Sell
+          </button>
+        </div>
       </div>
 
-      <h2 className="text-xl font-bold mb-4">Product Summary</h2>
-
-      {/* รูปหลัก */}
-      {product.baseImage && (
-        <img
-          src={product.baseImage}
-          alt="Product"
-          className="w-40 h-40 object-cover mb-4"
-        />
-      )}
-
-      <p><strong>Name:</strong> {product.name}</p>
-      <p><strong>Category:</strong> {product.category}</p>
-      <p><strong>Description:</strong> {product.description}</p>
-
-      <h3 className="mt-4 font-bold">Variants</h3>
-      {(product.variants || []).map((variant, index) => (
-        <div key={index} className="border p-2 mb-2">
-          {variant.image_url && (
-            <img
-              src={variant.image_url}
-              alt="Variant"
-              className="w-20 h-20 object-cover mb-2"
-            />
-          )}
-          {/* แสดง attribute */}
-          {Object.entries(variant.attribute || {})
-            .filter(([_, val]) => val)
-            .map(([key, val]) => (
-              <p key={key}>
-                <strong>{key}:</strong> {val}
-              </p>
-            ))}
-          <p><strong>Price:</strong> {variant.price}</p>
-          <p><strong>Stock:</strong> {variant.stock}</p>
-        </div>
-      ))}
-
-      {/* ถ้า user เลือก hasOptions => ให้ add Variant ได้ */}
-      {product.hasOptions && (
-        <button
-          onClick={handleOpenModal}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Add Variant
-        </button>
-      )}
-
-      <button
-        onClick={handleConfirm}
-        className="bg-pink-500 text-white px-4 py-2 rounded ml-4"
-      >
-        Sell
-      </button>
-
-      {/* เรียกใช้ VariantModal อีกครั้ง */}
       <VariantModal
         show={showModal}
         onClose={() => setShowModal(false)}

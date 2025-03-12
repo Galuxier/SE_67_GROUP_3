@@ -1,4 +1,4 @@
-import EventList from "../../components/Events";
+import EventCard from "../../components/EventCard";
 import { Link } from "react-router-dom";
 
 const EventHome = () => {

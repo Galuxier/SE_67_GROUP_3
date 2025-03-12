@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { loginUser } from "../services/api/AuthApi"; // นำเข้า loginUser จาก AuthApi
-import { useNavigate } from "react-router-dom"; // ใช้สำหรับ redirect
-import { useAuth } from "../context/AuthContext"; // นำเข้า useAuth
+import { Link, useNavigate } from "react-router-dom";
+import { loginUser } from "../services/api/AuthApi";
+import { useAuth } from "../context/AuthContext";
+import { toast, ToastContainer } from "react-toastify"; // นำเข้า toast สำหรับแสดงข้อความแจ้งเตือน
+import "react-toastify/dist/ReactToastify.css"; // CSS สำหรับ toast
+import { ClipLoader } from "react-spinners"; // นำเข้า Spinner
 
 const Login = () => {
   const [formInput, setFormInput] = useState({
-    identifier: "", // ใช้ identifier สำหรับรับทั้ง username และ email
+    identifier: "",
     password: "",
   });
 
@@ -14,8 +17,10 @@ const Login = () => {
     password: "",
   });
 
-  const navigate = useNavigate(); // ใช้สำหรับ redirect
-  const { login } = useAuth(); // ใช้ login function จาก useAuth
+  const [isLoading, setIsLoading] = useState(false); // สถานะ Loading
+
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -25,7 +30,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
-    // เคลียร์ข้อความ error ทั้งหมด
+    // เคลียร์ข้อความ error
     setFormError({
       identifier: "",
       password: "",
@@ -40,13 +45,15 @@ const Login = () => {
       return;
     }
   
+    setIsLoading(true); // เริ่ม Loading
+  
     try {
-      // เรียกใช้ฟังก์ชัน loginUser จาก AuthApi
+      // เรียกใช้ฟังก์ชัน loginUser
       const { token, user } = await loginUser({
         identifier: formInput.identifier,
         password: formInput.password,
       });
-      // ตรวจสอบว่า token และ user มีค่าหรือไม่
+  
       if (!token || !user) {
         throw new Error("Invalid response from server");
       }
@@ -54,19 +61,20 @@ const Login = () => {
       // บันทึก token ลงใน localStorage
       localStorage.setItem("token", token);
   
-      // อัปเดตสถานะการล็อกอิน
       login(user);
-  
-      // Redirect ไปยังหน้าหลัก
-      navigate("/");
+
+      toast.success("Login สำเร็จ!", {
+        position: "top-right",
+        autoClose: 1000,
+      });
+
+      navigate(-1);
     } catch (error) {
       console.error("Login failed:", error);
   
-      // จัดการข้อผิดพลาดที่ส่งกลับมาจาก Backend
+      // จัดการข้อผิดพลาด
       if (error.response?.data?.message) {
         const errorMessage = error.response.data.message;
-  
-        // แสดงข้อความผิดพลาดที่เหมาะสม
         if (errorMessage === "Invalid email/username or password") {
           setFormError({
             identifier: "Invalid email/username or password",
@@ -84,78 +92,89 @@ const Login = () => {
           });
         }
       } else {
-        // ข้อผิดพลาดที่ไม่รู้จัก
         setFormError({
           identifier: "An error occurred. Please try again.",
           password: "",
         });
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // ฟังก์ชันสำหรับปุ่ม Cancel
-  const handleCancel = () => {
-    navigate("/"); // Redirect ไปยังหน้า Home
+  const handleBack = () => {
+    navigate(-1);
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen py-12">
+    <div className="flex flex-col items-center justify-center min-h-screen py-12 bg-gray-50">
+      <ToastContainer /> {/* Container สำหรับแสดง Toast */}
       <div className="w-96 p-6 shadow-lg bg-white rounded-md">
+        <button onClick={handleBack} className="text-gray-600 hover:text-gray-800 mb-4">
+          ← Back
+        </button>
+
         <h1 className="text-3xl block text-center font-semibold py-2">Login</h1>
-        <hr />
+        {/* <hr /> */}
         <form onSubmit={handleSubmit}>
           {/* ช่องกรอก email/username */}
           <div className="mb-4">
+            <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-1">
+              Username/E-mail
+            </label>
             <input
               type="text"
+              id="identifier"
               name="identifier"
               value={formInput.identifier}
               onChange={handleInputChange}
               className={`w-full border border-gray-300 rounded py-2 px-3 focus:outline-none focus:border-pink-500 ${
                 formError.identifier ? "border-red-500" : ""
               }`}
-              placeholder="Email/Username"
+              placeholder="Enter your email or username"
             />
             {formError.identifier && (
               <p className="text-red-500 text-sm mt-1">{formError.identifier}</p>
             )}
           </div>
-  
+
           {/* ช่องกรอก password */}
           <div className="mb-4">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
             <input
               type="password"
+              id="password"
               name="password"
               value={formInput.password}
               onChange={handleInputChange}
               className={`w-full border border-gray-300 rounded py-2 px-3 focus:outline-none focus:border-pink-500 ${
                 formError.password ? "border-red-500" : ""
               }`}
-              placeholder="Password"
+              placeholder="Enter your password"
             />
             {formError.password && (
               <p className="text-red-500 text-sm mt-1">{formError.password}</p>
             )}
           </div>
-  
+
           {/* ปุ่ม Login และ Cancel */}
           <div className="flex space-x-4">
             <button
               type="submit"
-              className="w-full bg-rose-600 border rounded py-2 px-3 focus:outline-none"
+              className="w-full bg-rose-600 border rounded py-2 px-3 focus:outline-none flex items-center justify-center"
+              disabled={isLoading} // ปิดปุ่มขณะ Loading
             >
-              <label className="text-white">LOGIN</label>
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="w-full bg-gray-500 border rounded py-2 px-3 focus:outline-none hover:bg-gray-600"
-            >
-              <label className="text-white">CANCEL</label>
+              {isLoading ? (
+                <ClipLoader size={20} color="#ffffff" /> // แสดง Spinner
+              ) : (
+                <label className="text-white">LOGIN</label>
+              )}
             </button>
           </div>
         </form>
-  
+
         {/* ลิงก์ Forgot Password */}
         <div>
           <label className="block text-center py-2 text-rose-600">
@@ -163,10 +182,12 @@ const Login = () => {
           </label>
         </div>
         <hr className="bg-red-500 border-red-500" />
-  
+
         {/* ลิงก์ Register */}
         <div>
-          <label className="block text-center py-2 text-rose-600">Register</label>
+          <Link to="/signup" className="block text-center py-2 text-rose-600 hover:text-rose-500">
+            Register
+          </Link>
         </div>
       </div>
     </div>

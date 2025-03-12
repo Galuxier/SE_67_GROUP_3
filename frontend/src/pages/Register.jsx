@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../index.css";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { signupUser } from "../services/api/AuthApi"; // นำเข้า signupUser จาก AuthApi
 import { MdOutlineKeyboardBackspace } from "react-icons/md";
 import { useNavigate } from "react-router-dom"; // ใช้สำหรับ redirect
+
+
 
 function RegisterForm() {
   const [formInput, setFormInput] = useState({
@@ -113,17 +115,14 @@ function RegisterForm() {
         password: formInput.password,
       };
 
-      const response = await signupUser(userData); // เรียกใช้ signupUser
+      const response = await signupUser(userData);
       console.log("Registration successful:", response);
 
-      // แสดงข้อความสำเร็จ
       setFormError({ ...formError, general: "Registration successful!" });
 
-      // Redirect หรือทำอย่างอื่นหลังจากลงทะเบียนสำเร็จ
     } catch (error) {
       console.error("Error during registration:", error.response?.data);
 
-      // จัดการข้อผิดพลาดที่ส่งกลับมาจาก Backend
       if (error.message === "Email already exists") {
         setFormError({ ...formError, email: "Email already exists", general: "" });
       } else if (error.message === "Username already exists") {
@@ -134,17 +133,16 @@ function RegisterForm() {
     }
   };
 
-  const navigate = useNavigate(); // ใช้สำหรับ redirect
-    // ฟังก์ชันสำหรับปุ่ม Cancel
-    const handleCancel = () => {
-      navigate("/"); // Redirect ไปยังหน้า Home
+  const navigate = useNavigate();
+    const handleBack = () => {
+      navigate(-1);
     };
 
   return (
     <div className="flex flex-col items-center min-h-screen py-12">
       <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
       <div className="flex items-center gap-2 text-rose-600 hover:text-rose-500 cursor-pointer"
-        onClick={handleCancel}
+        onClick={handleBack}
       ><MdOutlineKeyboardBackspace /> Back
       </div>
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import VariantModal from "../../components/VariantModal";
+import { useNavigate } from "react-router-dom";
+import VariantModal from "../../components/shops/VariantModal";
 
 export default function AddProduct() {
   const navigate = useNavigate();
@@ -14,18 +14,16 @@ export default function AddProduct() {
     price: "",
     stock: "",
     options: [],
-    variants: []
+    variants: [],
   });
 
   const [newOption, setNewOption] = useState("");
-
-  // state สำหรับโชว์/ซ่อน Modal
   const [showModal, setShowModal] = useState(false);
 
-  // อัปโหลดรูปหลักสินค้า
   const handleBaseImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setProduct((prev) => ({ ...prev, baseImage: reader.result }));
@@ -33,197 +31,212 @@ export default function AddProduct() {
     reader.readAsDataURL(file);
   };
 
-  // เพิ่ม Option
   const addOption = () => {
     if (!newOption.trim()) return;
     setProduct((prev) => ({
       ...prev,
-      options: [...prev.options, { name: newOption, isMain: false, values: [] }]
+      options: [...prev.options, { name: newOption, isMain: false, values: [] }],
     }));
     setNewOption("");
   };
 
-  // เลือก Main Option (หากต้องการ)
   const setAsMainOption = (index) => {
     setProduct((prev) => {
       const updatedOptions = prev.options.map((opt, i) => ({
         ...opt,
-        isMain: i === index
+        isMain: i === index,
       }));
       return { ...prev, options: updatedOptions };
     });
   };
 
-  // เมื่อกดปุ่ม Next
   const openModal = () => {
-    // ถ้าไม่มี Options => user เลือก No => ทำ Variant เดียว
     if (!product.hasOptions) {
       const mainVariant = {
         attribute: {},
         image_url: product.baseImage,
         price: parseFloat(product.price) || 0,
-        stock: parseInt(product.stock) || 0
+        stock: parseInt(product.stock) || 0,
       };
       const updatedProduct = {
         ...product,
-        variants: [mainVariant]
+        variants: [mainVariant],
       };
       navigate("/shop/summary", { state: { product: updatedProduct } });
       return;
     }
-
-    // ถ้า Yes => เปิด Modal
     setShowModal(true);
   };
 
-  // เมื่อ user กด Submit ใน Modal => เพิ่ม variant แรกแล้วไป summary
   const handleSubmitVariant = (newVar) => {
-    // รวม variant ใหม่
     const updatedProduct = {
       ...product,
-      variants: [...product.variants, newVar]
+      variants: [...product.variants, newVar],
     };
-    // ปิด Modal
     setShowModal(false);
-    // ไป summary
     navigate("/shop/summary", { state: { product: updatedProduct } });
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen flex justify-center items-center p-4">
-      <div className="absolute top-4 left-4">
-        <Link to="/shop" className="text-blue-500">
-          ← Back
-        </Link>
-      </div>
-
-      <div className="bg-white p-6 shadow-lg rounded-lg max-w-lg w-full">
-        <h2 className="text-xl font-bold mb-4">Add Product</h2>
-
-        <label className="block mb-1">Product Name</label>
-        <input
-          type="text"
-          className="border p-2 w-full mb-4"
-          onChange={(e) => setProduct({ ...product, name: e.target.value })}
-        />
-
-        <label className="block mb-1">Category</label>
-        <input
-          type="text"
-          className="border p-2 w-full mb-4"
-          onChange={(e) => setProduct({ ...product, category: e.target.value })}
-        />
-
-        <label className="block mb-1">Description</label>
-        <textarea
-          className="border p-2 w-full mb-4"
-          onChange={(e) => setProduct({ ...product, description: e.target.value })}
-        />
-
-        <label className="block font-semibold">Product Image</label>
-        <input
-          type="file"
-          accept="image/*"
-          className="mb-4 p-2 w-full border"
-          onChange={handleBaseImageUpload}
-        />
-
-        <label className="block mb-1">Product Options</label>
-        <div className="mb-4 flex items-center gap-4">
-          <label>
-            <input
-              type="radio"
-              name="hasOptions"
-              onChange={() => setProduct({ ...product, hasOptions: true })}
-            />{" "}
-            Yes
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="hasOptions"
-              onChange={() =>
-                setProduct({
-                  ...product,
-                  hasOptions: false,
-                  options: [],
-                  price: "",
-                  stock: ""
-                })
-              }
-            />{" "}
-            No
-          </label>
+    <div className="flex justify-center items-start min-h-screen bg-gray-100 pt-10 pb-10">
+      <div className="w-full max-w-2xl p-6 shadow-lg bg-white rounded-md overflow-y-auto">
+        {/* ส่วนหัว */}
+        <div className="flex justify-between items-center mb-4">
+        <button
+        onClick={() => navigate(-1)}
+        className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
+      >
+        Back
+      </button>
+          <h1 className="text-3xl font-semibold py-2">Add Product</h1>
+          <div className="w-20"></div>
         </div>
+        <hr className="mb-6" />
 
-        {/* ถ้า No => ให้ใส่ price / stock ของสินค้าได้เลย */}
-        {!product.hasOptions && (
-          <div className="mb-4 border p-2 rounded">
-            <label className="block mb-1">Price</label>
+        {/* ฟอร์ม */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-lg font-medium mb-2">Product Name</label>
             <input
-              type="number"
-              className="border p-2 w-full mb-4"
-              onChange={(e) => setProduct({ ...product, price: e.target.value })}
-            />
-
-            <label className="block mb-1">Stock Quantity</label>
-            <input
-              type="number"
-              className="border p-2 w-full mb-4"
-              onChange={(e) => setProduct({ ...product, stock: e.target.value })}
+              type="text"
+              placeholder="Enter product name"
+              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-pink-500"
+              onChange={(e) => setProduct({ ...product, name: e.target.value })}
             />
           </div>
-        )}
 
-        {/* ถ้า Yes => ให้เพิ่ม Option ได้ */}
-        {product.hasOptions && (
-          <div className="mb-4">
-            <div className="flex gap-2 mb-2">
-              <label className="block mb-1">Add Option</label>
-              <input
-                type="text"
-                className="border p-2 flex-grow"
-                value={newOption}
-                onChange={(e) => setNewOption(e.target.value)}
-              />
-              <button
-                onClick={addOption}
-                className="bg-blue-500 text-white px-4 py-2 rounded"
-              >
-                ➕
-              </button>
-            </div>
+          <div>
+            <label className="block text-lg font-medium mb-2">Category</label>
+            <input
+              type="text"
+              placeholder="Enter product category"
+              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-pink-500"
+              onChange={(e) => setProduct({ ...product, category: e.target.value })}
+            />
+          </div>
 
-            {product.options.map((opt, index) => (
-              <div key={index} className="flex items-center gap-2 mb-2">
-                <p>{opt.name}</p>
+          <div>
+            <label className="block text-lg font-medium mb-2">Description</label>
+            <textarea
+              rows="4"
+              placeholder="Enter product description"
+              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-pink-500"
+              onChange={(e) => setProduct({ ...product, description: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-lg font-medium mb-2">Product Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none"
+              onChange={handleBaseImageUpload}
+            />
+          </div>
+
+          <div>
+            <label className="block text-lg font-medium mb-2">Product Options</label>
+            <div className="flex items-center gap-4 mb-2">
+              <label className="flex items-center gap-1">
                 <input
                   type="radio"
-                  name="mainOption"
-                  onChange={() => setAsMainOption(index)}
-                  checked={opt.isMain}
-                />{" "}
-                Main Option
-              </div>
-            ))}
-          </div>
-        )}
+                  name="hasOptions"
+                  onChange={() => setProduct({ ...product, hasOptions: true })}
+                />
+                Yes
+              </label>
+              <label className="flex items-center gap-1">
+                <input
+                  type="radio"
+                  name="hasOptions"
+                  onChange={() =>
+                    setProduct({
+                      ...product,
+                      hasOptions: false,
+                      options: [],
+                      price: "",
+                      stock: "",
+                    })
+                  }
+                />
+                No
+              </label>
+            </div>
 
-        <button
-          onClick={openModal}
-          className="w-full bg-pink-500 text-white py-2 rounded-lg"
-        >
-          Next
-        </button>
+            {!product.hasOptions && (
+              <div className="border border-gray-300 p-3 rounded-lg space-y-4">
+                <div>
+                  <label className="block text-lg font-medium mb-2">Price</label>
+                  <input
+                    type="number"
+                    placeholder="Enter price"
+                    className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-pink-500"
+                    onChange={(e) => setProduct({ ...product, price: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-lg font-medium mb-2">Stock Quantity</label>
+                  <input
+                    type="number"
+                    placeholder="Enter stock quantity"
+                    className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-pink-500"
+                    onChange={(e) => setProduct({ ...product, stock: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
+
+            {product.hasOptions && (
+              <div className="border border-gray-300 p-3 rounded-lg space-y-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-lg font-medium">Add Option:</label>
+                  <input
+                    type="text"
+                    className="border border-gray-300 rounded-lg p-2 flex-grow focus:outline-none focus:border-pink-500"
+                    placeholder="e.g. Size, Color"
+                    value={newOption}
+                    onChange={(e) => setNewOption(e.target.value)}
+                  />
+                  <button
+                    onClick={addOption}
+                    className="bg-rose-600 text-white px-4 py-2 rounded hover:bg-rose-700 transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+
+                {product.options.map((opt, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <p>{opt.name}</p>
+                    <input
+                      type="radio"
+                      name="mainOption"
+                      checked={opt.isMain}
+                      onChange={() => setAsMainOption(index)}
+                    />
+                    <span className="text-sm">Main Option</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={openModal}
+            className="w-full bg-rose-600 text-white py-2 rounded-lg hover:bg-rose-700 transition-colors"
+          >
+            Next
+          </button>
+        </div>
       </div>
 
-      {/* เรียกใช้ VariantModal (component) */}
       <VariantModal
-        show={showModal && product.hasOptions} // ถ้า Yes => แสดง
-        onClose={() => setShowModal(false)}    // ปิด Modal
-        productOptions={product.options}       // ส่ง options ไปให้ Modal
-        baseImage={product.baseImage}          // ส่งรูปหลัก
-        onSubmitVariant={(newVar) => handleSubmitVariant(newVar)} // เมื่อกด Submit ใน Modal
+        show={showModal && product.hasOptions}
+        onClose={() => setShowModal(false)}
+        productOptions={product.options}
+        baseImage={product.baseImage}
+        onSubmitVariant={(newVar) => handleSubmitVariant(newVar)}
       />
     </div>
   );

@@ -9,7 +9,6 @@ import FormAddWeightClass from "../pages/events/AddEvent/AddWeight";
 import FormAddResult from "../pages/events/AddResult";
 
 
-
 function EventRoutes() {
   return (
       <Routes>

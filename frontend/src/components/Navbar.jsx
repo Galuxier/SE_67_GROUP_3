@@ -16,7 +16,7 @@ function Navbar() {
 
   const handleLogout = () => {
     logout();
-    navigate("/login"); // Redirect ไปยังหน้า login หลังจากล็อกเอาท์
+    navigate("/login"); // เปลี่ยนเส้นทางไปที่หน้า Home หลังจาก logout
   };
 
   const path = [
@@ -58,8 +58,6 @@ function Navbar() {
               </button>
             </div>
           </form>
-
-         
 
          {/* Profile dropdown หรือปุ่ม Login/Signup */}
           {user ? (
