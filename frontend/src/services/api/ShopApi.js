@@ -21,3 +21,23 @@ export async function registerShop(ShopData) {
     }
     
 }
+
+export const updateShop = async (id, shopData) => {
+  try {
+    const response = await api.put(`/shop/${id}`, shopData); // ใช้ PUT หรือ PATCH ตามที่ backend กำหนด
+    return response.data;
+  } catch (error) {
+    console.error("Error updating shop:", error);
+    throw error;
+  }
+};
+
+export const getShopFromId = async (id) => {
+    try {
+      const response = await api.get(`/shop/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching shop:", error);
+      throw error;
+    }
+  };

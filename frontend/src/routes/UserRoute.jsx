@@ -9,7 +9,7 @@ function UserRoutes() {
       {/* มี Layout(Navbar) */}
       <Route path="/" element={<MainLayout />}>
         <Route index element={<UserProfile />} />
-        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/profile/:username" element={<UserProfile />} />
       </Route>
 
       {/* ไม่มี Layout(Navbar) */}

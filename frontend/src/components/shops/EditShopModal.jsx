@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AddressForm from "../AddressForm";
+import { updateShop } from "../../services/api/ShopApi"; // นำเข้า API service
 
 export default function EditShopModal({ show, onClose, shopData, onSave }) {
   const [formData, setFormData] = useState(() => ({
@@ -16,7 +17,6 @@ export default function EditShopModal({ show, onClose, shopData, onSave }) {
       province: shopData?.address?.province || "",
       district: shopData?.address?.district || "",
       subdistrict: shopData?.address?.subdistrict || "",
-      street: shopData?.address?.street || "",
       postal_code: shopData?.address?.postal_code || "",
       latitude: shopData?.address?.latitude || "",
       longitude: shopData?.address?.longitude || "",
@@ -58,8 +58,16 @@ export default function EditShopModal({ show, onClose, shopData, onSave }) {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = () => {
-    onSave(formData);
+  const handleSubmit = async () => {
+    try {
+      // เรียก API เพื่ออัปเดตข้อมูลร้านค้า
+      const updatedShop = await updateShop(shopData._id, formData); // ใช้ shopData._id เพื่อระบุร้านค้าที่ต้องการอัปเดต
+      onSave(updatedShop); // ส่งข้อมูลที่อัปเดตกลับไปยังหน้า ShopProfile
+      onClose(); // ปิด Modal
+    } catch (error) {
+      console.error("Error updating shop:", error);
+      alert("Failed to update shop. Please try again."); // แจ้งเตือนผู้ใช้หากเกิดข้อผิดพลาด
+    }
   };
 
   if (!show) return null;
@@ -82,14 +90,6 @@ export default function EditShopModal({ show, onClose, shopData, onSave }) {
             name="shop_name"
             value={formData.shop_name}
             onChange={handleChange}
-            className="mb-4 p-2 w-full border"
-          />
-
-          <label className="block font-semibold">Shop Logo</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
             className="mb-4 p-2 w-full border"
           />
 
@@ -131,6 +131,7 @@ export default function EditShopModal({ show, onClose, shopData, onSave }) {
                   required
                 />
               </div>
+
               {/* Line ID */}
               <div className="flex items-center">
                 <label className="w-24 text-gray-700">Line ID:</label>
@@ -159,7 +160,12 @@ export default function EditShopModal({ show, onClose, shopData, onSave }) {
             </div>
           </div>
 
-          <AddressForm/>
+          <AddressForm
+            initialData={formData.address}
+            onChange={(newAddress) => {
+              setFormData({ ...formData, address: newAddress });
+            }}
+          />
 
           <button
             onClick={handleSubmit}

@@ -1,14 +1,34 @@
 import { Request, Response } from 'express';
+import path from 'path';
 import GymService from '../services/gym.service';
 
 // สร้างโรงยิมใหม่
 export const createGymController = async (req: Request, res: Response) => {
   try {
-    console.log(req.body);
-    const newGym = await GymService.add(req.body);
-    res.status(201).json(newGym);
+    const { owner_id, gym_name, description, contact, address } = req.body;
+
+    // ตรวจสอบและระบุประเภทของ req.files
+    const files = req.files as Express.Multer.File[] | undefined;
+
+    // กำหนด basePath ให้ตรงกับตำแหน่งของโฟลเดอร์ uploads
+    const basePath = path.join(__dirname, '../uploads');
+
+    // ดึง path ของไฟล์ที่อัปโหลดและตัดส่วนที่ไม่จำเป็นออก
+    const filePaths = files?.map((file) => {
+      // ใช้ path.relative() เพื่อตัดส่วนของ path ที่ไม่จำเป็น
+      return path.relative(basePath, file.path);
+    }) || [];
+
+    // สร้าง Gym โดยใช้ GymService
+    const gym = await GymService.createGym(
+      { owner_id, gym_name, description, contact, address },
+      filePaths
+    );
+
+    res.status(201).json({ success: true, data: gym });
   } catch (err) {
-    res.status(400).json({ message: 'Error creating gym', error: err });
+    console.error('Error creating gym:', err);
+    res.status(500).json({ message: 'Error creating gym', error: err });
   }
 };
 
@@ -36,7 +56,30 @@ export const getGymByIdController = async (req: Request, res: Response) => {
   }
 };
 
-// อัปเดตข้อมูลโรงยิม
+// export const updateGymController = async (req: Request, res: Response) => {
+//   try {
+//     const { owner_id, gym_name, description, contact, address } = req.body;
+
+//     // ตรวจสอบและระบุประเภทของ req.files
+//     const files = req.files as Express.Multer.File[] | undefined;
+
+//     // ดึง path ของไฟล์ที่อัปโหลด
+//     const filePaths = files?.map((file) => file.path) || [];
+
+//     // อัปเดตข้อมูลโรงยิมโดยใช้ GymService
+//     const updatedGym = await GymService.updateGym(
+//       req.params.id, // gymId
+//       { owner_id, gym_name, description, contact, address }, // ข้อมูลทั่วไป
+//       filePaths // path ของไฟล์ที่อัปโหลด
+//     );
+
+//     res.status(200).json({ success: true, data: updatedGym });
+//   } catch (err) {
+//     res.status(500).json({ message: "Error updating gym", error: err });
+//   }
+// };
+
+// อัปเดตข้อมูลโรงยิม 
 export const updateGymController = async (req: Request, res: Response) => {
   try {
     const updatedGym = await GymService.update(req.params.id, req.body);

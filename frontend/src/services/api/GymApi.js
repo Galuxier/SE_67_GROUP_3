@@ -1,14 +1,42 @@
 import { api } from "../Axios";
 
-export async function CreateGym(GymData) {
-    try{
-        const response = await api.post('/gyms', GymData);
-        return response.data;
-    } catch(error){
-        console.error('Create Gym Failed: ', error)
-        throw error;
-    }   
-}
+export async function CreateGym(gymData) {
+    try {
+      const response = await api.post("/gyms", gymData, {
+        headers: {
+          "Content-Type": "multipart/form-data", // กำหนด headers สำหรับ FormData
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Create Gym Failed: ", error);
+      throw error;
+    }
+  }
+
+// export const updateGym = async (gymId, formData) => {
+//   try {
+//     const response = await api.put(`/gym/${gymId}`, formData, {
+//       headers: {
+//         "Content-Type": "multipart/form-data", // กำหนด headers สำหรับ FormData
+//       },
+//     });
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error updating gym:", error);
+//     throw error;
+//   }
+// };
+
+export const updateGym = async (gymId, formData) => {
+  try {
+    const response = await api.put(`/gym/${gymId}`, formData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating gym:", error);
+    throw error;
+  }
+};
 
 export async function getAllGyms() {
     try{

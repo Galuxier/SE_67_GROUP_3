@@ -23,8 +23,8 @@ export const register = async (req: Request, res: Response) => {
 // เข้าสู่ระบบ
 export const login = async (req: Request, res: Response) => {
   try {
-    const { token, user } = await loginUser(req.body); // ส่ง req.body ไปยัง service
-    res.json({ token, user });
+    const { token } = await loginUser(req.body); // ส่ง req.body ไปยัง service
+    res.json({ token });
   } catch (err) {
     if (err instanceof Error) {
       res.status(400).json({ message: err.message }); // ส่งข้อความผิดพลาดกลับไปยัง Frontend
