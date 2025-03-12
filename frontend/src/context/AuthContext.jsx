@@ -1,4 +1,5 @@
 import { createContext, useState, useContext, useEffect } from "react";
+import { jwtDecode} from 'jwt-decode';
 
 const AuthContext = createContext();
 
@@ -7,7 +8,8 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
   // ฟังก์ชัน login
-  const login = (userData) => {
+  const login = (token) => {
+    const userData = jwtDecode(token);
     setIsLoggedIn(true);
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData)); // บันทึกข้อมูลผู้ใช้ใน localStorage
@@ -17,7 +19,7 @@ export function AuthProvider({ children }) {
   // ฟังก์ชัน logout
   const logout = () => {
     setIsLoggedIn(false);
-    setUser(null);
+    setUser(null);  
     localStorage.removeItem("user"); 
     localStorage.removeItem("isLoggedIn"); 
   };

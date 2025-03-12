@@ -21,6 +21,20 @@ export const getUsersController = async (req: Request, res: Response) => {
   }
 };
 
+export const getUserProfileController = async (req: Request, res: Response) => {
+  try{
+    const user = await UserService.getUserProfile(req.params.username);
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    res.status(200).json(user);
+  }catch (err) {
+    res.status(500).json({ message: 'Error fetching user', error: err });
+  }
+
+}
+
 // ดึงข้อมูลผู้ใช้จาก _id
 export const getUserByIdController = async (req: Request, res: Response) => {
   try {

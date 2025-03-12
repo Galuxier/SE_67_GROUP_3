@@ -169,7 +169,6 @@ const EventSchema = new Schema<EventDocument>({
   }],
 });
 
-// สร้างโมเดล Event
 
 
 export const Event = model<EventDocument>('Event', EventSchema);

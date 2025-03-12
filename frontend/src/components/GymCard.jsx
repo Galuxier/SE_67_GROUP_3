@@ -35,16 +35,16 @@ const GymCardItem = ({ gym, onClick }) => {
     }
 
     return () => {
-      if (interval) clearInterval(interval); // ลบ interval เมื่อเมาส์ออกหรือคอมโพเนนต์ถูกถอด
+      if (interval) clearInterval(interval);
     };
   }, [isHovered, gym.gym_image_url]);
 
   return (
     <button
-      className="max-w-xs rounded overflow-hidden shadow-lg bg-white text-left cursor-pointer transition transform hover:scale-105"
+      className={`max-w-xs rounded overflow-hidden shadow-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-white text-left cursor-pointer transition transform hover:scale-105`}
       onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)} // เมื่อเมาส์ชี้
-      onMouseLeave={() => setIsHovered(false)} // เมื่อเมาส์ออก
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <div className="w-full aspect-[4/3] relative">
         {gym.gym_image_url?.map((image, index) => (
@@ -53,22 +53,27 @@ const GymCardItem = ({ gym, onClick }) => {
             className={`w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-1000 ${
               index === currentImageIndex ? "opacity-100" : "opacity-0"
             }`}
-            src={`http://10.35.145.93:3000/images/${image.split('/').pop()}`}
+            src={`http://10.35.145.93:3000/images/${image}`}
             alt={`Gym Image ${index}`}
           />
         ))}
       </div>
       <div className="px-6 py-4">
-        <div className="text-gray-700 text-base mb-3">{gym.gym_name}</div>
+        {/* Gym Name */}
+        <div className="text-base mb-3">
+          {gym.gym_name}
+        </div>
+
+        {/* Address */}
         <div className="flex items-center font-base text-lg mb-2">
           <span className="mr-2">
-            <FaMapMarkerAlt />
+            <FaMapMarkerAlt className="text-gray-700 dark:text-white" />
           </span>
-          <span className="text-gray-700 text-base mr-1">
-            {gym.address.district} ,
+          <span className="text-base mr-1 text-gray-700 dark:text-white">
+            {gym.address?.district || "-"} ,
           </span>
-          <span className="text-gray-700 text-base">
-            {gym.address.province}
+          <span className="text-base text-gray-700 dark:text-white">
+            {gym.address?.province || "-"}
           </span>
         </div>
       </div>

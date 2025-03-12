@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import path from 'path';
 import GymService from '../services/gym.service';
 
 // สร้างโรงยิมใหม่
@@ -9,9 +10,15 @@ export const createGymController = async (req: Request, res: Response) => {
     // ตรวจสอบและระบุประเภทของ req.files
     const files = req.files as Express.Multer.File[] | undefined;
 
-    // ดึง path ของไฟล์ที่อัปโหลด
-    const filePaths = files?.map((file) => file.path) || [];
-    
+    // กำหนด basePath ให้ตรงกับตำแหน่งของโฟลเดอร์ uploads
+    const basePath = path.join(__dirname, '../uploads');
+
+    // ดึง path ของไฟล์ที่อัปโหลดและตัดส่วนที่ไม่จำเป็นออก
+    const filePaths = files?.map((file) => {
+      // ใช้ path.relative() เพื่อตัดส่วนของ path ที่ไม่จำเป็น
+      return path.relative(basePath, file.path);
+    }) || [];
+
     // สร้าง Gym โดยใช้ GymService
     const gym = await GymService.createGym(
       { owner_id, gym_name, description, contact, address },
@@ -20,7 +27,8 @@ export const createGymController = async (req: Request, res: Response) => {
 
     res.status(201).json({ success: true, data: gym });
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching gyms', error: err });
+    console.error('Error creating gym:', err);
+    res.status(500).json({ message: 'Error creating gym', error: err });
   }
 };
 

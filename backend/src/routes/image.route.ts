@@ -3,7 +3,8 @@ import { serveImage } from '../controllers/image.controller';
 
 const router = express.Router();
 
-// GET /images/:imageName
-router.get('/:imageName', serveImage);
+// Route สำหรับรับ request ภาพ
+// GET /images/*
+router.get('/*', serveImage);
 
 export default router;

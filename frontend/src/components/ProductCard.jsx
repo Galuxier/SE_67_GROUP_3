@@ -4,7 +4,7 @@ function ProductCard({ products = [] }) {
   const navigate = useNavigate();
 
   const getLowestPrice = (p) => {
-    if (p.variants && p.variants.length > 0) {
+    if (p.variants?.length > 0) {
       const allPrices = p.variants.map((v) => v.price);
       return Math.min(...allPrices);
     }
@@ -22,25 +22,39 @@ function ProductCard({ products = [] }) {
         return (
           <button
             key={p.id}
-            className="max-w-xs rounded overflow-hidden shadow-lg bg-white text-left cursor-pointer transition transform hover:scale-105"
+            className="max-w-xs rounded overflow-hidden shadow-lg bg-white dark:bg-gray-700 text-left cursor-pointer transition transform hover:scale-105"
             onClick={() => handleProductClick(p)}
           >
-            <img
-              className="w-full aspect-[4/3] object-cover"
-              src={p.image_url}
-              alt={p.product_name}
-            />
+            {/* Image */}
+            <div className="w-full aspect-[4/3] bg-gray-100 dark:bg-gray-600">
+              {p.image_url ? (
+                <img
+                  className="w-full h-full object-cover"
+                  src={p.image_url}
+                  alt={p.product_name || "Product Image"}
+                />
+              ) : (
+                <div className="flex justify-center items-center h-full text-gray-400 dark:text-gray-500">
+                  No Image
+                </div>
+              )}
+            </div>
+
+            {/* Product Info */}
             <div className="px-6 py-4">
-              <div className="text-gray-700 text-base font-medium mb-3">
-                {p.product_name}
+              {/* Product Name */}
+              <div className="text-gray-700 dark:text-white text-base font-medium mb-3">
+                {p.product_name || "Unnamed Product"}
               </div>
+
+              {/* Product Price */}
               {displayPrice ? (
                 <div className="flex items-center text-lg">
-                  <span className="text-gray-700 mr-1">THB</span>
-                  <span className="text-gray-700">{displayPrice}</span>
+                  <span className="text-gray-700 dark:text-gray-300 mr-1">THB</span>
+                  <span className="text-gray-700 dark:text-gray-300">{displayPrice}</span>
                 </div>
               ) : (
-                <div className="text-gray-500">No price</div>
+                <div className="text-gray-500 dark:text-gray-400">No price</div>
               )}
             </div>
           </button>

@@ -12,6 +12,19 @@ export async function getUser(_id) {
     
 }
 
+export async function getUserProfile(username) {
+    try{
+        console.log("username: ", username);
+        const response = await api.get(`/user/profile/${username}`);
+        console.log(response.data);
+        return response.data;
+    } catch(error){
+        console.error('Failed to get User: ', error);
+        throw error;
+    }
+    
+}
+
 export async function updateUser(userId, userData) { 
     try {
         const response = await api.put(`/user/${userId}`, userData);

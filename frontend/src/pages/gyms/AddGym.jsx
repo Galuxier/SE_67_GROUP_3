@@ -123,7 +123,7 @@ const Addgym = () => {
       for (let [key, value] of formData.entries()) {
         console.log(key, value);
       }
-
+      // console.log(formData);
       const response = await CreateGym(formData); // ส่ง FormData ไปยัง API
       console.log("Create Gym Successful:", response);
       navigate("/gym");

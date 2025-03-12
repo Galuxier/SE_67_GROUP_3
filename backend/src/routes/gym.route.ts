@@ -6,11 +6,11 @@ import {
     updateGymController,
     deleteGymController
 } from '../controllers/gym.controller';
-import { uploadMiddleware } from '../middlewares/upload';
+import { gymImagesUpload } from '../middlewares/uploads/gymImages.upload';
 
 const router = express.Router();
 
-router.post('/gyms', uploadMiddleware, createGymController);
+router.post('/gyms', gymImagesUpload, createGymController);
 
 router.get('/gyms', getGymsController);
 
