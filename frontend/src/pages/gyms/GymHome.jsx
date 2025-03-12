@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { getAllGyms } from "../../services/api/GymApi";
 import GymCard from "../../components/GymCard";
 import provinceData from "../../data/thailand/address/provinces.json";
+import axios from "axios";
 
 function GymHome() {
   const [province, setProvince] = useState("All");
@@ -88,6 +89,8 @@ function GymHome() {
                   <option>-- Select --</option>
                 </select>
               </div> */}
+              
+
             </div>
           </div>
 

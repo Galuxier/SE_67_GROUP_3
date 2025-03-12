@@ -97,6 +97,10 @@ const Addgym = () => {
     }
   };
 
+  const Back = () => {
+    navigate(-1);
+  };
+
   return (
     <div className="flex justify-center items-start min-h-screen bg-gray-100 pt-10 pb-10">
       <div className="w-full max-w-2xl p-6 shadow-lg bg-white rounded-md overflow-y-auto">
@@ -112,120 +116,120 @@ const Addgym = () => {
         </div>
         <hr className="mb-6" />
 
-        <form onSubmit={handleSubmit}>
-          {/* ชื่อโรงยิม */}
-          <div className="mb-6">
-            <label className="block text-lg font-medium mb-2">Name</label>
-            <input
-              type="text"
-              name="gym_name"
-              value={gymData.gym_name}
-              onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-pink-500"
-              placeholder="Enter gym name"
-              required
-            />
-          </div>
-
-          {/* คำอธิบาย */}
-          <div className="mb-6">
-            <label className="block text-lg font-medium mb-2">Description</label>
-            <textarea
-              name="description"
-              value={gymData.description}
-              onChange={handleInputChange}
-              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-              placeholder="Enter gym description"
-              rows="4"
-              required
-            />
-          </div>
-
-          {/* ช่องกรอกข้อมูลติดต่อ */}
-          <div className="mb-6">
-            <label className="block text-lg font-medium mb-2">Contact</label>
-            <div className="space-y-4">
-              {/* Email */}
-              <div className="flex items-center">
-                <label className="w-24 text-gray-700">Email:</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={gymData.contact.email}
-                  onChange={handleContactChange}
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-                  placeholder="Enter email (Required)"
-                  required
-                />
-              </div>
-
-              {/* Tel */}
-              <div className="flex items-center">
-                <label className="w-24 text-gray-700">Tel:</label>
-                <input
-                  type="tel"
-                  name="tel"
-                  value={gymData.contact.tel}
-                  onChange={handleContactChange}
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-                  placeholder="Enter telephone number (Required)"
-                  required
-                />
-              </div>
-
-              {/* Line ID */}
-              <div className="flex items-center">
-                <label className="w-24 text-gray-700">Line ID:</label>
-                <input
-                  type="text"
-                  name="line"
-                  value={gymData.contact.line}
-                  onChange={handleContactChange}
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-                  placeholder="Enter Line ID (Optional)"
-                />
-              </div>
-
-              {/* Facebook */}
-              <div className="flex items-center">
-                <label className="w-24 text-gray-700">Facebook:</label>
-                <input
-                  type="text"
-                  name="facebook"
-                  value={gymData.contact.facebook}
-                  onChange={handleContactChange}
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-                  placeholder="Enter Facebook (Optional)"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* อัปโหลดรูปภาพ */}
-          <div className="mb-6">
-            <label className="block text-lg font-medium mb-2">Photo</label>
-            <div className="relative w-full">
+          <form onSubmit={handleSubmit}>
+            {/* ชื่อโรงยิม */}
+            <div className="mb-6">
+              <label className="block text-lg font-medium mb-2">Name</label>
               <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                onChange={handleFileChange}
-                id="fileInput"
-                accept="image/*"
+                type="text"
+                name="gym_name"
+                value={gymData.gym_name}
+                onChange={handleInputChange}
+                className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-pink-500"
+                placeholder="Enter gym name"
+                required
               />
-              <button
-                className="w-full border border-gray-300 rounded-lg py-2 px-4 flex items-center justify-between cursor-default"
-              >
-                <span className="text-gray-500 truncate pointer-events-none">
-                  {fileSelected ? fileName : "Choose a file"}
-                </span>
-                <PaperClipIcon
-                  onClick={handleIconClick}
-                  className="h-5 w-5 text-gray-400 cursor-pointer"
-                />
-              </button>
             </div>
-          </div>
+
+            {/* คำอธิบาย */}
+            <div className="mb-6">
+              <label className="block text-lg font-medium mb-2">
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={gymData.description}
+                onChange={handleInputChange}
+                className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
+                placeholder="Enter gym description"
+                rows="4"
+                required
+              />
+            </div>
+
+            {/* ช่องกรอกข้อมูลติดต่อ */}
+            <div className="mb-6">
+              <label className="block text-lg font-medium mb-2">Contact</label>
+              <div className="space-y-4">
+                {/* Email */}
+                <div className="flex items-center">
+                  <label className="w-24 text-gray-700">Email:</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={gymData.contact.email}
+                    onChange={handleContactChange}
+                    className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
+                    placeholder="Enter email (Required)"
+                    required
+                  />
+                </div>
+
+                {/* Tel */}
+                <div className="flex items-center">
+                  <label className="w-24 text-gray-700">Tel:</label>
+                  <input
+                    type="tel"
+                    name="tel"
+                    value={gymData.contact.tel}
+                    onChange={handleContactChange}
+                    className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
+                    placeholder="Enter telephone number (Required)"
+                    required
+                  />
+                </div>
+
+                {/* Line ID */}
+                <div className="flex items-center">
+                  <label className="w-24 text-gray-700">Line ID:</label>
+                  <input
+                    type="text"
+                    name="line"
+                    value={gymData.contact.line}
+                    onChange={handleContactChange}
+                    className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
+                    placeholder="Enter Line ID (Optional)"
+                  />
+                </div>
+
+                {/* Facebook */}
+                <div className="flex items-center">
+                  <label className="w-24 text-gray-700">Facebook:</label>
+                  <input
+                    type="text"
+                    name="facebook"
+                    value={gymData.contact.facebook}
+                    onChange={handleContactChange}
+                    className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
+                    placeholder="Enter Facebook (Optional)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* อัปโหลดรูปภาพ */}
+            <div className="mb-6">
+              <label className="block text-lg font-medium mb-2">Photo</label>
+              <div className="relative w-full">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileChange}
+                  id="fileInput"
+                  accept="image/*"
+                />
+                <button className="w-full border border-gray-300 rounded-lg py-2 px-4 flex items-center justify-between cursor-default">
+                  <span className="text-gray-500 truncate pointer-events-none">
+                    {fileSelected ? fileName : "Choose a file"}
+                  </span>
+                  <PaperClipIcon
+                    onClick={handleIconClick}
+                    className="h-5 w-5 text-gray-400 cursor-pointer"
+                  />
+                </button>
+              </div>
+            </div>
 
           {/* ตำแหน่งที่ตั้ง */}
           <AddressForm
