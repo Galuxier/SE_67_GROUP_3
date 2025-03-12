@@ -36,7 +36,7 @@ function CourseList() {
             image_url: new URL("../assets/images/muaythai-003.png", import.meta.url).href, 
             course_name: "Fighter's Journey", 
             gym: "Phuket Fight Club",
-            level: "Advanced",
+            level: "Advance",
             price: 2500,
             start_date: "2025-03-01",
             end_date: "2025-05-01",
@@ -46,29 +46,29 @@ function CourseList() {
             ]
         },
         { id: 4, 
-            image_url: new URL("../assets/images/muaythai-004.jpg", import.meta.url).href, 
+            image_url: new URL("../assets/images/muaythai-003.png", import.meta.url).href, 
             course_name: "Elite Muaythai", 
             gym: "Bangkok Fight Lab",
-            level: "Intermediate",
+            level: "Advance",
             price: 2500,
             start_date: "2025-04-01",
             end_date: "2025-06-01",
             description: "An intermediate course to refine Muaythai skills.",
             activities: [
-                { description: "Muaythai combination drills", date: "2025-04-01", startTime: "11:00 AM",endTime: "12:00 AM", trainer: [["Trainer D"]] }
+                { description: "Muaythai combination drills", date: "2025-04-01", startTime: "11:00 ",endTime: "12:00 ", trainer: [["Trainer D"]] }
             ]
         },
         { id: 5, 
-            image_url: new URL("../assets/images/muaythai-005.jpg", import.meta.url).href, 
+            image_url: new URL("../assets/images/muaythai-003.png", import.meta.url).href, 
             course_name: "Pro Fighter Course", 
             gym: "Tiger Muay Thai",
-            level: "Professional",
+            level: "Advance",
             price: 3000,
             start_date: "2025-05-01",
             end_date: "2025-07-01",
             description: "Designed for professional fighters looking to improve their technique.",
             activities: [ 
-                { description: "Professional-level fight strategies", date: "2025-05-01", time: "12:00 PM", trainer: ["Trainer E"] }
+                { description: "Professional-level fight strategies", date: "2025-05-01", startTime: "11:00",endTime: "12:00", trainer: ["Trainer E"] }
             ]
         },
         
