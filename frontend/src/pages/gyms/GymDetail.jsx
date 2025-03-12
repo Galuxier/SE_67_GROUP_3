@@ -34,6 +34,7 @@ const GymProfile = () => {
     setIsModalOpen(false);
   };
 
+
   const Back = () => {
     navigate(-1);
   };

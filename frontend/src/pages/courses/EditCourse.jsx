@@ -98,12 +98,13 @@ export default function EditCourse() {
         startDate: course?.start_date || "",
         endDate: course?.end_date || "",
         price: course?.price || "",
-        details: course?.description || "",
-        Activity: course?.Activity || "",
+        description: course?.description || "",
+        activities: course?.activities || [],
       };
     }
   });
-  
+ 
+  // console.log("99999999999999999999",formDataEdit.activities);
 
   const [errors, setErrors] = useState({});
 
@@ -129,12 +130,13 @@ export default function EditCourse() {
     if (validateForm()) {
       // บันทึกข้อมูลที่แก้ไขและส่งต่อไป
       localStorage.setItem("formDataEdit", JSON.stringify(formDataEdit));
-      console.log("formDataEdit: ", formDataEdit);
+      // console.log("formDataEdit: ", formDataEdit);
       navigate("/course/editCourseFrom", { state: { formDataEdit ,course} });
     }
   };
 
   const handleBack = () => {
+    localStorage.removeItem("formDataEdit");
     navigate(-1);
   };
 
@@ -150,11 +152,12 @@ export default function EditCourse() {
             onChange={handleChange} 
           />
           {errors.courseName && <p className="text-red-500 text-sm">{errors.courseName}</p>}
-
+          
           <RadioGroup
             label="Level"
             name="level"
-            options={["For Kids", "Beginner", "Advance"]}
+            options={["Forkids", "Beginner", "Advance"]}
+            
             selectedValue={formDataEdit.level || ""}
             onChange={handleChange}
           />
@@ -190,9 +193,9 @@ export default function EditCourse() {
           {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
 
           <TextArea 
-            label="Details" 
-            name="details" 
-            value={formDataEdit.details} 
+            label="Description" 
+            name="description" 
+            value={formDataEdit.description} 
             onChange={handleChange} 
           />
 

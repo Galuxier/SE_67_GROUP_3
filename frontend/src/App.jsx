@@ -10,6 +10,8 @@ import LoadingSpinner from "./components/LoadingSpinner"; // นำเข้า 
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Register"));
+import Ticket from "./pages/Ticket";
+
 
 // Lazy load routes
 const GymRoutes = lazy(() => import("./routes/GymRoute"));
@@ -17,6 +19,7 @@ const CourseRoutes = lazy(() => import("./routes/CourseRoute"));
 const EventRoutes = lazy(() => import("./routes/EventRoute"));
 const ShopRoutes = lazy(() => import("./routes/ShopRoute"));
 const UserRoutes = lazy(() => import("./routes/UserRoute"));
+
 
 const App = () => {
   return (
@@ -35,6 +38,10 @@ const App = () => {
               {/* Routes ที่ไม่มี Layout (Login/Signup) */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+          {/* Routes ที่ไม่มี Layout (Login/Signup) */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/ticket" element={<Ticket/>} />
 
               {/* ใช้ Component ของแต่ละหมวด */}
               <Route path="/gym/*" element={<GymRoutes />} />

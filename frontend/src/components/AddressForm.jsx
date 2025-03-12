@@ -160,7 +160,6 @@ const AddressForm = ({ onChange, initialData }) => {
                         className="flex-1 border border-gray-300 rounded-lg py-2 px-4 bg-gray-200 text-gray-500" 
                     />
                 </div>
-
                 {/* <div className="flex items-center">
                     <label className="w-24 text-gray-700">Latitude:</label>
                     <input 

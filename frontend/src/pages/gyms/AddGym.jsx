@@ -132,6 +132,10 @@ const Addgym = () => {
     }
   };
 
+  const Back = () => {
+    navigate(-1);
+  };
+
   return (
     <div className="flex justify-center items-start min-h-screen bg-gray-100 pt-10 pb-10">
       <div className="w-full max-w-2xl p-6 shadow-lg bg-white rounded-md overflow-y-auto">
