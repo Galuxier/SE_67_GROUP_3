@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import provinceData from "../data/thailand/address/provinces.json";
 import districtData from "../data/thailand/address/districts.json";
 import subDistrictData from "../data/thailand/address/subdistricts.json";
+import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
 
-const AddressForm = ({ onChange }) => {
+const AddressForm = ({ onChange, initialData }) => {
     const [selectedProvince, setSelectedProvince] = useState(null);
     const [selectedDistrict, setSelectedDistrict] = useState(null);
     const [selectedSubDistrict, setSelectedSubDistrict] = useState(null);
@@ -23,9 +24,44 @@ const AddressForm = ({ onChange }) => {
         information: "",
     });
 
+    const [position, setPosition] = useState({ lat: 15.8700, lng: 100.9925 }); // ตำแหน่งเริ่มต้นของ Marker
+    const [showMap, setShowMap] = useState(false); // state เพื่อควบคุมการแสดงแผนที่
+
+    // ตั้งค่าข้อมูลเริ่มต้นเมื่อโหลดคอมโพเนนต์
     useEffect(() => {
         setProvinces(provinceData);
-    }, []);
+
+        if (initialData) {
+            setAddressData(initialData);
+
+            const province = provinceData.find((p) => p.provinceNameTh === initialData.province);
+            if (province) {
+                setSelectedProvince(province);
+                const filteredDistricts = districtData.filter((d) => d.provinceCode === province.provinceCode);
+                setDistricts(filteredDistricts);
+
+                const district = filteredDistricts.find((d) => d.districtNameTh === initialData.district);
+                if (district) {
+                    setSelectedDistrict(district);
+                    const filteredSubDistricts = subDistrictData.filter((s) => s.districtCode === district.districtCode);
+                    setSubDistricts(filteredSubDistricts);
+
+                    const subDistrict = filteredSubDistricts.find((s) => s.subdistrictNameTh === initialData.subdistrict);
+                    if (subDistrict) {
+                        setSelectedSubDistrict(subDistrict);
+                        setPostalCode(subDistrict.postalCode);
+                    }
+                }
+            }
+        }
+    }, [initialData]);
+
+    // ตรวจสอบว่าข้อมูลครบถ้วนและแสดงแผนที่
+    useEffect(() => {
+        if (selectedProvince && selectedDistrict && selectedSubDistrict && postalCode) {
+            setShowMap(true); // แสดงแผนที่เมื่อข้อมูลครบถ้วน
+        }
+    }, [selectedProvince, selectedDistrict, selectedSubDistrict, postalCode]);
 
     const updateAddress = (newData) => {
         const updatedData = { ...addressData, ...newData };
@@ -67,6 +103,39 @@ const AddressForm = ({ onChange }) => {
     const handleAddressChange = (e) => {
         const { name, value } = e.target;
         updateAddress({ [name]: value });
+    };
+
+    // ฟังก์ชันที่เรียกเมื่อ Marker ถูกย้าย
+    const handleDragEnd = (event) => {
+        const newPosition = {
+            lat: event.latLng.lat(),
+            lng: event.latLng.lng(),
+        };
+        setPosition(newPosition); // อัปเดตตำแหน่งใหม่
+        updateAddress({ latitude: newPosition.lat, longitude: newPosition.lng }); // อัปเดตตำแหน่งใน addressData
+    };
+
+    const ShowMap = () => {
+        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+        return (
+            <APIProvider apiKey={apiKey}>
+                <Map
+                    style={{ width: '100%', height: '30vh' }}
+                    defaultCenter={position}
+                    defaultZoom={9}
+                    gestureHandling={'greedy'}
+                    disableDefaultUI={true}
+                >
+                    {/* ใช้ Marker ที่ขยับได้ */}
+                    <Marker
+                        position={position}
+                        draggable={true} // ทำให้ Marker ขยับได้
+                        onDragEnd={handleDragEnd} // เรียกฟังก์ชันเมื่อ Marker ถูกย้าย
+                    />
+                </Map>
+            </APIProvider>
+        );
     };
 
     return (
@@ -133,30 +202,6 @@ const AddressForm = ({ onChange }) => {
                     />
                 </div>
 
-                {/* <div className="flex items-center">
-                    <label className="w-24 text-gray-700">Latitude:</label>
-                    <input 
-                        type="number" 
-                        name="latitude" 
-                        value={addressData.latitude} 
-                        onChange={handleAddressChange} 
-                        className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500" 
-                        placeholder="Enter latitude" 
-                        required 
-                    />
-                </div>
-                <div className="flex items-center">
-                    <label className="w-24 text-gray-700">Longitude:</label>
-                    <input 
-                        type="number" 
-                        name="longitude" 
-                        value={addressData.longitude} 
-                        onChange={handleAddressChange} 
-                        className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500" 
-                        placeholder="Enter longitude" 
-                        required 
-                    />
-                </div> */}
                 <div className="flex items-center">
                     <label className="w-24 text-gray-700">Information:</label>
                     <input 
@@ -168,6 +213,9 @@ const AddressForm = ({ onChange }) => {
                         placeholder="Enter additional information" 
                     />
                 </div>
+
+                {/* แสดงแผนที่ถ้า showMap เป็น true */}
+                {showMap && <ShowMap />}
             </div>
         </div>
     );
