@@ -22,6 +22,7 @@ function Home() {
         <div className="flex gap-4 pb-4"> {/* เรียง ShopCard แนวนอน */}
           <ShopCard shops={data} />
         </div>
+        <Link to="/admin/dashboard">Dashboard</Link>
       </div>
     </div>
   );
