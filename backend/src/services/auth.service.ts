@@ -55,7 +55,7 @@ export const loginUser = async (credentials: { identifier: string; password: str
 
     // ค้นหาผู้ใช้ในฐานข้อมูล
     const user = await User.findOne({
-      $or: [{ email: identifier }, { user_name: identifier }],
+      $or: [{ email: identifier }, { username: identifier }],
     });
 
     // ตรวจสอบว่าพบผู้ใช้หรือไม่
@@ -70,10 +70,14 @@ export const loginUser = async (credentials: { identifier: string; password: str
     }
 
     // สร้าง token
-    const token = jwt.sign({ id: user._id }, "secretKey", { expiresIn: "1h" });
-
+    var payload = {
+      username: user.username,
+      _id: user._id,
+      role: user.role
+    }
+    const token = jwt.sign(payload, `${process.env.TOKEN_KEY}`, { expiresIn: "2h" });
     // ส่งคืน token และข้อมูลผู้ใช้
-    return { token, user };
+    return { token };
   } catch (error) {
     console.error("Login error:", error);
 

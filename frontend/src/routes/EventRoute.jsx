@@ -7,6 +7,8 @@ import FormAddSeat from "../pages/events/AddEvent/AddSeat";
 import FormAddFighter from "../pages/events/AddEvent/AddFighter";
 import FormAddWeightClass from "../pages/events/AddEvent/AddWeight";
 import FormAddResult from "../pages/events/AddResult";
+import EventDetail from "../pages/events/EventDetail";
+import RegistrationForm from "../pages/events/RegistrationForm";
 
 
 function EventRoutes() {
@@ -15,6 +17,9 @@ function EventRoutes() {
         {/* มี Layout(Navbar) */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<EventHome />} />
+          <Route path="/detail/:id" element={<EventDetail />} />
+          <Route path="/register/:eventId" element={<RegistrationForm />} />
+
         </Route>
 
         {/* ไม่มี Layout(Navbar) */}

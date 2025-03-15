@@ -1,4 +1,4 @@
-import { useLocation, Link,useNavigate } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Trainer from "../../components/Trainer";
 import { Dialog } from "@headlessui/react";
@@ -9,10 +9,10 @@ export default function CourseDetail() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const applicants = course.applicants || ["สมชาย", "สมหญิง", "สมปอง", "สมศรี"];
-
+  // console.log("กิจกรรม",course.activities);
   const handleToEditCourse = () => {
-      navigate("/course/editCourse", { state: { course } });
-  }
+    navigate("/course/editCourse", { state: { course } });
+  };
   return (
     <div className="p-10 max-w-5xl mx-auto">
       <div className="flex justify-between items-center">
@@ -27,11 +27,11 @@ export default function CourseDetail() {
           >
             ดูรายชื่อผู้สมัคร
           </button>
-          <button 
-          onClick={handleToEditCourse}
-          className="bg-rose-600 text-white text-lg px-8 py-3 rounded-xl hover:bg-rose-600" >
-           edit
-
+          <button
+            onClick={handleToEditCourse}
+            className="bg-rose-600 text-white text-lg px-8 py-3 rounded-xl hover:bg-rose-600"
+          >
+            edit
           </button>
           <Link to="/course/courseBuyFrom" state={{ course }}>
             <button className="bg-rose-600 text-white text-lg px-8 py-3 rounded-xl hover:bg-rose-600">
@@ -52,11 +52,20 @@ export default function CourseDetail() {
       <h2 className="mt-12 text-2xl font-semibold">รายละเอียดคอร์ส</h2>
       <div className="mt-5 h-auto text-base text-gray-600 bg-gray-100 p-4 rounded-lg">
         <span>
-          ราคา: {course.price} บาท <br />
-          ระดับ: {course.level} <br />
-          เราจะมาบอกว่าเราทำอะไรบ้างใน course นี้
-          <br />
-          1. สอนมวยไทย 2. สอนมวยไทย 3. สอนมวยไทย 4. สอนมวยไทย
+          price: {course.price} บาท <br />
+          level: {course.level} <br />
+          <div className="text-gray-700 text-sm mt-2">
+            <strong>Activities:</strong>
+            <ul className="list-disc pl-5 mt-2">
+              {course.activities.map((activity, index) => (
+                <li key={index}>
+                  {activity.description} on{" "}
+                  {new Date(activity.date).toLocaleDateString()} at{" "}
+                  {activity.time} with {activity.trainer.join(", ")}
+                </li>
+              ))}
+            </ul>
+          </div>
         </span>
       </div>
 
@@ -66,15 +75,21 @@ export default function CourseDetail() {
       <div className="mt-8">สถานที่ตั้ง {course.gym}</div>
 
       {/* Modal แสดงรายชื่อผู้สมัคร */}
-      <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-xl w-auto h-auto min-w-[300px] min-h-[200px] relative">
+      <Dialog
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        className="fixed inset-0 flex items-center justify-center z-50"
+      >
+        <div className="bg-white p-6 rounded-lg shadow-xl w-auto h-auto min-w-[300px] min-h-[200px] relative">
           <button
             onClick={() => setIsOpen(false)}
             className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
           >
             ✖
           </button>
-          <Dialog.Title className="text-xl font-semibold">รายชื่อผู้สมัคร</Dialog.Title>
+          <Dialog.Title className="text-xl font-semibold">
+            รายชื่อผู้สมัคร
+          </Dialog.Title>
           <ul className="mt-4 list-disc pl-6 text-gray-700">
             {applicants.map((name, index) => (
               <li key={index}>{name}</li>

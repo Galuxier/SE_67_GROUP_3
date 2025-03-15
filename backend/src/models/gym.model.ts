@@ -28,7 +28,7 @@ interface Address {
   postal_code: string;
   latitude: number;
   longitude: number;
-  information?: string; // optional field
+  information?: string;
 }
 
 // กำหนด interface สำหรับ Gym document

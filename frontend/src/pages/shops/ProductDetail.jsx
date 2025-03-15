@@ -91,7 +91,6 @@ export default function ProductDetail() {
     return Array.from(new Set(vals));
   };
 
-  // ฟังก์ชันปุ่ม
   const handleAddToCart = () => alert("Add to Cart!");
   const handleBuyNow = () => alert("Buy Now!");
 
@@ -126,7 +125,6 @@ export default function ProductDetail() {
               <p className="text-lg font-bold mb-2">Price: {displayPrice} THB</p>
               <p className="text-gray-600 mb-4">Stock: {displayStock}</p>
 
-              {/* ถ้ามี variants -> แสดงปุ่มเลือก */}
               {hasVariants && mainOption && (
                 <div className="space-y-4">
                   {/* main option */}
@@ -200,7 +198,7 @@ export default function ProductDetail() {
 
               {shop && (
                 <Link
-                  to={`/shop/shopProfile/${shop.owner_id}`}
+                  to={`/shop/profile/${shop.owner_id}`}
                   className="block p-4 border rounded bg-gray-50 hover:bg-gray-100 transition"
                 >
                   <div className="flex items-center">
@@ -214,7 +212,6 @@ export default function ProductDetail() {
                       
                     </div>
                   </div>
-                  {/* ไม่ต้องมีปุ่ม View Shop แยก: เพราะคลิกทั้งกรอบได้แล้ว */}
                 </Link>
               )}
             </div>

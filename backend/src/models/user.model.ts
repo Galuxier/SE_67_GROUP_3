@@ -6,7 +6,7 @@ export interface License {
 }
 
 export interface UserDocument extends Document {
-  user_name: string;
+  username: string;
   password: string;
   email: string;
   phone?: string;
@@ -25,7 +25,7 @@ export interface UserDocument extends Document {
 }
 
 const UserSchema = new Schema<UserDocument>({
-  user_name: { type: String, required: true },
+  username: { type: String, required: true },
   password: { type: String, required: true },
   email: { type: String, required: true },
   phone: { type: String },

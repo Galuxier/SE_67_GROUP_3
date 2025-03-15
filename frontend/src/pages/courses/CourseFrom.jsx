@@ -14,15 +14,15 @@ export default function CourseFrom() {
   const [currentDay, setCurrentDay] = useState(1);
   const [isAddActivityModalOpen, setIsAddActivityModalOpen] = useState(false);
   const [totalDays, setTotalDays] = useState(1);
-  const [courseDates, setCourseDates] = useState([]);
+  const [courseDates, setCourseDates] = useState({});
   
-  // สร้าง newActivity state ในหน้า CourseFrom โดยตรง
+  // ปรับปรุง newActivity state
   const [newActivity, setNewActivity] = useState({
     startTime: "",
     endTime: "",
     description: "",
     trainer: [],
-    day: currentDay
+    date: ""
   });
   
   // คำนวณวันทั้งหมดของคอร์สและสร้างรายการวันที่
@@ -46,38 +46,53 @@ export default function CourseFrom() {
       // คำนวณความต่างของวันและบวก 1 (เพื่อรวมวันเริ่มต้น)
       const diffTime = Math.abs(endDate - startDate);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      if (diffDays  !== Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1) {
-       setTotalDays(diffDays);
-      }
       
-      // สร้างรายการวันที่ในรูปแบบ DD/MM
+      setTotalDays(diffDays);
+      
+      // สร้างรายการวันที่ในรูปแบบ DD/MM และ YYYY-MM-DD (เหมือน EditCourseFrom)
       const dates = [];
+      const isoDateFormat = [];
       for (let i = 0; i < diffDays; i++) {
         const date = new Date(startDate);
         date.setDate(startDate.getDate() + i);
         
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        
         dates.push(`${day}/${month}`);
+        isoDateFormat.push(`${year}-${month}-${day}`);
       }
       
-      setCourseDates(dates);
+      // ตั้งค่ารายการวันที่เป็น object เหมือนใน EditCourseFrom
+      setCourseDates({
+        display: dates,
+        iso: isoDateFormat
+      });
     }
   }, [courseData]);
   
   // โหลดกิจกรรมที่บันทึกไว้
   useEffect(() => {
-    const savedActivities = JSON.parse(localStorage.getItem("activities")) || [];
-    setActivities(savedActivities);
-  }, []);
+    // ตรวจสอบว่ามีกิจกรรมใน courseData หรือไม่
+    if (courseData?.activities && courseData.activities.length > 0) {
+      setActivities(courseData.activities);
+    } else {
+      // โหลดจาก localStorage ถ้าไม่มีใน courseData
+      const savedActivities = JSON.parse(localStorage.getItem("activities")) || [];
+      setActivities(savedActivities);
+    }
+  }, [courseData]);
   
-  // อัพเดต day ใน newActivity เมื่อ currentDay เปลี่ยน
+  // อัพเดต newActivity เมื่อ currentDay เปลี่ยน (ใช้รูปแบบเดียวกับ EditCourseFrom)
   useEffect(() => {
-    setNewActivity(prev => ({
-      ...prev,
-      day: currentDay
-    }));
-  }, [currentDay]);
+    if (courseDates.iso && courseDates.iso.length > 0) {
+      setNewActivity(prev => ({
+        ...prev,
+        date: courseDates.iso[currentDay - 1]
+      }));
+    }
+  }, [currentDay, courseDates.iso]);
 
   const handleBack = () => {
     navigate(-1); // กลับไปหน้าก่อนหน้า
@@ -104,36 +119,62 @@ export default function CourseFrom() {
   };
   
   const handleCreateCourse = () => {
-    // เตรียมข้อมูลสำหรับสร้างคอร์สเรียน
+    // เตรียมข้อมูลสำหรับสร้างคอร์สเรียน (ปรับรูปแบบเหมือน EditCourseFrom)
+    const formattedActivities = activities.map((activity) => ({
+      description: activity.description,
+      date: activity.date || (courseDates.iso ? courseDates.iso[0] : "2025-01-01"),
+      startTime: activity.startTime,
+      endTime: activity.endTime,
+      trainer: activity.coachDetails
+        ? activity.coachDetails.map((coach) => coach.name)
+        : activity.trainer || [],
+    }));
+    
     const finalCourseData = {
-      ...courseData,
-      activities: activities
+      image_url: courseData?.image_url || "",
+      gym: courseData?.gym || "",
+      course_name: courseData?.course_name || "",
+      level: courseData?.level || "",
+      startDate: courseData?.startDate || "",
+      endDate: courseData?.endDate || "",
+      price: courseData?.price || "",
+      description: courseData?.description || "",
+      activities: formattedActivities
     };
     
     // บันทึกข้อมูลคอร์สที่สมบูรณ์
     localStorage.setItem("completeCourse", JSON.stringify(finalCourseData));
-    console.log(finalCourseData);
+    console.log("Final course data:", finalCourseData);
+    
     // นำทางไปยังหน้าแสดงรายการคอร์ส
-    navigate("/course");
+    
     
     // ล้างข้อมูลชั่วคราว
     localStorage.removeItem("courseData");
     localStorage.removeItem("activities");
+    navigate("/course");
   };
 
-  // กรองกิจกรรมตามวันที่แสดง
-  const filteredActivities = activities.filter(activity => {
-    return activity.day === currentDay || !activity.day; // แสดงกิจกรรมตามวันปัจจุบัน
+  // กรองกิจกรรมตามวันที่แสดง (ใช้ date แทน day เหมือน EditCourseFrom)
+  const filteredActivities = activities.filter((activity) => {
+    // ตรวจสอบว่ามี courseDates.iso และมีวันที่ปัจจุบัน
+    const currentDateIso = courseDates.iso ? courseDates.iso[currentDay - 1] : null;
+    
+    // กรองเฉพาะกิจกรรมที่มี date ตรงกับวันที่กำลังดูอยู่
+    return activity.date === currentDateIso;
   });
 
   // ดึงวันที่ปัจจุบัน
-  const currentDateString = courseDates[currentDay - 1] || "";
+  const currentDateString = courseDates.display ? courseDates.display[currentDay - 1] : "";
 
-  // ฟังก์ชันช่วยแสดงชื่อโค้ชในรูปแบบที่ต้องการ - แสดงชื่อจริง
-  const formatCoachDisplay = (coachString) => {
-    if (!coachString) return "";
-    
-    return coachString;
+  // ฟังก์ชันช่วยแสดงชื่อโค้ชในรูปแบบที่ต้องการ
+  const formatCoachDisplay = (act) => {
+    if (act.coachDetails) {
+      return act.coachDetails.map(coach => coach.name).join(", ");
+    } else if (act.trainer) {
+      return Array.isArray(act.trainer) ? act.trainer.join(", ") : act.trainer;
+    }
+    return "";
   };
 
   return (
@@ -141,7 +182,7 @@ export default function CourseFrom() {
       <div className="w-[1000px] p-10 shadow-lg bg-white rounded-lg relative">
         <div className="flex flex-col items-center mb-6">
           <label className="block text-lg font-semibold text-gray-700">
-            Course : {courseData?.courseName || "ไม่พบชื่อคอร์ส"}
+            Course : {courseData?.course_name || "ไม่พบชื่อคอร์ส"}
           </label>
           <label className="block text-sm text-gray-600">
            time : {courseData?.startDate} - {courseData?.endDate}
@@ -158,7 +199,7 @@ export default function CourseFrom() {
               {currentDay > 1 && (
                 <button 
                   onClick={handlePrevDay}
-                  className="px-4 py-1 bg-rose-600 text-white rounded-lg  text-sm"
+                  className="px-4 py-1 bg-rose-600 text-white rounded-lg text-sm"
                 >
                   back
                 </button>
@@ -166,7 +207,7 @@ export default function CourseFrom() {
               {currentDay < totalDays && (
                 <button 
                   onClick={handleNextDay}
-                  className="px-4 py-1 bg-rose-600 text-white rounded-lg  text-sm"
+                  className="px-4 py-1 bg-rose-600 text-white rounded-lg text-sm"
                 >
                   next
                 </button>
@@ -179,31 +220,39 @@ export default function CourseFrom() {
               <tr className="bg-gray-200">
                 <th className="p-2 border">Time</th>
                 <th className="p-2 border">Description</th>
-                <th className="p-2 border">Coach</th>
+                <th className="p-2 border">Trainer</th>
                 <th className="p-2 border">Edit</th>
               </tr>
             </thead>
             <tbody>
-              {filteredActivities.map((act) => (
-                <tr key={act.id} className="text-center">
-                  <td className="p-2 border">
-                    {act.startTime} - {act.endTime}
-                  </td>
-                  <td className="p-2 border">{act.description}</td>
-                  <td className="p-2 border">{formatCoachDisplay(act.coach)}</td>
-                  <td className="p-2 border">
-                    <button className="text-blue-500 mr-2">
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      className="text-red-500"
-                      onClick={() => handleDeleteActivity(act.id)}
-                    >
-                      <Trash2 size={16} />
-                    </button>
+              {filteredActivities.length > 0 ? (
+                filteredActivities.map((act) => (
+                  <tr key={act.id} className="text-center">
+                    <td className="p-2 border">
+                      {act.startTime} - {act.endTime}
+                    </td>
+                    <td className="p-2 border">{act.description}</td>
+                    <td className="p-2 border">{formatCoachDisplay(act)}</td>
+                    <td className="p-2 border">
+                      <button className="text-blue-500 mr-2">
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        className="text-red-500"
+                        onClick={() => handleDeleteActivity(act.id)}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="p-4 text-center text-gray-500">
+                    ไม่มีกิจกรรมในวันนี้
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
 
@@ -239,6 +288,7 @@ export default function CourseFrom() {
         setIsOpen={setIsAddActivityModalOpen}
         setActivities={setActivities}
         currentDay={currentDay}
+        currentDate={courseDates.iso ? courseDates.iso[currentDay - 1] : ""}
         newActivity={newActivity}       
         setNewActivity={setNewActivity} 
       />

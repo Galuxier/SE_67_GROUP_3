@@ -5,6 +5,7 @@ import {
   getUserByIdController,
   updateUserController,
   deleteUserController,
+  getUserProfileController
 } from '../controllers/user.controller';
 
 const router = express.Router();
@@ -17,6 +18,8 @@ router.get('/users', getUsersController);
 
 // ดึงข้อมูลผู้ใช้โดย ID
 router.get('/user/:id', getUserByIdController);
+
+router.get('/user/profile/:username', getUserProfileController);
 
 // อัปเดตข้อมูลผู้ใช้
 router.put('/user/:id', updateUserController);

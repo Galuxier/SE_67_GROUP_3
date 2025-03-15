@@ -1,65 +1,64 @@
+// src/components/shops/EditShopModal.jsx
 import { useState } from "react";
 import AddressForm from "../AddressForm";
+import CropImageModal from "./CropImageModal";
+import { updateShop } from "../../services/api/ShopApi";
 
 export default function EditShopModal({ show, onClose, shopData, onSave }) {
   const [formData, setFormData] = useState(() => ({
-    shop_name: shopData?.shop_name || "",
-    logo_url: shopData?.logo_url || "",
-    description: shopData?.description || "",
-    contacts: {
-      email: shopData?.contacts?.email || "",
-      tel: shopData?.contacts?.tel || "",
-      line: shopData?.contacts?.line || "",
-      facebook: shopData?.contacts?.facebook || "",
-    },
-    address: {
-      province: shopData?.address?.province || "",
-      district: shopData?.address?.district || "",
-      subdistrict: shopData?.address?.subdistrict || "",
-      street: shopData?.address?.street || "",
-      postal_code: shopData?.address?.postal_code || "",
-      latitude: shopData?.address?.latitude || "",
-      longitude: shopData?.address?.longitude || "",
-      information: shopData?.address?.information || "",
-    },
+    shop_name: shopData.shop_name || "",
+    description: shopData.description || "",
+    contacts: { ...shopData.contacts },
+    address: { ...shopData.address },
   }));
 
+  const [logoFile, setLogoFile] = useState(null);
+  const [tempFile, setTempFile] = useState(null);
+  const [showCrop, setShowCrop] = useState(false);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleContactChange = (e) => {
-    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      contacts: { ...prev.contacts, [name]: value },
+      contacts: { ...prev.contacts, [e.target.name]: e.target.value },
     }));
   };
 
-  const handleAddressChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      address: { ...prev.address, [name]: value },
-    }));
+  const handleAddressChange = (addr) => {
+    setFormData((prev) => ({ ...prev, address: addr }));
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData((prev) => ({
-        ...prev,
-        logo_url: reader.result,
-      }));
-    };
-    reader.readAsDataURL(file);
+  const handleFileSelect = (e) => {
+    if (!e.target.files[0]) return;
+    setTempFile(e.target.files[0]);
+    setShowCrop(true);
   };
 
-  const handleSubmit = () => {
-    onSave(formData);
+  const handleCropDone = (croppedBlob) => {
+    setLogoFile(croppedBlob);
+    setShowCrop(false);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const fd = new FormData();
+      fd.append("shop_name", formData.shop_name);
+      fd.append("description", formData.description);
+      fd.append("contacts", JSON.stringify(formData.contacts));
+      fd.append("address", JSON.stringify(formData.address));
+
+      if (logoFile) fd.append("logo", logoFile);
+
+      const updatedShop = await updateShop(shopData._id, fd);
+      onSave(updatedShop);
+      onClose();
+    } catch (error) {
+      alert("Failed to update shop!");
+      console.error(error);
+    }
   };
 
   if (!show) return null;
@@ -74,22 +73,14 @@ export default function EditShopModal({ show, onClose, shopData, onSave }) {
           ✕
         </button>
 
-        <div className="max-h-[80vh] overflow-y-auto p-6">
+        <div className="p-6 max-h-[80vh] overflow-y-auto">
           <h2 className="text-xl font-bold mb-4">Edit Shop</h2>
-          
+
           <label className="block font-semibold">Shop Name</label>
           <input
             name="shop_name"
             value={formData.shop_name}
             onChange={handleChange}
-            className="mb-4 p-2 w-full border"
-          />
-
-          <label className="block font-semibold">Shop Logo</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
             className="mb-4 p-2 w-full border"
           />
 
@@ -101,65 +92,64 @@ export default function EditShopModal({ show, onClose, shopData, onSave }) {
             className="mb-4 p-2 w-full border"
           />
 
-          <div className="mb-6">
-            <label className="block text-lg font-medium mb-2">Contact</label>
-            <div className="space-y-4">
-              {/* Email */}
-              <div className="flex items-center">
-                <label className="w-24 text-gray-700">Email:</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.contacts.email}
-                  onChange={handleContactChange}
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-                  placeholder="Enter email (Required)"
-                  required
-                />
-              </div>
+          <label className="block font-semibold">Shop Logo</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="mb-4 p-2 w-full border"
+          />
 
-              {/* Tel */}
-              <div className="flex items-center">
-                <label className="w-24 text-gray-700">Tel:</label>
-                <input
-                  type="tel"
-                  name="tel"
-                  value={formData.contacts.tel}
-                  onChange={handleContactChange}
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-                  placeholder="Enter telephone number (Required)"
-                  required
-                />
-              </div>
-              {/* Line ID */}
-              <div className="flex items-center">
-                <label className="w-24 text-gray-700">Line ID:</label>
-                <input
-                  type="text"
-                  name="line"
-                  value={formData.contacts.line}
-                  onChange={handleContactChange}
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-                  placeholder="Enter Line ID (Optional)"
-                />
-              </div>
-
-              {/* Facebook */}
-              <div className="flex items-center">
-                <label className="w-24 text-gray-700">Facebook:</label>
-                <input
-                  type="text"
-                  name="facebook"
-                  value={formData.contacts.facebook}
-                  onChange={handleContactChange}
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-                  placeholder="Enter Facebook (Optional)"
-                />
-              </div>
+          <label className="block text-lg font-medium mb-2">Contact</label>
+          <div className="space-y-4 mb-4">
+            <div>
+              <span>Email:</span>
+              <input
+                type="email"
+                name="email"
+                value={formData.contacts.email}
+                onChange={handleContactChange}
+                className="border ml-2 px-2 py-1 w-60"
+                required
+              />
+            </div>
+            <div>
+              <span>Tel:</span>
+              <input
+                type="tel"
+                name="tel"
+                value={formData.contacts.tel}
+                onChange={handleContactChange}
+                className="border ml-2 px-2 py-1 w-60"
+                required
+              />
+            </div>
+            <div>
+              <span>Line:</span>
+              <input
+                type="text"
+                name="line"
+                value={formData.contacts.line}
+                onChange={handleContactChange}
+                className="border ml-2 px-2 py-1 w-60"
+              />
+            </div>
+            <div>
+              <span>Facebook:</span>
+              <input
+                type="text"
+                name="facebook"
+                value={formData.contacts.facebook}
+                onChange={handleContactChange}
+                className="border ml-2 px-2 py-1 w-60"
+              />
             </div>
           </div>
 
-          <AddressForm/>
+          <AddressForm
+            initialData={formData.address}
+            onChange={handleAddressChange}
+          />
 
           <button
             onClick={handleSubmit}
@@ -169,6 +159,13 @@ export default function EditShopModal({ show, onClose, shopData, onSave }) {
           </button>
         </div>
       </div>
+
+      <CropImageModal
+        show={showCrop}
+        onClose={() => setShowCrop(false)}
+        file={tempFile}
+        onCropDone={handleCropDone}
+      />
     </div>
   );
 }
