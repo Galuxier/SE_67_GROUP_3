@@ -19,6 +19,7 @@ const CourseRoutes = lazy(() => import("./routes/CourseRoute"));
 const EventRoutes = lazy(() => import("./routes/EventRoute"));
 const ShopRoutes = lazy(() => import("./routes/ShopRoute"));
 const UserRoutes = lazy(() => import("./routes/UserRoute"));
+const AdminRoutes = lazy(() => import("./routes/AdminRoute"));
 
 
 const App = () => {
@@ -46,6 +47,7 @@ const App = () => {
               <Route path="/event/*" element={<EventRoutes />} />
               <Route path="/user/*" element={<UserRoutes />} />
               <Route path="/shop/*" element={<ShopRoutes />} />
+              <Route path="/admin/*" element={<AdminRoutes />} />
             </Routes>
           </Suspense>
         </AuthProvider>
