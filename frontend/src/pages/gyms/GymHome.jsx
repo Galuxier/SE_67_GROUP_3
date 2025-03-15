@@ -49,36 +49,36 @@ function GymHome() {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
-      <div className="container mx-auto px-4 py-2 dark:bg-gray-800 dark:text-white">
+      <div className="container mx-auto px-4 py-2 bg-background text-text">
         {/* Header */}
         <div className="flex justify-center relative mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+          <h1 className="text-3xl font-bold text-text">
             All Gym
           </h1>
           {/* แสดงปุ่ม "+" เฉพาะผู้ใช้ที่มี role เป็น gym_owner */}
           {user?.role?.includes("gym_owner") && (
             <Link to="/gym/addgym">
-              <button className="bg-rose-600 hover:bg-rose-700 rounded-full w-8 h-8 flex items-center justify-center absolute right-0 dark:bg-rose-500 dark:hover:bg-rose-600">
+              <button className="bg-secondary hover:bg-primary rounded-full w-8 h-8 flex items-center justify-center absolute right-0">
                 <PlusCircleIcon className="h-10 w-10 text-white" />
               </button>
             </Link>
           )}
         </div>
-
+  
         {/* Sidebar and GymList */}
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar */}
-          <div className="w-full md:w-56 bg-white rounded-lg shadow-lg flex-shrink-0 dark:bg-gray-700">
-            <div className="p-2 border-b border-gray-200 dark:border-gray-600">
-              <h2 className="font-medium text-gray-700 dark:text-white">
+          <div className="w-full md:w-56 bg-background rounded-lg shadow-lg flex-shrink-0">
+            <div className="p-2 border-b border-border">
+              <h2 className="font-medium text-text">
                 Filter
               </h2>
             </div>
             <div className="p-2">
               <div className="mb-2 justify-center relative py-2">
-                <label className="block mb-1 dark:text-white">Province</label>
+                <label className="block mb-1 text-text">Province</label>
                 <select
-                  className="border p-2 w-full dark:bg-gray-600 dark:text-white dark:border-gray-500"
+                  className="border p-2 w-full bg-background text-text border-border"
                   value={province}
                   onChange={(e) => handleProvinceSelect(e.target.value)}
                 >
@@ -94,7 +94,7 @@ function GymHome() {
               </div>
             </div>
           </div>
-
+  
           {/* GymList */}
           <div className="flex-grow">
             <GymCard gyms={filteredGyms} />

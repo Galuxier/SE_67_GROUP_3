@@ -41,7 +41,8 @@ const GymCardItem = ({ gym, onClick }) => {
 
   return (
     <button
-      className={`max-w-xs rounded overflow-hidden shadow-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-white text-left cursor-pointer transition transform hover:scale-105`}
+      className={`max-w-xs rounded-lg overflow-hidden bg-card text-text cursor-pointer transition transform hover:scale-105 
+                  shadow-xl hover:shadow-2xl border border-opacity-10 border-gray-300 dark:border-gray-600`}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -60,19 +61,19 @@ const GymCardItem = ({ gym, onClick }) => {
       </div>
       <div className="px-6 py-4">
         {/* Gym Name */}
-        <div className="text-base mb-3">
+        <div className="text-base mb-3 text-text font-semibold">
           {gym.gym_name}
         </div>
-
+  
         {/* Address */}
         <div className="flex items-center font-base text-lg mb-2">
           <span className="mr-2">
-            <FaMapMarkerAlt className="text-gray-700 dark:text-white" />
+            <FaMapMarkerAlt className="text-text" />
           </span>
-          <span className="text-base mr-1 text-gray-700 dark:text-white">
+          <span className="text-base mr-1 text-text">
             {gym.address?.district || "-"} ,
           </span>
-          <span className="text-base text-gray-700 dark:text-white">
+          <span className="text-base text-text">
             {gym.address?.province || "-"}
           </span>
         </div>

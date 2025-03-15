@@ -103,30 +103,30 @@ const Login = () => {
   const handleBack = () => navigate(-1);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-12 bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col items-center justify-center min-h-screen py-12 bg-background text-text">
       <ToastContainer />
-      <div className="w-96 p-6 shadow-lg bg-white dark:bg-gray-800 rounded-md">
+      <div className="w-96 p-6 shadow-lg bg-background rounded-md border border-border">
         {isCheckingAuth ? (
           <div className="flex justify-center items-center h-64">
-            <ClipLoader size={40} color="#4F46E5" />
+            <ClipLoader size={40} color="primary" />
           </div>
         ) : (
           <>
             <button
               onClick={handleBack}
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 mb-4"
+              className="text-secondary hover:text-primary mb-4"
             >
               ← Back
             </button>
 
-            <h1 className="text-3xl block text-center font-semibold py-2 text-gray-800 dark:text-gray-100">
+            <h1 className="text-3xl block text-center font-semibold py-2 text-text">
               Login
             </h1>
 
             <form onSubmit={handleSubmit}>
               {/* ช่องกรอก email/username */}
               <div className="mb-4">
-                <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="identifier" className="block text-sm font-medium text-text mb-1">
                   Username/E-mail
                 </label>
                 <input
@@ -135,19 +135,19 @@ const Login = () => {
                   name="identifier"
                   value={formInput.identifier}
                   onChange={handleInputChange}
-                  className={`w-full border rounded py-2 px-3 focus:outline-none focus:border-pink-500 ${
-                    formError.identifier ? "border-red-500" : "border-gray-300 dark:border-gray-700"
-                  } bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
+                  className={`w-full border rounded py-2 px-3 focus:outline-none focus:border-primary ${
+                    formError.identifier ? "border-secondary" : "border-border"
+                  } bg-background text-text`}
                   placeholder="Enter your email or username"
                 />
                 {formError.identifier && (
-                  <p className="text-red-500 text-sm mt-1">{formError.identifier}</p>
+                  <p className="text-secondary text-sm mt-1">{formError.identifier}</p>
                 )}
               </div>
 
               {/* ช่องกรอก password */}
               <div className="mb-4">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-text mb-1">
                   Password
                 </label>
                 <input
@@ -156,13 +156,13 @@ const Login = () => {
                   name="password"
                   value={formInput.password}
                   onChange={handleInputChange}
-                  className={`w-full border rounded py-2 px-3 focus:outline-none focus:border-pink-500 ${
-                    formError.password ? "border-red-500" : "border-gray-300 dark:border-gray-700"
-                  } bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
+                  className={`w-full border rounded py-2 px-3 focus:outline-none focus:border-primary ${
+                    formError.password ? "border-secondary" : "border-border"
+                  } bg-background text-text`}
                   placeholder="Enter your password"
                 />
                 {formError.password && (
-                  <p className="text-red-500 text-sm mt-1">{formError.password}</p>
+                  <p className="text-secondary text-sm mt-1">{formError.password}</p>
                 )}
               </div>
 
@@ -170,7 +170,7 @@ const Login = () => {
               <div className="flex space-x-4">
                 <button
                   type="submit"
-                  className="w-full bg-rose-600 border rounded py-2 px-3 focus:outline-none flex items-center justify-center"
+                  className="btn mt-6 w-full bg-rose-600 text-white py-2 rounded-md hover:bg-rose-500"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -185,7 +185,7 @@ const Login = () => {
             <div>
               <Link
                 to="/signup"
-                className="block text-center py-2 text-rose-600 dark:text-rose-400 hover:text-rose-500"
+                className="block text-center py-2 text-secondary hover:text-primary"
               >
                 Register
               </Link>

@@ -34,14 +34,11 @@ const App = () => {
               <Route path="/" element={<MainLayout />}>
                 <Route index element={<Home />} />
               </Route>
-
+              
               {/* Routes ที่ไม่มี Layout (Login/Signup) */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-          {/* Routes ที่ไม่มี Layout (Login/Signup) */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/ticket" element={<Ticket/>} />
+              <Route path="/ticket" element={<Ticket/>} />
 
               {/* ใช้ Component ของแต่ละหมวด */}
               <Route path="/gym/*" element={<GymRoutes />} />

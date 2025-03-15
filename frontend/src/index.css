@@ -14,3 +14,22 @@
     font-size: 0.875rem; /* ขนาดข้อความเล็ก */
     margin-top: 0.25rem; /* ระยะห่างด้านบน */
   }
+
+
+  :root {
+    --color-primary: #4F46E5; /* สีหลัก */
+    --color-secondary: #EF4444; /* สีรอง */
+    --color-background: #FFFFFF; /* สีพื้นหลังของหน้า */
+    --color-card-background: #F9FAFB; /* สีพื้นหลังของ Card */
+    --color-text: #1F2937; /* สีข้อความ */
+    --color-border: #E5E7EB; /* สีเส้นขอบ */
+  }
+  
+  .dark {
+    --color-primary: #818CF8; /* สีหลักใน Dark Mode */
+    --color-secondary: #F87171; /* สีรองใน Dark Mode */
+    --color-background: #1F2937; /* สีพื้นหลังของหน้าใน Dark Mode */
+    --color-card-background: #374151; /* สีพื้นหลังของ Card ใน Dark Mode */
+    --color-text: #F3F4F6; /* สีข้อความใน Dark Mode */
+    --color-border: #4B5563; /* สีเส้นขอบใน Dark Mode */
+  }
