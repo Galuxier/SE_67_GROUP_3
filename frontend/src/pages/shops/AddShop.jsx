@@ -340,256 +340,208 @@
 //   );
 // }
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { registerShop } from '../../services/api/ShopApi';
+import { registerShop } from "../../services/api/ShopApi";
 import AddressForm from "../../components/AddressForm";
-import { PaperClipIcon } from "@heroicons/react/24/solid";
+import CropImageModal from "../../components/shops/CropImageModal";
 
 export default function AddShop() {
   const navigate = useNavigate();
-  const logoInputRef = useRef(null);
-  const licenseInputRef = useRef(null);
 
   const [shopData, setShopData] = useState({
     shop_name: "",
-    license: "",
     description: "",
-    logo_url: "",
-    contacts: {
-      email: "",
-      tel: "",
-      line: "",
-      facebook: "",
-    },
+    contacts: { email: "", tel: "", line: "", facebook: "" },
     address: {},
   });
 
+  const [logoFile, setLogoFile] = useState(null);
   const [logoFileName, setLogoFileName] = useState("");
+
+  const [licenseFile, setLicenseFile] = useState(null);
   const [licenseFileName, setLicenseFileName] = useState("");
 
+  const [showCrop, setShowCrop] = useState(false);
+  const [tempFile, setTempFile] = useState(null);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setShopData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setShopData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleContactChange = (e) => {
-    const { name, value } = e.target;
     setShopData((prev) => ({
       ...prev,
-      contacts: {
-        ...prev.contacts,
-        [name]: value,
-      },
+      contacts: { ...prev.contacts, [e.target.name]: e.target.value },
     }));
   };
 
-  const handleAddressChange = (address) => {
-    setShopData((prev) => ({ ...prev, address }));
+  const handleAddressChange = (addr) => {
+    setShopData((prev) => ({ ...prev, address: addr }));
   };
 
-  const handleLogoIconClick = () => {
-    logoInputRef.current.click();
-  };
-  const handleLicenseIconClick = () => {
-    licenseInputRef.current.click();
-  };
-
-  const handleFileChange = (e, field) => {
+  // เมื่อเลือกไฟล์ Logo -> เปิด Crop
+  const handleLogoFileSelect = (e) => {
     if (!e.target.files[0]) return;
+    setTempFile(e.target.files[0]);
+    setShowCrop(true); // เปิด Modal ครอป
+  };
+
+  // เมื่อ crop เสร็จ -> เก็บ blob ไว้ใน logoFile
+  const handleCropDone = (croppedBlob) => {
+    setShowCrop(false);
+    setLogoFile(croppedBlob);
+    setLogoFileName("logo_cropped.png"); // หรือ .jpg ก็ได้
+  };
+
+  const handleLicenseFileSelect = (e) => {
     const file = e.target.files[0];
-
-    if (field === "logo_url") {
-      setLogoFileName(file.name);
-    } else if (field === "license") {
-      setLicenseFileName(file.name);
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setShopData((prev) => ({
-        ...prev,
-        [field]: reader.result,
-      }));
-    };
-    reader.readAsDataURL(file);
+    if (!file) return;
+    setLicenseFile(file);
+    setLicenseFileName(file.name);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-      const owner_id = user?._id;
+      const owner_id = user?._id || "demoUserId";
 
-      if (!owner_id) {
-        throw new Error("User not found in localStorage");
+      // สร้าง FormData
+      const formData = new FormData();
+      formData.append("owner_id", owner_id);
+      formData.append("shop_name", shopData.shop_name);
+      formData.append("description", shopData.description);
+
+      if (logoFile) {
+        formData.append("logo", logoFile);
       }
 
-      const dataToSend = {
-        owner_id,
-        shop_name: shopData.shop_name,
-        license: shopData.license,
-        description: shopData.description,
-        // logo_url: shopData.logo_url,
-        contacts: shopData.contacts,
-        address: shopData.address,
-      };
+      if (licenseFile) {
+        formData.append("license", licenseFile);
+      }
 
-      const response = await registerShop(dataToSend);
+      formData.append("contacts", JSON.stringify(shopData.contacts));
+      formData.append("address", JSON.stringify(shopData.address));
+
+      const response = await registerShop(formData);
       console.log("Server response:", response);
-
       navigate("/shop");
     } catch (error) {
       console.error("Error creating shop:", error);
+      alert("Failed to create shop!");
     }
   };
 
   return (
     <div className="flex justify-center items-start min-h-screen bg-gray-100 pt-10 pb-10">
-      <div className="w-full max-w-2xl p-6 shadow-lg bg-white rounded-md overflow-y-auto">
-        {/* ส่วนหัว */}
+      <div className="w-full max-w-2xl p-6 shadow-lg bg-white rounded-md">
         <div className="flex justify-between items-center mb-4">
-        <button
-        onClick={() => navigate(-1)}
-        className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
-      >
-        Back
-      </button>
-          <h1 className="text-3xl font-semibold py-2">Shop Register</h1>
-          <div className="w-20"></div>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500"
+          >
+            Back
+          </button>
+          <h1 className="text-3xl font-semibold">Shop Register</h1>
+          <div className="w-20" />
         </div>
         <hr className="mb-6" />
 
-        {/* ฟอร์ม */}
         <form onSubmit={handleSubmit}>
-
-        <div className="mb-6">
-            <label className="block text-lg font-medium mb-2">Shop Logo</label>
-            <div className="relative w-full">
-              <input
-                type="file"
-                ref={logoInputRef}
-                className="hidden"
-                onChange={(e) => handleFileChange(e, "logo_url")}
-                accept="image/*"
-              />
-              <button
-                type="button"
-                className="w-full border border-gray-300 rounded-lg py-2 px-4 flex items-center justify-between cursor-default"
-                onClick={handleLogoIconClick}
-              >
-                <span className="text-gray-500 truncate pointer-events-none">
-                  {logoFileName || "Choose a file"}
-                </span>
-                <PaperClipIcon className="h-5 w-5 text-gray-400 cursor-pointer" />
-              </button>
-            </div>
+          <div className="mb-4">
+            <label className="block font-medium mb-1">Shop Logo (Crop)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleLogoFileSelect}
+            />
+            {logoFileName && (
+              <p className="text-sm text-gray-600">File: {logoFileName}</p>
+            )}
           </div>
 
-          <div className="mb-6">
-            <label className="block text-lg font-medium mb-2">Shop Name</label>
+          <div className="mb-4">
+            <label className="block font-medium mb-1">Shop Name</label>
             <input
               name="shop_name"
               value={shopData.shop_name}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-pink-500"
-              placeholder="Enter shop name"
+              className="w-full border rounded px-3 py-2"
               required
             />
           </div>
 
-          <div className="mb-6">
-            <label className="block text-lg font-medium mb-2">Description</label>
+          <div className="mb-4">
+            <label className="block font-medium mb-1">Description</label>
             <textarea
               name="description"
+              rows="3"
               value={shopData.description}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-              placeholder="Enter shop description"
-              rows="4"
+              className="w-full border rounded px-3 py-2"
               required
             />
           </div>
 
-          <div className="mb-6">
-            <label className="block text-lg font-medium mb-2">Contact</label>
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <label className="w-24 text-gray-700">Email:</label>
+          <div className="mb-4">
+            <label className="block font-medium mb-1">Contact</label>
+            <div className="space-y-2">
+              <div>
+                <span className="mr-2">Email:</span>
                 <input
                   type="email"
                   name="email"
                   value={shopData.contacts.email}
                   onChange={handleContactChange}
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-                  placeholder="Enter email (Required)"
+                  className="border rounded px-2 py-1 w-60"
                   required
                 />
               </div>
-
-              <div className="flex items-center">
-                <label className="w-24 text-gray-700">Tel:</label>
+              <div>
+                <span className="mr-2">Tel:</span>
                 <input
                   type="tel"
                   name="tel"
                   value={shopData.contacts.tel}
                   onChange={handleContactChange}
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-                  placeholder="Enter telephone number (Required)"
+                  className="border rounded px-2 py-1 w-60"
                   required
                 />
               </div>
-
-              <div className="flex items-center">
-                <label className="w-24 text-gray-700">Line ID:</label>
+              <div>
+                <span className="mr-2">Line:</span>
                 <input
                   type="text"
                   name="line"
                   value={shopData.contacts.line}
                   onChange={handleContactChange}
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-                  placeholder="Enter Line ID (Optional)"
+                  className="border rounded px-2 py-1 w-60"
                 />
               </div>
-
-              <div className="flex items-center">
-                <label className="w-24 text-gray-700">Facebook:</label>
+              <div>
+                <span className="mr-2">Facebook:</span>
                 <input
                   type="text"
                   name="facebook"
                   value={shopData.contacts.facebook}
                   onChange={handleContactChange}
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
-                  placeholder="Enter Facebook (Optional)"
+                  className="border rounded px-2 py-1 w-60"
                 />
               </div>
             </div>
           </div>
 
-          <div className="mb-6">
-            <label className="block text-lg font-medium mb-2">License</label>
-            <div className="relative w-full">
-              <input
-                type="file"
-                ref={licenseInputRef}
-                className="hidden"
-                onChange={(e) => handleFileChange(e, "license")}
-                accept="image/*"
-              />
-              <button
-                type="button"
-                className="w-full border border-gray-300 rounded-lg py-2 px-4 flex items-center justify-between cursor-default"
-                onClick={handleLicenseIconClick}
-              >
-                <span className="text-gray-500 truncate pointer-events-none">
-                  {licenseFileName || "Choose a file"}
-                </span>
-                <PaperClipIcon className="h-5 w-5 text-gray-400 cursor-pointer" />
-              </button>
-            </div>
+          <div className="mb-4">
+            <label className="block font-medium mb-1">License (No Crop)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleLicenseFileSelect}
+            />
+            {licenseFileName && (
+              <p className="text-sm text-gray-600">File: {licenseFileName}</p>
+            )}
           </div>
 
           <div className="mb-6">
@@ -598,12 +550,19 @@ export default function AddShop() {
 
           <button
             type="submit"
-            className="w-full bg-rose-600 border rounded-lg py-2 px-4 focus:outline-none hover:bg-rose-700 transition-colors"
+            className="bg-rose-600 text-white px-4 py-2 rounded w-full hover:bg-rose-700"
           >
-            <span className="text-white text-lg font-semibold">Submit</span>
+            Submit
           </button>
         </form>
       </div>
+
+      <CropImageModal
+        show={showCrop}
+        onClose={() => setShowCrop(false)}
+        file={tempFile}
+        onCropDone={handleCropDone}
+      />
     </div>
   );
 }
