@@ -4,7 +4,7 @@ function EventCard() {
   const navigate = useNavigate();
 
   const handleEventClick = (event) => {
-    console.log("navigate to:", `/event/detail/${event._id}`);
+    console.log("navigate to:", `/event/${event._id}`);
 
     // ✅ แปลง `Date` object เป็น `string` "YYYY-MM-DD" ก่อนส่งไปยัง `EventDetail`
     const eventData = {
@@ -13,7 +13,7 @@ function EventCard() {
       end_date: event.end_date.toISOString().split("T")[0], // 🔥 "YYYY-MM-DD"
     };
 
-    navigate(`/event/detail/${event._id}`, { state: { event: eventData } });
+    navigate(`/event/${event._id}`, { state: { event: eventData } });
   };
 
   const events = [

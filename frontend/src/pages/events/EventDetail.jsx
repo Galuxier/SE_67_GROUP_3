@@ -44,20 +44,11 @@ function EventDetail() {
         Loading...
       </div>
     );
-  const handleBack = () => navigate(-1);
 
   return (
     <div className="min-h-screen">
       <div className="grid grid-rows-2 gap-2">
         <div className="grid grid-cols-3 gap-4 p-1 rounded-lg">
-          <div className="rounded-lg">
-            <button
-              onClick={handleBack}
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 mb-4"
-            >
-              ← Back
-            </button>
-          </div>
           <div className="justify-center flex rounded-lg w-full">
             <img
               src={event.image_url}
