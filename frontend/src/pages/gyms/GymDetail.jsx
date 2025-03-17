@@ -2,16 +2,17 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { PencilSquareIcon } from "@heroicons/react/24/outline";
-import EditGymModal from "../../components/gyms/EditGymModal";
 import { useNavigate } from "react-router-dom";
 import { getGymFromId } from "../../services/api/GymApi";
 import { getImage } from "../../services/api/ImageApi";
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation } from 'swiper/modules';
+import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import EditGymModal from "../../components/gyms/EditGymModal";
 
-const GymProfile = () => {
+const GymDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [gym, setGym] = useState(null);
@@ -53,12 +54,15 @@ const GymProfile = () => {
     <div className="min-h-screen bg-background">
       {/* ส่วนของรูปภาพและปุ่ม Back */}
       <div className="relative w-full pt-8">
-        {/* ปุ่ม Back อยู่ซ้ายบนของระนาบรูปภาพ */}
+        {/* ปุ่ม Back แบบ minimal */}
         <button
           onClick={handleBack}
-          className="absolute top-8 left-4 z-10 px-4 py-2 bg-primary text-white rounded"
+          className="absolute top-4 left-4 z-10 flex items-center text-white bg-black bg-opacity-30 hover:bg-opacity-50 rounded-full p-2 transition-all"
+          aria-label="Go back"
         >
-          Back
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
         </button>
 
         {/* รูปภาพแบบ Swiper */}
@@ -67,10 +71,18 @@ const GymProfile = () => {
             <div className="relative h-64 sm:h-80 md:h-96 lg:h-[400px]">
               <Swiper
                 spaceBetween={0}
-                modules={[Navigation]}
+                modules={[Navigation, Pagination]}
                 navigation={{
                   nextEl: '.swiper-button-next',
                   prevEl: '.swiper-button-prev',
+                  enabled: window.innerWidth >= 768, // Enable navigation only on desktop
+                }}
+                pagination={{
+                  el: '.swiper-pagination',
+                  clickable: true,
+                  // สร้างตัวเลขหน้า/ทั้งหมด เมื่อมีรูปเกิน 8 รูป
+                  type: imageUrls.length > 8 ? 'fraction' : 'bullets',
+                  dynamicBullets: imageUrls.length > 8,
                 }}
                 className="h-full rounded-lg overflow-hidden"
               >
@@ -87,17 +99,20 @@ const GymProfile = () => {
                 ))}
               </Swiper>
               
-              {/* Custom navigation buttons */}
-              <div className="swiper-button-prev absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-black bg-opacity-30 text-white p-1 rounded-r cursor-pointer opacity-80 hover:opacity-100 transition-opacity">
+              {/* ปุ่มเลื่อนถัดไปแบบ minimal - ซ่อนบนมือถือ */}
+              <div className="swiper-button-prev !hidden md:!flex absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-black bg-opacity-10 hover:bg-opacity-30 text-white p-1 rounded-r cursor-pointer opacity-30 hover:opacity-80 transition-opacity">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M15 18l-6-6 6-6" />
                 </svg>
               </div>
-              <div className="swiper-button-next absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-black bg-opacity-30 text-white p-1 rounded-l cursor-pointer opacity-80 hover:opacity-100 transition-opacity">
+              <div className="swiper-button-next !hidden md:!flex absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-black bg-opacity-10 hover:bg-opacity-30 text-white p-1 rounded-l cursor-pointer opacity-30 hover:opacity-80 transition-opacity">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 18l6-6-6-6" />
                 </svg>
               </div>
+              
+              {/* จุดไข่ปลาสำหรับเลื่อนรูป */}
+              <div className="swiper-pagination flex justify-center mt-2"></div>
             </div>
           )}
         </div>
@@ -178,4 +193,4 @@ const GymProfile = () => {
   );
 };
 
-export default GymProfile;
+export default GymDetail;

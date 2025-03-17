@@ -18,6 +18,7 @@ import teachHistoryRoutes from './routes/teachHistory.route';
 import ticketRoutes from './routes/ticket.route';
 import authRoutes from './routes/auth.route';
 import imageRoutes from './routes/image.route';
+import enrollmentRoutes from './routes/enrollment.route';
 
 const app: Application = express();
 
@@ -41,6 +42,7 @@ app.use('/api', teachHistoryRoutes);
 app.use('/api', ticketRoutes);
 app.use('/api', authRoutes);
 app.use('/api', imageRoutes);
+app.use('/api', enrollmentRoutes);
 
 
 

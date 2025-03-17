@@ -142,6 +142,7 @@ function EventCard() {
       weight_classes: [],
     },
   ];
+
   const formatDate = (dateValue) => {
     if (!dateValue) return "N/A";
     const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
@@ -160,24 +161,29 @@ function EventCard() {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
       {events.map((event) => (
         <button
           key={event._id}
-          className="max-w-xs rounded overflow-hidden shadow-lg bg-white dark:bg-gray-600 text-left cursor-pointer transition transform hover:scale-105"
+          className={`max-w-xs rounded-lg overflow-hidden bg-card text-text cursor-pointer transition transform hover:scale-105 
+                      shadow-xl hover:shadow-2xl border border-opacity-10 border-gray-300 dark:border-gray-600`}
           onClick={() => handleEventClick(event)}
         >
-          <img
-            className="w-full aspect-[4/3] object-cover"
-            src={event.image_url}
-            alt={event.event_name}
-          />
-          <div className="px-6 py-4">
-            <div className="font-semibold text-xl mb-2">{event.event_name}</div>
+          <div className="w-full aspect-[4/3] relative">
+            <img
+              className="w-full h-full object-cover"
+              src={event.image_url}
+              alt={event.event_name}
+            />
+          </div>
+          <div className="px-6 py-2">
+            <div className="text-base mb-1 text-text font-semibold">
+              {event.event_name}
+            </div>
             <div className={`font-normal ${getLevelColor(event.level)}`}>
               {event.level}
             </div>
-            <div className="flex items-center font-base text-lg mb-2">
+            <div className="flex items-center font-base text-sm mb-1">
               <span className="mr-2">{formatDate(event.start_date)}</span>
               <span className="mr-2">-</span>
               <span className="mr-2">{formatDate(event.end_date)}</span>

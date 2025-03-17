@@ -2,13 +2,18 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { products } from "../../data/ProductsData";
 import ProductCard from "../../components/ProductCard";
+import ShopFilter from "../../components/shops/ShopFilter";
+import { PlusCircleIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function ShopHome() {
   const [sortOrder, setSortOrder] = useState(""); // State สำหรับเรียงลำดับ
   const [categoryFilter, setCategoryFilter] = useState(""); // State สำหรับกรองประเภท
   const [priceFilter, setPriceFilter] = useState(""); // State สำหรับกรองราคา
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false); // State สำหรับเปิด/ปิด filter modal
+  const { isDarkMode } = useTheme();
 
-  // กรองสินค้าโดยใช้ category
+  // กรองสินค้าโดยใช้ category และเรียงลำดับราคา
   const filteredProducts = products
     .filter((p) => {
       if (!categoryFilter || categoryFilter === "-- Select --") return true;
@@ -20,92 +25,87 @@ export default function ShopHome() {
       return 0;
     });
 
+  const toggleFilterModal = () => {
+    setIsFilterModalOpen(!isFilterModalOpen);
+  };
+
   return (
-    <div className="min-h-screen flex bg-gray-100 dark:bg-gray-900">
-      {/* Sidebar */}
-      <div className="w-1/6 bg-white dark:bg-gray-800 p-4 shadow-md">
-        {/* Add Shop Button */}
-        <Link to="/shop/addShop">
-          <button className="bg-rose-600 text-white px-4 py-2 rounded w-full mb-4">
-            + Add shop
-          </button>
-        </Link>
-        {/* Add Product Button */}
-        <Link to="/shop/addProduct">
-          <button className="bg-rose-600 text-white px-4 py-2 rounded w-full mb-8">
-            + Add product
-          </button>
-        </Link>
-        {/* Cart Button */}
-        <Link to="/shop/cart">
-          <button className="bg-rose-600 text-white px-4 py-2 rounded w-full mb-8">
-            Cart
-          </button>
-        </Link>
-
-        {/* Filter */}
-        <h2 className="font-bold text-lg mb-4 text-gray-700 dark:text-white">Filter</h2>
-        {/* Category Filter */}
-        <div className="mb-4">
-          <label className="block mb-1 text-gray-600 dark:text-gray-300">Category</label>
-          <select
-            className="border p-2 w-full bg-white dark:bg-gray-700 text-gray-700 dark:text-white"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            <option>-- Select --</option>
-            <option>Glove</option>
-            <option>Sandbag</option>
-          </select>
+    <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
+      <div className="container px-5 sm:px-0 pb-5 pt-5 mx-auto">
+        {/* Header */}
+        <div className="flex justify-center relative mb-6">
+          <h1 className="text-3xl font-bold text-text">All Products</h1>
+          <div className="flex gap-2 absolute right-0">
+            <Link to="/shop/addShop">
+              <button className="bg-secondary hover:bg-primary rounded-full w-8 h-8 flex items-center justify-center">
+                <PlusCircleIcon className="h-6 w-6 text-white" />
+              </button>
+            </Link>
+            <Link to="/shop/addProduct">
+              <button className="bg-secondary hover:bg-primary rounded-full w-8 h-8 flex items-center justify-center">
+                <PlusCircleIcon className="h-6 w-6 text-white" />
+              </button>
+            </Link>
+          </div>
         </div>
 
-        {/* Price Filter */}
-        <div>
-          <label className="block mb-1 text-gray-600 dark:text-gray-300">Price</label>
-          <select
-            className="border p-2 w-full bg-white dark:bg-gray-700 text-gray-700 dark:text-white"
-            value={priceFilter}
-            onChange={(e) => {
-              const value = e.target.value;
-              setPriceFilter(value);
-              if (value === "Low - High") setSortOrder("low-to-high");
-              if (value === "High - Low") setSortOrder("high-to-low");
-              if (value === "-- Select --") setSortOrder("");
-            }}
-          >
-            <option>-- Select --</option>
-            <option>Low - High</option>
-            <option>High - Low</option>
-          </select>
+        {/* Sidebar and Product Display */}
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Filter Button สำหรับ Mobile */}
+          <div className="md:hidden flex justify-center mb-4">
+            <button
+              onClick={toggleFilterModal}
+              className="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <Cog6ToothIcon className="h-5 w-5" />
+              <span>Filter</span>
+            </button>
+          </div>
+
+          {/* Sidebar */}
+          <div className="hidden md:block w-full md:w-48 bg-background rounded-lg shadow-lg flex-shrink-0">
+            <ShopFilter
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+              priceFilter={priceFilter}
+              setPriceFilter={setPriceFilter}
+              sortOrder={sortOrder}
+              setSortOrder={setSortOrder}
+            />
+          </div>
+
+          {/* Product Display */}
+          <div className="flex-grow">
+            {/* ส่ง products ที่กรองและเรียงแล้วไปให้ ProductCard */}
+            <ProductCard products={filteredProducts} />
+          </div>
         </div>
       </div>
 
-      {/* Product Display */}
-      <div className="flex-1 p-4">
-        {/* Sort Buttons */}
-        <div className="flex justify-end items-center gap-2 mb-4">
-          <span className="text-gray-600 dark:text-gray-300">Sort by:</span>
-          <button
-            className={`p-2 rounded ${
-              sortOrder === "low-to-high" ? "bg-gray-400" : "bg-gray-300"
-            } dark:bg-gray-600`}
-            onClick={() => setSortOrder("low-to-high")}
-          >
-            ↑
-          </button>
-          <button
-            className={`p-2 rounded ${
-              sortOrder === "high-to-low" ? "bg-gray-400" : "bg-gray-300"
-            } dark:bg-gray-600`}
-            onClick={() => setSortOrder("high-to-low")}
-          >
-            ↓
-          </button>
+      {/* Modal สำหรับ Filter บน Mobile */}
+      {isFilterModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-background rounded-lg shadow-lg w-11/12 max-w-md p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-text">Filter</h2>
+              <button
+                onClick={toggleFilterModal}
+                className="text-text hover:text-primary"
+              >
+                &times;
+              </button>
+            </div>
+            <ShopFilter
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+              priceFilter={priceFilter}
+              setPriceFilter={setPriceFilter}
+              sortOrder={sortOrder}
+              setSortOrder={setSortOrder}
+            />
+          </div>
         </div>
-
-        {/* ส่ง products ที่กรองและเรียงแล้วไปให้ ProductCard */}
-        <ProductCard products={filteredProducts} />
-      </div>
+      )}
     </div>
   );
 }

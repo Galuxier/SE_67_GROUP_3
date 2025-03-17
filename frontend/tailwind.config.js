@@ -14,7 +14,7 @@ export default {
         card: 'var(--color-card-background)', // เพิ่มสีสำหรับ Card
         text: 'var(--color-text)',
         border: 'var(--color-border)',
-        textmain: 'var(--color-text-main)',
+        highlight: 'var(--color-text-highlight)',
       },
     },
   },

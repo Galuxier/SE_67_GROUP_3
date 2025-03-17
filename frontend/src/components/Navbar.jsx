@@ -59,7 +59,7 @@ function Navbar() {
                   <Link
                     to={item.path}
                     className={`text-text transition hover:text-primary ${
-                      basePath === item.path.split("/")[1] ? "text-textmain font-bold" : ""
+                      basePath === item.path.split("/")[1] ? "text-highlight font-bold" : ""
                     }`}
                   >
                     {item.name}
