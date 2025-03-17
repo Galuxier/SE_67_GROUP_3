@@ -17,7 +17,7 @@ function EventRoutes() {
         {/* มี Layout(Navbar) */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<EventHome />} />
-          <Route path="/detail/:id" element={<EventDetail />} />
+          <Route path="/:id" element={<EventDetail />} />
           <Route path="/register/:eventId" element={<RegistrationForm />} />
 
         </Route>

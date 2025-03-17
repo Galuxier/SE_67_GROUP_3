@@ -60,10 +60,9 @@ function CourseHome() {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
-      <div className="container px-20 sm:px-0 pb-5 pt-5 mx-auto">
+      <div className="container px-5 sm:px-0 pb-5 pt-5 mx-auto">
         {/* Header */}
         <div className="flex justify-center relative mb-6">
-          <h1 className="text-3xl font-bold text-text">All Courses</h1>
           {user?.role?.includes("trainer") && (
             <Link to="/course/addcourse">
               <button className="bg-secondary hover:bg-primary rounded-full w-8 h-8 flex items-center justify-center absolute right-0">

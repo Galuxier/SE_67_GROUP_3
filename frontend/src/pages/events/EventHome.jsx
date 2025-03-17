@@ -63,7 +63,6 @@ function EventHome() {
       <div className="container px-5 sm:px-0 pb-5 pt-5 mx-auto">
         {/* Header */}
         <div className="flex justify-center relative mb-6">
-          <h1 className="text-3xl font-bold text-text">All Events</h1>
           {user?.role?.includes("event_organizer") && (
             <Link to="/event/addEvent">
               <button className="bg-secondary hover:bg-primary rounded-full w-8 h-8 flex items-center justify-center absolute right-0">

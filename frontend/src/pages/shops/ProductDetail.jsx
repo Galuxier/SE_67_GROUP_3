@@ -104,15 +104,6 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6 relative">
-      <div className="absolute top-4 left-4 z-10">
-        <button
-          onClick={() => navigate(-1)}
-          className="bg-primary text-text px-4 py-2 rounded hover:bg-secondary transition"
-        >
-          Back
-        </button>
-      </div>
-
       <div className="max-w-4xl mx-auto bg-card p-4 md:p-8 shadow-md rounded mt-12">
         <div className="flex flex-col md:flex-row gap-4 md:gap-8">
           {/* ส่วนแสดงรูปภาพซ้าย */}

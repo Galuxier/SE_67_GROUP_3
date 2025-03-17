@@ -46,15 +46,11 @@ const GymDetail = () => {
     setIsModalOpen(false);
   };
 
-  const handleBack = () => {
-    navigate(-1);
-  };
-
   return (
     <div className="min-h-screen bg-background">
       {/* ส่วนของรูปภาพและปุ่ม Back */}
       <div className="relative w-full pt-8">
-        {/* ปุ่ม Back แบบ minimal */}
+        {/* ปุ่ม Back แบบ minimal
         <button
           onClick={handleBack}
           className="absolute top-4 left-4 z-10 flex items-center text-white bg-black bg-opacity-30 hover:bg-opacity-50 rounded-full p-2 transition-all"
@@ -63,7 +59,7 @@ const GymDetail = () => {
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
-        </button>
+        </button> */}
 
         {/* รูปภาพแบบ Swiper */}
         <div className="w-full max-w-4xl mx-auto px-4">

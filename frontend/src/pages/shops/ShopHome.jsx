@@ -34,7 +34,6 @@ export default function ShopHome() {
       <div className="container px-5 sm:px-0 pb-5 pt-5 mx-auto">
         {/* Header */}
         <div className="flex justify-center relative mb-6">
-          <h1 className="text-3xl font-bold text-text">All Products</h1>
           <div className="flex gap-2 absolute right-0">
             <Link to="/shop/addShop">
               <button className="bg-secondary hover:bg-primary rounded-full w-8 h-8 flex items-center justify-center">

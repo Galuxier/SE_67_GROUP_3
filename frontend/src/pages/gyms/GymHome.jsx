@@ -63,7 +63,6 @@ function GymHome() {
       <div className="container px-5 sm:px-0 pb-5 pt-5 mx-auto">
         {/* Header */}
         <div className="flex justify-center relative mb-6">
-          <h1 className="text-3xl font-bold text-text">All Gym</h1>
           {user?.role?.includes("gym_owner") && (
             <Link to="/gym/addgym">
               <button className="bg-secondary hover:bg-primary rounded-full w-8 h-8 flex items-center justify-center absolute right-0">

@@ -12,7 +12,7 @@ function GymRoutes() {
         {/* มี Layout(Navbar) */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<GymHome />} />
-          <Route path="/detail/:id" element={<GymDetail />} />
+          <Route path="/:id" element={<GymDetail />} />
           
         </Route>
 

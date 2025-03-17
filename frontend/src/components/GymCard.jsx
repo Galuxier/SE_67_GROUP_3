@@ -8,8 +8,8 @@ function GymCard({ gyms }) {
   const navigate = useNavigate();
 
   const handleGymClick = (gym) => {
-    console.log("Navigating to:", `/gym/detail/${gym._id}`);
-    navigate(`/gym/detail/${gym._id}`);
+    console.log("Navigating to:", `/gym/${gym._id}`);
+    navigate(`/gym/${gym._id}`);
   };
 
   return (
