@@ -6,7 +6,7 @@ import {
     updateGymController,
     deleteGymController
 } from '../controllers/gym.controller';
-import { gymImagesUpload } from '../middlewares/uploads/gymImages.upload';
+import { gymImagesUpload } from '../middlewares/uploads/gym.upload';
 
 const router = express.Router();
 

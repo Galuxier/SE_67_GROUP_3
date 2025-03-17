@@ -34,3 +34,17 @@ export async function updateUser(userId, userData) {
         throw error;
     }   
 }
+
+export async function submitEnrollment(formData) {
+    try {
+      const response = await api.post('/user/enrollment', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Enrollment request failed:', error.response?.data || error);
+      throw new Error(error.response?.data?.message || 'Failed to submit enrollment request');
+    }
+  }

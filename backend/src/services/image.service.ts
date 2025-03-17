@@ -9,6 +9,7 @@ export const ImageService = {
 
       // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
       if (!fs.existsSync(imagePath)) {
+        console.log(imagePath);
         throw new Error('Image not found');
       }
 

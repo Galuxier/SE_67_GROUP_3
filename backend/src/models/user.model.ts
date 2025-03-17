@@ -40,7 +40,7 @@ const UserSchema = new Schema<UserDocument>({
   }],
   gym_id: { type: Schema.Types.ObjectId },
   contact_info: { type: Schema.Types.Mixed }, // รับ key-value ที่ไม่กำหนดโครงสร้าง
-  role: [{ type: String, enum: ['member', 'organizer', 'boxer', 'trainer', 'gym_owner', 'shop_owner', 'lessor'], required: true }],
+  role: [{ type: String, enum: ['member', 'organizer', 'boxer', 'trainer', 'gym_owner', 'shop_owner', 'lessor', 'admin'], required: true }],
   create_at: { type: Date, required: true, default: Date.now },
   updated_at: { type: Date },
   status: { type: String, enum: ['active', 'inActive'], required: true, default: 'active' },

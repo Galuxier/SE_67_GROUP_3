@@ -74,20 +74,14 @@ function CourseList() {
         
     ];
 
-    
-
-
     const getLevelColor = (level) => {
         switch(level) {
-            case "Forkids": return "text-blue-500";
-            case "Beginner": return "text-green-500";
-            case "Advanced": return "text-red-500";
-            case "Intermediate": return "text-orange-500";
-            case "Professional": return "text-purple-500";
-            case "Expert": return "text-yellow-500";
-            default: return "text-gray-700";
+          case "ForKids": return "text-green-500 dark:text-green-400";
+          case "Beginner": return "text-orange-400 dark:text-orange-300";
+          case "Advance": return "text-red-500 dark:text-red-400";
+          default: return "text-text";
         }
-    };
+      };
 
     const handleCourseClick = (course) => {
         // console.log("Navigating to course: ", course);
@@ -98,35 +92,30 @@ function CourseList() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {courses.map((course) => (
                 <button 
-                    key={course.id} 
-                    className="max-w-xs rounded overflow-hidden shadow-lg bg-white text-left cursor-pointer transition transform hover:scale-105"
-                    onClick={() => handleCourseClick(course)}
+                key={course.id} 
+                className="max-w-xs rounded-lg overflow-hidden shadow-lg bg-card text-text cursor-pointer transition transform hover:scale-105 border border-border"
+                onClick={() => handleCourseClick(course)}
                 >
-                    <img className="w-full aspect-[4/3] object-cover" src={course.image_url} alt={course.course_name} />
-                    <div className="px-6 py-4">
-                        <div className="font-semibold text-xl mb-2">{course.course_name}</div>
-                        <div className="text-gray-700 text-base">{course.gym}</div>
-                        <div className={`font-normal ${getLevelColor(course.level)}`}>{course.level}</div>
-                        <div className="text-gray-700 text-base mt-2">{course.description}</div>
-                        <div className="text-gray-700 text-sm mt-2">
-                            <strong>Start Date:</strong> {new Date(course.start_date).toLocaleDateString()} <br />
-                            <strong>End Date:</strong> {new Date(course.end_date).toLocaleDateString()}
-                        </div>
-                        <div className="flex items-center font-base text-lg mb-2">
-                            <span className="mr-2">THB {course.price}</span>
-                            <span className="text-gray-700 text-base">/course</span>
-                        </div>
-                        <div className="text-gray-700 text-sm mt-2">
-                            <strong>Activities:</strong>
-                            <ul className="list-disc pl-5 mt-2">
-                                {course.activities.map((activity, index) => (
-                                    <li key={index}>
-                                        {activity.description} on {new Date(activity.date).toLocaleDateString()} at {activity.time} with {activity.trainer.join(", ")}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                <img 
+                    className="w-full aspect-[4/3] object-cover" 
+                    src={course.image_url} 
+                    alt={course.course_name} 
+                />
+                <div className="px-6 py-4">
+                    {/* Course Name */}
+                    <div className="font-semibold text-xl mb-2 text-text">{course.course_name}</div>
+                    
+                    {/* Level */}
+                    <div className={`font-medium mb-2 ${getLevelColor(course.level)}`}>
+                    {course.level}
                     </div>
+                    
+                    {/* Price */}
+                    <div className="flex items-center font-normal text-sm text-text">
+                    <span>{course.price.toLocaleString()}</span>
+                    <span className="text-text text-sm ml-1 font-normal">฿/Person</span>
+                    </div>
+                </div>
                 </button>
             ))}
         </div>

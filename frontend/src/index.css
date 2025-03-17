@@ -1,6 +1,8 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 /* สไตล์สำหรับ input ที่มีข้อผิดพลาด */
 .input-error {
@@ -13,4 +15,28 @@
     color: #ef4444; /* สีแดง */
     font-size: 0.875rem; /* ขนาดข้อความเล็ก */
     margin-top: 0.25rem; /* ระยะห่างด้านบน */
+  }
+
+  
+  :root {
+    --color-primary: #E11D48; /* สีหลัก (rose-600) */
+    --color-secondary: #EF4444; /* สีรอง */
+    --color-background: #F0EEE7; /* สีพื้นหลังของหน้า */
+    --color-bar-background: #FFFFFF;
+    --color-card-background: #F9FAFB; /* สีพื้นหลังของ Card */
+    --color-text: #1F2937; /* สีข้อความ */
+    --color-border: #0c0d0e; /* สีเส้นขอบ */
+    --color-text-highlight: #d43f5f;
+  }
+  
+  .dark {
+    /* --color-primary: #E11D48; */
+    --color-primary: #E11D48;
+    --color-secondary: #F87171; /* สีรองใน Dark Mode */
+    --color-background: #1F2937; /* สีพื้นหลังของหน้าใน Dark Mode */
+    --color-bar-background: #111827;
+    --color-card-background: #374151; /* สีพื้นหลังของ Card ใน Dark Mode */
+    --color-text: #F3F4F6; /* สีข้อความใน Dark Mode */
+    --color-border: #4B5563; /* สีเส้นขอบใน Dark Mode */
+    --color-text-highlight: #e95b7a;
   }

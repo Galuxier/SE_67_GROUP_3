@@ -1,19 +1,19 @@
 import { Routes, Route } from "react-router-dom";
-import MainLayout from "../layouts/MainLayout";
+import AdminLayout from "../layouts/AdminLayout"; 
 import Dashboard from "../pages/admin/Dashboard";
+import Approval from "../pages/admin/Approval"; 
 
-function ShopRoutes() {
+function AdminRoutes() {
   return (
-      <Routes>
-        {/* มี Layout(Navbar) */}
-        <Route path="/" element={<MainLayout />}>
-        </Route>
-          
-        {/* ไม่มี Layout(Navbar) */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          
-      </Routes>
+    <Routes>
+      {/* ใช้ AdminLayout สำหรับทุก Route ภายใต้ /admin */}
+      <Route path="/" element={<AdminLayout />}>
+        <Route index element={<Dashboard />} /> 
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="approval" element={<Approval />} /> 
+      </Route>
+    </Routes>
   );
 }
 
-export default ShopRoutes;
+export default AdminRoutes;

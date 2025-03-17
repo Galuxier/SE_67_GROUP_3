@@ -253,17 +253,15 @@ const Addgym = () => {
                 accept="image/*"
                 multiple // อนุญาตให้เลือกหลายไฟล์
               />
-              <button
-                className="w-full border border-gray-300 rounded-lg py-2 px-4 flex items-center justify-between cursor-default"
+              <label
+                htmlFor="fileInput" // เชื่อมกับ input file
+                className="w-full border border-gray-300 rounded-lg py-2 px-4 flex items-center justify-between cursor-pointer"
               >
-                <span className="text-gray-500 truncate pointer-events-none">
+                <span className="text-gray-500 truncate">
                   {fileSelected ? "Files selected" : "Choose files"}
                 </span>
-                <PaperClipIcon
-                  onClick={handleIconClick}
-                  className="h-5 w-5 text-gray-400 cursor-pointer"
-                />
-              </button>
+                <PaperClipIcon className="h-5 w-5 text-gray-400" />
+              </label>
             </div>
             {/* แสดงรูปภาพที่อัปโหลด */}
             <div className="mt-4 flex flex-wrap gap-2">

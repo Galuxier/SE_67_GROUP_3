@@ -1,7 +1,13 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { products } from "../../data/ProductsData";
 import { shops } from "../../data/ShopsData";
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Thumbs, Navigation, FreeMode } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/thumbs';
+import 'swiper/css/free-mode';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -17,7 +23,7 @@ export default function ProductDetail() {
         <p>Product not found!</p>
         <button
           onClick={() => navigate("/shop")}
-          className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
+          className="bg-primary text-text px-4 py-2 rounded hover:bg-secondary transition"
         >
           Back
         </button>
@@ -55,9 +61,6 @@ export default function ProductDetail() {
   const currentVariant = hasVariants ? findCurrentVariant() : null;
 
   // ข้อมูลที่จะแสดง
-  const displayImage = hasVariants
-    ? currentVariant?.variantImage_url || product.image_url
-    : product.image_url;
   const displayPrice = hasVariants
     ? currentVariant?.price ?? 0
     : product.price ?? 0;
@@ -94,54 +97,103 @@ export default function ProductDetail() {
   const handleAddToCart = () => alert("Add to Cart!");
   const handleBuyNow = () => alert("Buy Now!");
 
+  const [thumbsSwiper, setThumbsSwiper] = useState(null);
+
+  // สร้างอาเรย์รูปเพื่อความปลอดภัย
+  const productImages = product.images || [product.image_url || ''];
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6 relative">
-      <div className="absolute top-4 left-4">
+    <div className="min-h-screen bg-background p-4 md:p-6 relative">
+      <div className="absolute top-4 left-4 z-10">
         <button
           onClick={() => navigate(-1)}
-          className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
+          className="bg-primary text-text px-4 py-2 rounded hover:bg-secondary transition"
         >
           Back
         </button>
       </div>
 
-      <div className="max-w-3xl mx-auto bg-white p-8 shadow-md rounded">
-        <h2 className="text-2xl font-bold mb-4">{product.product_name}</h2>
-
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="flex-1">
-            <div className="w-full max-w-md h-96 overflow-hidden mx-auto">
-              <img
-                src={displayImage}
-                alt={product.product_name}
-                className="w-full h-full object-cover rounded"
-              />
+      <div className="max-w-4xl mx-auto bg-card p-4 md:p-8 shadow-md rounded mt-12">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-8">
+          {/* ส่วนแสดงรูปภาพซ้าย */}
+          <div className="md:w-1/2">
+            {/* รูปภาพหลัก */}
+            <div className="w-full bg-background rounded">
+              <Swiper
+                spaceBetween={10}
+                thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
+                modules={[Thumbs, Navigation]}
+                navigation={true}
+                className="product-main-swiper"
+              >
+                {productImages.map((image, index) => (
+                  <SwiperSlide key={index}>
+                    <div className="flex items-center justify-center" style={{ height: '300px' }}>
+                      <img
+                        src={image}
+                        alt={`Product ${index + 1}`}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </div>
+            
+            {/* รูปภาพเล็ก (thumbnails) */}
+            {productImages.length > 1 && (
+              <div className="mt-4">
+                <Swiper
+                  onSwiper={setThumbsSwiper}
+                  spaceBetween={8}
+                  slidesPerView={4}
+                  freeMode={true}
+                  watchSlidesProgress={true}
+                  modules={[FreeMode, Navigation]}
+                  className="product-thumbs-swiper"
+                >
+                  {productImages.map((image, index) => (
+                    <SwiperSlide key={index}>
+                      <div className="aspect-square cursor-pointer border border-border rounded overflow-hidden">
+                        <img
+                          src={image}
+                          alt={`Thumbnail ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              </div>
+            )}
           </div>
 
           {/* กล่องรายละเอียดด้านขวา */}
-          <div className="md:w-1/3 bg-white p-4 shadow-md flex flex-col justify-between">
+          <div className="md:w-1/2 bg-card p-4 rounded-md shadow-sm">
             <div>
-              <p className="text-lg font-bold mb-2">Price: {displayPrice} THB</p>
-              <p className="text-gray-600 mb-4">Stock: {displayStock}</p>
+              {/* ชื่อสินค้า */}
+              <h2 className="text-xl md:text-2xl font-bold mb-4 text-text">{product.product_name}</h2>
+              
+              <p className="text-lg font-bold mb-2 text-text">Price: {displayPrice} THB</p>
+              <p className="text-text mb-4">Stock: {displayStock}</p>
 
               {hasVariants && mainOption && (
                 <div className="space-y-4">
                   {/* main option */}
                   <div>
-                    <p className="font-semibold capitalize">
+                    <p className="font-semibold capitalize text-text">
                       {mainOption.name}:
                     </p>
-                    <div className="flex gap-2 mt-1">
+                    <div className="flex flex-wrap gap-2 mt-1">
                       {getMainOptionValues().map((val) => (
                         <button
                           key={val}
                           onClick={() => handleChangeAttr(mainOption.name, val)}
-                          className={`px-3 py-1 rounded border transition 
+                          className={`px-3 py-1 rounded border border-border transition 
                             ${
                               selectedAttrs[mainOption.name] === val
-                                ? "bg-rose-600 text-white"
-                                : "hover:bg-gray-100"
+                                ? "bg-primary text-text"
+                                : "hover:bg-secondary"
                             }`}
                         >
                           {val}
@@ -155,17 +207,17 @@ export default function ProductDetail() {
                     const possibleVals = getPossibleValues(opt.name);
                     return (
                       <div key={opt.name}>
-                        <p className="font-semibold capitalize">{opt.name}:</p>
-                        <div className="flex gap-2 mt-1">
+                        <p className="font-semibold capitalize text-text">{opt.name}:</p>
+                        <div className="flex flex-wrap gap-2 mt-1">
                           {possibleVals.map((val) => (
                             <button
                               key={val}
                               onClick={() => handleChangeAttr(opt.name, val)}
-                              className={`px-3 py-1 rounded border transition 
+                              className={`px-3 py-1 rounded border border-border transition 
                                 ${
                                   selectedAttrs[opt.name] === val
-                                    ? "bg-rose-600 text-white"
-                                    : "hover:bg-gray-100"
+                                    ? "bg-primary text-text"
+                                    : "hover:bg-secondary"
                                 }`}
                             >
                               {val}
@@ -179,48 +231,51 @@ export default function ProductDetail() {
               )}
             </div>
 
-            {/* ปุ่ม + กรอบโปรไฟล์ร้าน */}
-            <div className="mt-4">
-              <div className="flex gap-2 mb-4">
+            {/* ปุ่ม */}
+            <div className="mt-6">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={handleAddToCart}
-                  className="bg-rose-600 text-white px-4 py-2 rounded hover:bg-rose-700 transition"
+                  className="bg-primary text-text px-4 py-2 rounded hover:bg-secondary transition"
                 >
                   Add to Cart
                 </button>
                 <button
                   onClick={handleBuyNow}
-                  className="bg-rose-600 text-white px-4 py-2 rounded hover:bg-rose-700 transition"
+                  className="bg-primary text-text px-4 py-2 rounded hover:bg-secondary transition"
                 >
                   Buy Now
                 </button>
               </div>
-
-              {shop && (
-                <Link
-                  to={`/shop/profile/${shop.owner_id}`}
-                  className="block p-4 border rounded bg-gray-50 hover:bg-gray-100 transition"
-                >
-                  <div className="flex items-center">
-                    <img
-                      src={shop.logo_url}
-                      alt="Shop logo"
-                      className="w-12 h-12 object-cover rounded-full mr-3 border"
-                    />
-                    <div>
-                      <p className="font-semibold">{shop.shop_name}</p>
-                      
-                    </div>
-                  </div>
-                </Link>
-              )}
             </div>
           </div>
         </div>
 
+        {/* ข้อมูลร้านค้า */}
+        {shop && (
+          <div className="mt-8">
+            <Link
+              to={`/shop/profile/${shop.owner_id}`}
+              className="block p-4 border border-border rounded bg-card hover:bg-border transition"
+            >
+              <div className="flex items-center">
+                <img
+                  src={shop.logo_url}
+                  alt="Shop logo"
+                  className="w-12 h-12 object-cover rounded-full mr-3 border border-border"
+                />
+                <div>
+                  <p className="font-semibold text-text">{shop.shop_name}</p>
+                </div>
+              </div>
+            </Link>
+          </div>
+        )}
+        
+        {/* รายละเอียดสินค้า */}
         <div className="mt-8">
-          <h4 className="text-lg font-bold mb-2">Description</h4>
-          <p className="text-gray-700">{product.description}</p>
+          <h4 className="text-lg font-bold mb-2 text-text">Description</h4>
+          <p className="text-text">{product.description}</p>
         </div>
       </div>
     </div>

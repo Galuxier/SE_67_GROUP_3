@@ -5,15 +5,16 @@ import userService from "./user.service";
 
 // สมัครสมาชิก
 export const registerUser = async (userData: {
-  user_name: string;
+  username: string;
   email: string;
   password: string;
   first_name: string;
   last_name: string;
 }) => {
-  const { user_name, email, password, first_name, last_name } = userData;
-
-  const existingUserByUsername = await User.findOne({ user_name });
+  const { username, email, password, first_name, last_name } = userData;
+  console.log(username);
+  
+  const existingUserByUsername = await User.findOne({ username });
   if (existingUserByUsername) {
     throw new Error("Username already exists");
   }
@@ -29,7 +30,7 @@ export const registerUser = async (userData: {
   
   // สร้างผู้ใช้ใหม่
   const user = new User({
-    user_name: user_name,
+    username: username,
     email: email,
     password: hashedPassword,
     first_name: first_name,

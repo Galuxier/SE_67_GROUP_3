@@ -10,11 +10,11 @@ export async function loginUser(credentials) {
   }
 }
 
-export async function signupUser(userData) {
+export async function registerUser(userData) {
   try {
     // เตรียมข้อมูลให้ตรงกับที่เซิร์ฟเวอร์คาดหวัง
     const payload = {
-      user_name: userData.user_name,
+      username: userData.username,
       password: userData.password,
       email: userData.email,
       first_name: userData.first_name,
@@ -24,7 +24,7 @@ export async function signupUser(userData) {
       create_at: new Date(), // เพิ่ม create_at
     };
 
-    const response = await api.post("/signup", payload);
+    const response = await api.post("/register", payload);
     return response.data;
   } catch (error) {
     console.error("Signup failed:", error.response?.data); // ตรวจสอบข้อความผิดพลาดจากเซิร์ฟเวอร์
