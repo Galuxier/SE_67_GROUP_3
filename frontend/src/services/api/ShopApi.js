@@ -13,7 +13,19 @@ export async function creatProduct(ProductData){
 
 export async function registerShop(ShopData) {
     try{
-        const response = await api.post('/shops', ShopData);
+        ShopData.forEach((value, key) => {
+          if (value instanceof File) {
+            console.log(`${key}: File - ${value.name}, ${value.size} bytes, Type: ${value.type}`);
+          } else {
+            console.log(`${key}: ${value}`);
+          }
+        });
+        
+        const response = await api.post('/shops', ShopData, {
+          headers: {
+            "Content-Type": "multipart/form-data", // กำหนด headers สำหรับ FormData
+          },
+        });
         return response.data;
     } catch(error){
         console.error('Register Shop Failed: ', error);

@@ -10,7 +10,6 @@ import MuayThaiCourses from "../pages/courses/CourseHome";
 import  Checkout from "../pages/courses/CourseCheck"; //หน้าก่อนการซื้อ
 import EditCourse from "../pages/courses/EditCourse";
 import EditCourseFrom from "../pages/courses/EditCourseFrom";
-import AdminHome from "../pages/admin/AdminHome";
 function CourseRoutes() {
   return (
       <Routes>
@@ -19,7 +18,6 @@ function CourseRoutes() {
           <Route index element={<MuayThaiCourses />} />
           <Route path ="/courseDetail" element={<CourseDetail />} />
           <Route path ="/courseBuyFrom"  element={<CourseBuyFrom />} />
-          <Route path ="/adminHome" element={<AdminHome />} />
           <Route path ="/courseCheck" element={< Checkout />} />  
         </Route>
 

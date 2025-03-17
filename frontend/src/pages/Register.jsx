@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "../index.css";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
-import { signupUser } from "../services/api/AuthApi"; // นำเข้า signupUser จาก AuthApi
+import { registerUser } from "../services/api/AuthApi"; // นำเข้า signupUser จาก AuthApi
 import { MdOutlineKeyboardBackspace } from "react-icons/md";
 import { useNavigate } from "react-router-dom"; // ใช้สำหรับ redirect
 
@@ -108,14 +108,14 @@ function RegisterForm() {
     // ส่งข้อมูลไปยัง API
     try {
       const userData = {
-        user_name: formInput.username,
+        username: formInput.username,
         first_name: formInput.firstName,
         last_name: formInput.lastName,
         email: formInput.email,
         password: formInput.password,
       };
 
-      const response = await signupUser(userData);
+      const response = await registerUser(userData);
       console.log("Registration successful:", response);
       navigate(-1);
       setFormError({ ...formError, general: "Registration successful!" });

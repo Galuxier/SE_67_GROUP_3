@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BsShop } from "react-icons/bs";
 import EditShopModal from "../../components/shops/EditShopModal";
-import { getShopFromId } from "../../services/api/ShopApi"; // นำเข้า API service
+import { getShopFromId } from "../../services/api/ShopApi"; 
+import { getImage } from "../../services/api/ImageApi"; // นำเข้า getImage
 import ProductCard from "../../components/ProductCard";
 import { shops } from "../../data/ShopsData";
 import { products } from "../../data/ProductsData";
@@ -11,7 +12,6 @@ export default function ShopProfile() {
   const { id } = useParams(); 
   const navigate = useNavigate();
 
-  // หา shop ตาม owner_id
   const foundShop = shops.find((shop) => shop.owner_id === id);
   const initialShopData = foundShop || {
     owner_id: id,
@@ -24,29 +24,35 @@ export default function ShopProfile() {
 
   const [shop, setShop] = useState(initialShopData);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [shopLogoUrl, setShopLogoUrl] = useState(""); // เพิ่ม state สำหรับ URL ของภาพ
 
-  // ดึงข้อมูลร้านค้า
   useEffect(() => {
     const fetchShop = async () => {
       try {
-        const response = await getShopFromId(id); // เรียก API
-        setShop(response); // ตั้งค่าข้อมูลร้านค้า
+        const response = await getShopFromId(id);
+        setShop(response);
+        
+        if (response.logo) {
+          const logoUrl = await getImage(response.logo); // ดึงภาพจาก API
+          setShopLogoUrl(logoUrl); // ตั้งค่า URL ของภาพ
+        }
       } catch (error) {
         console.error("Error fetching shop:", error);
       }
     };
     fetchShop();
   }, [id]);
-
+  
+  
 
   const handleOpenModal = () => setShowEditModal(true);
   const handleCloseModal = () => setShowEditModal(false);
   const handleSaveShop = (newShopData) => {
-    setShop((prev) => ({ ...prev, ...newShopData })); // อัปเดตข้อมูลร้านค้า
+    setShop((prev) => ({ ...prev, ...newShopData }));
     setShowEditModal(false);
   };
 
-  if (!shop) return <div>Loading...</div>; // แสดง Loading ถ้ายังไม่ได้รับข้อมูล
+  if (!shop) return <div>Loading...</div>;
 
   if (!shop.shop_name) {
     return (
@@ -56,7 +62,6 @@ export default function ShopProfile() {
     );
   }
 
-  // filter products ของร้านนี้
   const shopProducts = products.filter((p) => p.shop_owner_id === shop.owner_id);
 
   return (
@@ -71,7 +76,6 @@ export default function ShopProfile() {
       </div>
 
       <div className="max-w-5xl mx-auto bg-white shadow-md rounded p-6 relative">
-        {/* ปุ่มแก้ไข */}
         <button
           onClick={handleOpenModal}
           className="absolute top-4 right-4 bg-rose-600 text-white px-4 py-2 rounded"
@@ -79,12 +83,11 @@ export default function ShopProfile() {
           Edit
         </button>
 
-        {/* ข้อมูลร้าน */}
         <div className="flex items-center space-x-6">
-          {shop.logo_url ? (
+          {shopLogoUrl ? (
             <img
               alt="Shop Logo"
-              src={new URL("../../assets/images/Shop_logo.jpg", import.meta.url).href} // แสดงรูปภาพจาก API
+              src={shopLogoUrl} // แสดงภาพจาก API
               className="shadow-xl rounded-full h-32 w-32 border-4 border-white object-cover"
             />
           ) : (
@@ -94,10 +97,7 @@ export default function ShopProfile() {
             <h3 className="text-3xl font-semibold text-gray-800">
               {shop.shop_name || "No Shop Name"}
             </h3>
-            <p className="text-gray-600 mt-1">{shop.description}</p>
-            <p className="text-gray-500 text-sm mt-1">
-              Owner ID: {shop.owner_id}
-            </p>
+            <p className="text-gray-500 text-sm mt-1">{shop.description}</p>
           </div>
           <div className="ml-auto bg-gray-100 px-5 py-3 rounded-lg shadow-md max-w-sm">
             <p className="text-gray-700 font-semibold mb-2">Contact</p>
@@ -113,24 +113,18 @@ export default function ShopProfile() {
           </div>
         </div>
 
-        {/* ที่อยู่ */}
         <div className="mt-6 bg-gray-100 p-4 rounded-lg">
           <h4 className="text-xl font-semibold mb-2">Address</h4>
           <div className="text-gray-600 text-sm">
             <p>
-              {shop.address.street}, {shop.address.subdistrict},{" "}
-              {shop.address.district}, {shop.address.province},{" "}
-              {shop.address.postal_code}
-            </p>
-            <p>
-              Latitude: {shop.address.latitude}, Longitude: {shop.address.longitude}
+              {shop.address?.street || ""} {shop.address?.subdistrict || ""},{" "}
+              {shop.address?.district || ""}, {shop.address?.province || ""},{" "}
+              {shop.address?.postal_code || ""}
             </p>
             <p>Information: {shop.address.information}</p>
           </div>
         </div>
 
-
-        {/* แสดงสินค้าในร้าน */}
         <div className="mt-6 border-t border-gray-300 pt-4">
           <h4 className="text-xl font-semibold mb-4">Products</h4>
           {shopProducts.length > 0 ? (
@@ -141,7 +135,6 @@ export default function ShopProfile() {
         </div>
       </div>
 
-      {/* Modal สำหรับแก้ไข */}
       <EditShopModal
         show={showEditModal}
         onClose={handleCloseModal}

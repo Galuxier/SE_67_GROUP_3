@@ -4,12 +4,42 @@ import ShopService from '../services/shop.service';
 // สร้างร้านค้าใหม่
 export const createShopController = async (req: Request, res: Response) => {
   try {
+    console.log(req.body);
+    console.log(req.files);
+
+    if (req.files) {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+      if (files.logo) {
+        req.body.logo = files.logo[0].path.replace(/^.*?uploads\//, '');
+      }
+
+      if (files.license) {
+        req.body.license = files.license[0].path.replace(/^.*?uploads\//, '');
+      }
+    }
+
+    // ✅ แปลง JSON string เป็น object ก่อนบันทึกลง Database
+    if (req.body.contacts) {
+      req.body.contacts = JSON.parse(req.body.contacts);
+    }
+
+    if (req.body.address) {
+      req.body.address = JSON.parse(req.body.address);
+    }
+
+    console.log('Final Body:', req.body);
+
     const newShop = await ShopService.add(req.body);
     res.status(201).json(newShop);
   } catch (err) {
+    console.error(err);
     res.status(400).json({ message: 'Error creating shop', error: err });
   }
 };
+
+
+
 
 // ดึงข้อมูลร้านค้าทั้งหมด
 export const getShopsController = async (req: Request, res: Response) => {

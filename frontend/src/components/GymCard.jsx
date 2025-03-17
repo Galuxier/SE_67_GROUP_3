@@ -1,6 +1,8 @@
+/* eslint-disable react/prop-types */
 import { useState, useEffect } from "react";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { getImage } from "../services/api/ImageApi";
 
 function GymCard({ gyms }) {
   const navigate = useNavigate();
@@ -11,7 +13,7 @@ function GymCard({ gyms }) {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"> {/* ปรับ grid-cols และ gap */}
       {gyms.map((gym) => (
         <GymCardItem key={gym._id} gym={gym} onClick={() => handleGymClick(gym)} />
       ))}
@@ -22,22 +24,36 @@ function GymCard({ gyms }) {
 const GymCardItem = ({ gym, onClick }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [imageUrls, setImageUrls] = useState([]);
 
-  // เปลี่ยนรูปทุกๆ 2 วินาทีเมื่อเมาส์ชี้
+  useEffect(() => {
+    const fetchImages = async () => {
+      if (gym.gym_image_url?.length > 0) {
+        const urls = await Promise.all(
+          gym.gym_image_url.map(async (imageUrl) => {
+            return await getImage(imageUrl);
+          })
+        );
+        setImageUrls(urls);
+      }
+    };
+    fetchImages();
+  }, [gym.gym_image_url]);
+
   useEffect(() => {
     let interval;
-    if (isHovered && gym.gym_image_url?.length > 1) {
+    if (isHovered && imageUrls.length > 1) {
       interval = setInterval(() => {
         setCurrentImageIndex((prevIndex) =>
-          prevIndex === gym.gym_image_url.length - 1 ? 0 : prevIndex + 1
+          prevIndex === imageUrls.length - 1 ? 0 : prevIndex + 1
         );
-      }, 2000); // เปลี่ยนรูปทุก 2 วินาที
+      }, 2000);
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isHovered, gym.gym_image_url]);
+  }, [isHovered, imageUrls]);
 
   return (
     <button
@@ -48,24 +64,21 @@ const GymCardItem = ({ gym, onClick }) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="w-full aspect-[4/3] relative">
-        {gym.gym_image_url?.map((image, index) => (
+        {imageUrls.map((imageUrl, index) => (
           <img
             key={index}
             className={`w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-1000 ${
               index === currentImageIndex ? "opacity-100" : "opacity-0"
             }`}
-            src={`http://10.35.145.93:3000/images/${image}`}
+            src={imageUrl}
             alt={`Gym Image ${index}`}
           />
         ))}
       </div>
       <div className="px-6 py-4">
-        {/* Gym Name */}
         <div className="text-base mb-3 text-text font-semibold">
           {gym.gym_name}
         </div>
-  
-        {/* Address */}
         <div className="flex items-center font-base text-lg mb-2">
           <span className="mr-2">
             <FaMapMarkerAlt className="text-text" />

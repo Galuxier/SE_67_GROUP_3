@@ -10,9 +10,11 @@ export default {
         primary: 'var(--color-primary)',
         secondary: 'var(--color-secondary)',
         background: 'var(--color-background)',
+        bar: 'var(--color-bar-background)',
         card: 'var(--color-card-background)', // เพิ่มสีสำหรับ Card
         text: 'var(--color-text)',
         border: 'var(--color-border)',
+        textmain: 'var(--color-text-main)',
       },
     },
   },
@@ -26,4 +28,4 @@ export default {
   plugins: [],
   darkMode: 'class',
 }
-
+  

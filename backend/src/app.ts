@@ -40,7 +40,7 @@ app.use('/api', recommendRoutes);
 app.use('/api', teachHistoryRoutes);
 app.use('/api', ticketRoutes);
 app.use('/api', authRoutes);
-app.use('/images', imageRoutes);
+app.use('/api', imageRoutes);
 
 
 

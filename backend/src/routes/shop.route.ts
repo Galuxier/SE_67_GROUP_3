@@ -6,10 +6,28 @@ import{
     updateShopController,
     deleteShopController
 } from '../controllers/shop.controller';
+// import { shopLicenseUpload, shopLogoUpload } from '../middlewares/uploads/shop.upload';
+import createMultiFieldUploader from '../middlewares/uploads/shop.upload';
 
 const router = express.Router();
 
-router.post('/shops', createShopController);
+const shopUpload = createMultiFieldUploader(
+    [
+      { name: 'logo', maxCount: 1 }, // ฟิลด์สำหรับโลโก้
+      { name: 'license', maxCount: 1 }, // ฟิลด์สำหรับใบอนุญาต
+    ],
+    'shops', // โฟลเดอร์หลัก
+    ['image/'] // อนุญาตเฉพาะไฟล์รูปภาพ
+  );
+
+// router.post(
+//     '/shops',
+//     shopLogoUpload, // Middleware สำหรับอัปโหลดโลโก้
+//     shopLicenseUpload, 
+//     createShopController // Controller สำหรับสร้างร้านค้า
+//   );
+
+router.post('/shops', shopUpload, createShopController);
 
 router.get('/shops', getShopsController);
 

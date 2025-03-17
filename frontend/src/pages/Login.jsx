@@ -19,35 +19,44 @@ const Login = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isLoggingIn, setIsLoggingIn] = useState(false); // เพิ่ม state สำหรับตรวจสอบการ Login
+  const [roles, setRoles] = useState([]);
 
   const navigate = useNavigate();
   const { login, isLoggedIn } = useAuth();
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && !isLoggingIn) {
       toast.info("คุณล็อกอินอยู่แล้ว", {
         position: "top-right",
         autoClose: 2000,
       });
-      navigate("/");
+      if (roles.includes("admin")) {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } else {
       setIsCheckingAuth(false);
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, isLoggingIn, roles]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormInput({ ...formInput, [name]: value });
+    setFormInput((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     setFormError({
       identifier: "",
       password: "",
     });
-
+  
     if (!formInput.identifier || !formInput.password) {
       setFormError({
         identifier: !formInput.identifier ? "Please enter your email or username" : "",
@@ -55,48 +64,37 @@ const Login = () => {
       });
       return;
     }
-
+  
     setIsLoading(true);
-
+    setIsLoggingIn(true);
+  
     try {
       const { token } = await loginUser({
         identifier: formInput.identifier,
         password: formInput.password,
       });
-
+  
       if (!token) throw new Error("Invalid response from server");
-
+  
       localStorage.setItem("token", token);
-      login(token);
-
-      toast.success("Login สำเร็จ!", {
-        position: "top-right",
-        autoClose: 1000,
-      });
-
-      navigate(-1);
-    } catch (error) {
-      if (error.response?.data?.message) {
-        const errorMessage = error.response.data.message;
-        if (errorMessage === "Invalid email/username or password") {
-          setFormError({
-            identifier: "Invalid email/username or password",
-            password: "Invalid email/username or password",
-          });
-        } else if (errorMessage === "User not found") {
-          setFormError({
-            identifier: "User not found. Please check your email/username",
-            password: "",
-          });
-        } else {
-          setFormError({
-            identifier: "An error occurred. Please try again.",
-            password: "",
-          });
-        }
+  
+      // 👉 เซ็ต roles ใน state เพื่อให้ useEffect สามารถเข้าถึงได้
+      const userRoles = await login(token);
+      setRoles(userRoles);
+  
+      if (userRoles.includes("admin")) {
+        navigate("/admin");
+      } else {
+        navigate("/");
       }
+    } catch (error) {
+      toast.error(error.message || "Login failed", {
+        position: "top-right",
+        autoClose: 3000,
+      });
     } finally {
       setIsLoading(false);
+      setTimeout(() => setIsLoggingIn(false), 100);
     }
   };
 

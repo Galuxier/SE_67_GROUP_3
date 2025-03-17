@@ -5,6 +5,6 @@ const router = express.Router();
 
 // Route สำหรับรับ request ภาพ
 // GET /images/*
-router.get('/*', serveImage);
+router.get('/images/*', serveImage);
 
 export default router;

@@ -9,6 +9,7 @@ const createUploader = (
   allowedMimeTypes: string[] = ['image/'],
   fieldName = 'file'
 ) => {
+  
   const uploadPath = path.join(__dirname, '../../uploads', subfolder);
 
   // สร้างโฟลเดอร์ถ้ายังไม่มี
