@@ -38,10 +38,10 @@ import EventRoutes from "./routes/EventRoute";
 import ShopRoutes from "./routes/ShopRoute";
 import UserRoutes from "./routes/UserRoute";
 import AdminRoutes from "./routes/AdminRoute";
-
 import AdminRouteGuard from "./routes/AdminRouteGuard";
 
-
+import PlaceManageLayout from "./layouts/PlaceManageLayout";
+import PlaceManageDashboard from "./pages/places/managements/PlaceManageDashboard";
 
 const App = () => {
   return (
@@ -57,7 +57,11 @@ const App = () => {
               <Route path="/" element={<MainLayout />}>
                 <Route index element={<Home />} />
               </Route>
-              
+
+              <Route path="/place/management" element={<PlaceManageLayout />}>
+                <Route index element={<PlaceManageDashboard />} />              
+              </Route>
+
               {/* Routes ที่ไม่มี Layout (Login/Signup) */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Register />} />

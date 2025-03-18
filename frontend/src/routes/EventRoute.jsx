@@ -1,7 +1,8 @@
 import { Routes, Route } from "react-router-dom";
-import EventHome from "../pages/events/EventHome";
 import MainLayout from "../layouts/MainLayout";
+import EventManageLayout from "../layouts/EnevtManageLayout";
 
+import EventHome from "../pages/events/EventHome";
 import FormAddEvent from "../pages/events/AddEvent/AddEvent";
 import FormAddSeat from "../pages/events/AddEvent/AddSeat";
 import FormAddFighter from "../pages/events/AddEvent/AddFighter";
@@ -9,6 +10,7 @@ import FormAddWeightClass from "../pages/events/AddEvent/AddWeight";
 import FormAddResult from "../pages/events/AddResult";
 import EventDetail from "../pages/events/EventDetail";
 import RegistrationForm from "../pages/events/RegistrationForm";
+import EventManageDashboard from "../pages/events/managements/EventManageDashboard";
 
 
 function EventRoutes() {
@@ -20,6 +22,10 @@ function EventRoutes() {
           <Route path="/:id" element={<EventDetail />} />
           <Route path="/register/:eventId" element={<RegistrationForm />} />
 
+        </Route>
+
+        <Route path="/management" element={<EventManageLayout />} >
+          <Route index element={<EventManageDashboard />} />
         </Route>
 
         {/* ไม่มี Layout(Navbar) */}

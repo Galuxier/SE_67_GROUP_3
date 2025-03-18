@@ -7,7 +7,7 @@ const GymManageSidebar = () => {
       <div className="flex flex-col space-y-4">
         {/* Logo or Home Button */}
         <Link
-          to="/gym/manage"
+          to="/gym/management"
           className="text-xl font-bold text-primary hover:text-secondary"
         >
           Gym Management
@@ -16,7 +16,7 @@ const GymManageSidebar = () => {
         {/* Menu Items */}
         <nav className="flex flex-col space-y-2 mt-6">
           <Link
-            to="/gym/manage"
+            to="/gym/management"
             className="p-2 rounded-md hover:bg-primary hover:text-white text-text flex items-center"
           >
             <HomeIcon className="h-5 w-5 mr-2" />

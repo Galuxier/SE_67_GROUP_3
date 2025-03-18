@@ -7,7 +7,7 @@ const EventManageSidebar = () => {
       <div className="flex flex-col space-y-4">
         {/* Logo or Home Button */}
         <Link
-          to="/event/manage"
+          to="/event/management"
           className="text-xl font-bold text-primary hover:text-secondary"
         >
           Event Management
@@ -16,7 +16,7 @@ const EventManageSidebar = () => {
         {/* Menu Items */}
         <nav className="flex flex-col space-y-2 mt-6">
           <Link
-            to="/event/manage"
+            to="/event/management"
             className="p-2 rounded-md hover:bg-primary hover:text-white text-text flex items-center"
           >
             <HomeIcon className="h-5 w-5 mr-2" />
