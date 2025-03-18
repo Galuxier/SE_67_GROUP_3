@@ -1,42 +1,124 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Variables for Light Mode */
+:root {
+  --color-primary: #E11D48; /* rose-600 for primary color */
+  --color-primary-rgb: 225, 29, 72; /* RGB values for animations */
+  --color-secondary: #EF4444; /* red-500 for secondary color */
+  --color-background: #F0EEE7; /* Light background */
+  --color-bar-background: #FFFFFF; /* White for bar background */
+  --color-card-background: #F9FAFB; /* Light gray for card background */
+  --color-text: #1F2937; /* Dark text for readability */
+  --color-border: #E5E7EB; /* Light gray for borders */
+  --color-text-highlight: #9F1239; /* rose-800 for highlighted text */
+}
 
-/* สไตล์สำหรับ input ที่มีข้อผิดพลาด */
+/* CSS Variables for Dark Mode */
+.dark {
+  --color-primary: #E11D48; /* Keep primary color consistent */
+  --color-primary-rgb: 225, 29, 72;
+  --color-secondary: #F87171; /* Lighter red for secondary in dark mode */
+  --color-background: #1F2937; /* Dark background */
+  --color-bar-background: #111827; /* Even darker for bar background */
+  --color-card-background: #374151; /* Dark gray for card background */
+  --color-text: #F3F4F6; /* Light text for readability */
+  --color-border: #4B5563; /* Dark gray for borders */
+  --color-text-highlight: #FDA4AF; /* rose-300 for highlighted text in dark mode */
+}
+
+/* Input styles */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-background) inset;
+  -webkit-text-fill-color: var(--color-text);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Error styles */
 .input-error {
-    border-color: #ef4444; /* สีแดง */
-    box-shadow: 0 0 0 1px #ef4444; /* เงาสีแดง */
-  }
-  
-  /* สไตล์สำหรับข้อความผิดพลาด */
-  .error-message {
-    color: #ef4444; /* สีแดง */
-    font-size: 0.875rem; /* ขนาดข้อความเล็ก */
-    margin-top: 0.25rem; /* ระยะห่างด้านบน */
-  }
+  border-color: var(--color-secondary) !important;
+  box-shadow: 0 0 0 1px var(--color-secondary) !important;
+}
 
-  
-  :root {
-    --color-primary: #E11D48; /* สีหลัก (rose-600) */
-    --color-secondary: #EF4444; /* สีรอง */
-    --color-background: #F0EEE7; /* สีพื้นหลังของหน้า */
-    --color-bar-background: #FFFFFF;
-    --color-card-background: #F9FAFB; /* สีพื้นหลังของ Card */
-    --color-text: #1F2937; /* สีข้อความ */
-    --color-border: #0c0d0e; /* สีเส้นขอบ */
-    --color-text-highlight: #d43f5f;
+.error-message {
+  color: var(--color-secondary);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
-  
-  .dark {
-    /* --color-primary: #E11D48; */
-    --color-primary: #E11D48;
-    --color-secondary: #F87171; /* สีรองใน Dark Mode */
-    --color-background: #1F2937; /* สีพื้นหลังของหน้าใน Dark Mode */
-    --color-bar-background: #111827;
-    --color-card-background: #374151; /* สีพื้นหลังของ Card ใน Dark Mode */
-    --color-text: #F3F4F6; /* สีข้อความใน Dark Mode */
-    --color-border: #4B5563; /* สีเส้นขอบใน Dark Mode */
-    --color-text-highlight: #e95b7a;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(var(--color-primary-rgb), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0);
+  }
+}
+
+/* Animation utility classes */
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Animation delays */
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-400 {
+  animation-delay: 400ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+} 

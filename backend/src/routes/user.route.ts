@@ -7,6 +7,7 @@ import {
   deleteUserController,
   getUserProfileController
 } from '../controllers/user.controller';
+import { userProfileUpload } from '../middlewares/uploads/userProfile.upload';
 
 const router = express.Router();
 
@@ -22,8 +23,7 @@ router.get('/user/:id', getUserByIdController);
 router.get('/user/profile/:username', getUserProfileController);
 
 // อัปเดตข้อมูลผู้ใช้
-router.put('/user/:id', updateUserController);
-
+router.put('/user/:id', userProfileUpload, updateUserController);
 // ลบผู้ใช้
 router.delete('/user/:id', deleteUserController);
 
