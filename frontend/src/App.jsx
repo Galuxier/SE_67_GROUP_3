@@ -6,6 +6,8 @@ import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "./context/ThemeContext"; // นำเข้า ThemeProvider
 import LoadingSpinner from "./components/LoadingSpinner"; // นำเข้า LoadingSpinner
 import 'swiper/swiper-bundle.css';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // // Lazy load pages
 // const Home = lazy(() => import("./pages/Home"));
@@ -25,8 +27,9 @@ import 'swiper/swiper-bundle.css';
 // Import pages normally
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import Signup from "./pages/Register";
+import Register from "./pages/Register";
 import Ticket from "./pages/Ticket";
+import ProfileSetup from "./pages/ProfileSetup";
 
 // Import routes normally
 import GymRoutes from "./routes/GymRoute";
@@ -43,6 +46,7 @@ import AdminRouteGuard from "./routes/AdminRouteGuard";
 const App = () => {
   return (
     <Router>
+      <ToastContainer />
       {/* Wrap ทั้งแอปด้วย ThemeProvider */}
       <ThemeProvider>
         <AuthProvider>
@@ -56,7 +60,8 @@ const App = () => {
               
               {/* Routes ที่ไม่มี Layout (Login/Signup) */}
               <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
+              <Route path="/signup" element={<Register />} />
+              <Route path="/profile-setup" element={<ProfileSetup />} />
               <Route path="/ticket" element={<Ticket />} />
 
               {/* ใช้ Component ของแต่ละหมวด */}

@@ -52,9 +52,30 @@ export const getUserByIdController = async (req: Request, res: Response) => {
 // อัปเดตข้อมูลผู้ใช้
 export const updateUserController = async (req: Request, res: Response) => {
   try {
-    const updatedUser = await UserService.update(req.params.id, req.body);
+    const userData = { ...req.body };
+    
+    // Process the profile picture if it exists
+    if (req.files && 'profile_picture' in req.files) {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      if (files.profile_picture && files.profile_picture.length > 0) {
+        // Store the file path in the database
+        userData.profile_picture_url = files.profile_picture[0].path.replace(/^.*?uploads\//, '');
+      }
+    }
+    
+    // Process contact info if it's a string (from FormData)
+    if (typeof userData.contact_info === 'string') {
+      try {
+        userData.contact_info = JSON.parse(userData.contact_info);
+      } catch (e) {
+        console.error('Error parsing contact_info:', e);
+      }
+    }
+    
+    const updatedUser = await UserService.update(req.params.id, userData);
     res.status(200).json(updatedUser);
   } catch (err) {
+    console.error('Error updating user:', err);
     res.status(500).json({ message: 'Error updating user', error: err });
   }
 };

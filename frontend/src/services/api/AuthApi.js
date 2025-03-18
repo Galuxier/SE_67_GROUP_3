@@ -37,3 +37,23 @@ export async function registerUser(userData) {
     }
   }
 }
+
+
+export async function updateUser(userId, userData) { 
+  try {
+      // Check if userData is FormData (has profile image)
+      const isFormData = userData instanceof FormData;
+      
+      const config = isFormData ? {
+          headers: {
+              'Content-Type': 'multipart/form-data'
+          }
+      } : {};
+      
+      const response = await api.put(`/user/${userId}`, userData, config);
+      return response.data;
+  } catch(error) {
+      console.error('Update User Failed: ', error);
+      throw error;
+  }   
+}
