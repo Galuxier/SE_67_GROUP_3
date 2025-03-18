@@ -1,7 +1,7 @@
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../../context/ThemeContext";
 import { BsMoon, BsSun, BsPersonCircle } from "react-icons/bs";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const AdminNavbar = () => {

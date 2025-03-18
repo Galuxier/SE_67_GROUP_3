@@ -75,7 +75,16 @@ const Login = () => {
       });
   
       if (!token) throw new Error("Invalid response from server");
-  
+
+      toast.success("Registration successful!", {
+        position: "top-left",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
       localStorage.setItem("token", token);
   
       // 👉 เซ็ต roles ใน state เพื่อให้ useEffect สามารถเข้าถึงได้

@@ -63,7 +63,7 @@ const ProfileSetup = ({ user }) => {
       const formData = new FormData();
       
       if (profileData.profilePicture) {
-        formData.append('profilePicture', profileData.profilePicture);
+        formData.append('profile_picture', profileData.profilePicture);
       }
       
       formData.append('bio', profileData.bio);

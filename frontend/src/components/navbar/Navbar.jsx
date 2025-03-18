@@ -3,8 +3,8 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { BsList, BsPersonCircle, BsSearch, BsMoon, BsSun } from "react-icons/bs";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { BellIcon } from "@heroicons/react/24/outline";
-import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -156,6 +156,80 @@ function Navbar() {
                           Enrollment
                         </Link>
                       </MenuItem>
+                      
+                      {/* Role-specific menu items */}
+                      {user?.role && (
+                        <>
+                          {/* <div className="flex items-center my-1">
+                            <hr className="flex-grow border-border dark:border-gray-600" />
+                            <span className="px-2 text-sm text-gray-500 dark:text-gray-400">Management</span>
+                            <hr className="flex-grow border-border dark:border-gray-600" />
+                          </div> */}
+
+                          <hr className="flex-grow border-border dark:border-gray-600" />
+
+                          {/* Gym Management for gym_owner */}
+                          {user.role.includes('gym_owner') ? (
+                            <MenuItem>
+                              <Link
+                                to="/gym/management"
+                                className="block px-4 py-1 text-sm text-text hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                              >
+                                Gym Management
+                              </Link>
+                            </MenuItem>
+                          ) : null}
+                          
+                          {/* Event Management for organizer and gym_owner */}
+                          {user.role.includes('organizer') || user.role.includes('gym_owner') ? (
+                            <MenuItem>
+                              <Link
+                                to="/event/management"
+                                className="block px-4 py-1 text-sm text-text hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                              >
+                                Event Management
+                              </Link>
+                            </MenuItem>
+                          ) : null}
+                          
+                          {/* Shop Management for shop_owner */}
+                          {user.role.includes('shop_owner') && (
+                            <MenuItem>
+                              <Link
+                                to="/shop/management"
+                                className="block px-4 py-1 text-sm text-text hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                              >
+                                Shop Management
+                              </Link>
+                            </MenuItem>
+                          )}
+                          
+                          {/* Place Management for lessor */}
+                          {user.role.includes('lessor') && (
+                            <MenuItem>
+                              <Link
+                                to="/place/management"
+                                className="block px-4 py-1 text-sm text-text hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                              >
+                                Place Management
+                              </Link>
+                            </MenuItem>
+                          )}
+                          
+                          {/* Admin Dashboard for admin */}
+                          {user.role.includes('admin') && (
+                            <MenuItem>
+                              <Link
+                                to="/admin"
+                                className="block px-4 py-1 text-sm text-text hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                              >
+                                Admin
+                              </Link>
+                            </MenuItem>
+                          )}
+                        </>
+                      )}
+                      
                       <hr className="border-border dark:border-gray-600" />
                       <MenuItem>
                         <button

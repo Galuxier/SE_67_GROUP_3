@@ -1,12 +1,12 @@
 import { Outlet } from "react-router-dom";
-import AdminSidebar from "../components/sidebars/AdminSidebar";
+import PlaceManageSidebar from "../components/sidebars/PlaceManageSidebar";
 import AdminNavbar from "../components/navbar/ManagementNavbar";
 
-const AdminLayout = () => {
+const PlaceManageLayout = () => {
   return (
     <div className="min-h-screen flex bg-background text-text">
       {/* Sidebar */}
-      <AdminSidebar />
+      <PlaceManageSidebar />
 
       {/* Main Content */}
       <div className="flex-1 ml-64">
@@ -22,4 +22,4 @@ const AdminLayout = () => {
   );
 };
 
-export default AdminLayout;
+export default PlaceManageLayout;

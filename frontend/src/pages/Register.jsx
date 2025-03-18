@@ -124,8 +124,8 @@ function RegisterForm() {
         password: formInput.password,
       };
 
-      // const response = await registerUser(userData);
-      // console.log("Registration successful:", response);
+      const response = await registerUser(userData);
+      console.log("Registration successful:", response);
       
       // Show success toast
       toast.success("Registration successful!", {
@@ -138,7 +138,7 @@ function RegisterForm() {
       });
       
       // Store registered user for profile setup
-      // setRegisteredUser(response);
+      setRegisteredUser(response);
       setRegistrationSuccess(true);
       
       // Clear form
