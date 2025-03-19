@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { PlusCircleIcon, PaperClipIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import AddressForm from "../AddressForm";
+import AddressForm from "../forms/AddressForm";
 import { updateGym } from "../../services/api/GymApi";
 
 const EditGymModal = ({ isOpen, onClose, gymData, onSave }) => {

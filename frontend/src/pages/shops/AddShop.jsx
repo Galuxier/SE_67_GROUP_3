@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerShop } from "../../services/api/ShopApi";
-import AddressForm from "../../components/AddressForm";
+import AddressForm from "../../components/forms/AddressForm";
 import CropImageModal from "../../components/shops/CropImageModal";
 
 export default function AddShop() {

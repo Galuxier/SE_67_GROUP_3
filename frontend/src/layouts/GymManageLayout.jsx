@@ -14,7 +14,7 @@ const GymManageLayout = () => {
         <ManagementNavBar />
 
         {/* Page Content */}
-        <div className="p-4 mt-16">
+        <div className="p-6 mt-10">
           <Outlet />
         </div>
       </div>

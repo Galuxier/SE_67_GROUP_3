@@ -16,6 +16,7 @@
     "@tailwindcss/vite": "^4.0.14",
     "@vis.gl/react-google-maps": "^1.5.2",
     "axios": "^1.7.9",
+    "framer-motion": "^12.5.0",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.477.0",
     "react": "^19.0.0",

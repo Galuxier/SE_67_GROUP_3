@@ -1,13 +1,15 @@
 import { Routes, Route } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import GymManageLayout from "../layouts/GymManageLayout";
-import { GymManagementRouteGuard } from "./guards/RouteGuard";
 
 import GymHome from "../pages/gyms/GymHome";
-import AddGym from "../pages/gyms/AddGym";
 import GymDetail from "../pages/gyms/GymDetail";
 import GymForRent from "../pages/gyms/GymForRent";
+
+import GymManageLayout from "../layouts/GymManageLayout";
+import { GymManagementRouteGuard } from "./guards/RouteGuard";
 import GymManageDashboard from "../pages/gyms/managements/GymManageDashboard";
+import GymList from "../pages/gyms/managements/GymList";
+import AddGym from "../pages/gyms/managements/AddGym";
 
 function GymRoutes() {
   return (
@@ -28,10 +30,11 @@ function GymRoutes() {
           }
         >
           <Route index element={<GymManageDashboard />} />
+          <Route path="/management/gymlist" element={<GymList />} />
+          <Route path="/management/create" element={<AddGym />} />
         </Route>
 
       {/* ไม่มี Layout(Navbar) */}
-      <Route path="/addgym" element={<AddGym />} />
       <Route path="/forrent" element={<GymForRent />} />
     </Routes>
   );
