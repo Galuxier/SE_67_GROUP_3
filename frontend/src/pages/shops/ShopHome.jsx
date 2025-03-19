@@ -33,21 +33,6 @@ export default function ShopHome() {
     <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
       <div className="container px-5 sm:px-0 pb-5 pt-5 mx-auto">
         {/* Header */}
-        <div className="flex justify-center relative mb-6">
-          <div className="flex gap-2 absolute right-0">
-            <Link to="/shop/addShop">
-              <button className="bg-secondary hover:bg-primary rounded-full w-8 h-8 flex items-center justify-center">
-                <PlusCircleIcon className="h-6 w-6 text-white" />
-              </button>
-            </Link>
-            <Link to="/shop/addProduct">
-              <button className="bg-secondary hover:bg-primary rounded-full w-8 h-8 flex items-center justify-center">
-                <PlusCircleIcon className="h-6 w-6 text-white" />
-              </button>
-            </Link>
-          </div>
-        </div>
-
         {/* Sidebar and Product Display */}
         <div className="flex flex-col md:flex-row gap-4">
           {/* Filter Button สำหรับ Mobile */}

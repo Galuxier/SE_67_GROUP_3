@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import GymManageSidebar from "../components/sidebars/GymManageSidebar";
-import AdminNavbar from "../components/navbar/ManagementNavbar";
+import ManagementNavBar from "../components/navbar/ManagementNavbar";
 
 const GymManageLayout = () => {
   return (
@@ -11,7 +11,7 @@ const GymManageLayout = () => {
       {/* Main Content */}
       <div className="flex-1 ml-64">
         {/* Navbar */}
-        <AdminNavbar />
+        <ManagementNavBar />
 
         {/* Page Content */}
         <div className="p-4 mt-16">

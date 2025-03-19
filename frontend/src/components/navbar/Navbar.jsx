@@ -28,6 +28,7 @@ function Navbar() {
   };
 
   const basePath = getBasePath(location.pathname); // ดึงส่วนแรกของ path ปัจจุบัน
+  const isHomePage = location.pathname === "/";
 
   const path = [
     { name: "Course", path: "/course" },
@@ -290,6 +291,7 @@ function Navbar() {
       </header>
 
       {/* Header และ Breadcrumbs */}
+      {!isHomePage && ( // ตรวจสอบว่าไม่ใช่หน้า Home จึงแสดง Breadcrumbs และ Page Title
       <div className="bg-background py-4">
         <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
           {/* Breadcrumbs */}
@@ -345,24 +347,28 @@ function Navbar() {
             </ol>
           </nav>
 
-          {/* Page Title */}
-          {location.pathname.split("/").filter((path) => path !== "").length <= 1 && (
+          {/* Page Title - Modified to show "Muay Thai All in" for the home page */}
+          {(location.pathname === "/" || 
+            location.pathname.split("/").filter((path) => path !== "").length <= 1) && (
             <h1 className="mt-4 text-3xl font-bold text-text text-center w-full">
-              {location.pathname
-                .split("/")
-                .filter((path) => path !== "")
-                .pop()
-                ?.charAt(0)
-                .toUpperCase() +
-                location.pathname
-                  .split("/")
-                  .filter((path) => path !== "")
-                  .pop()
-                  ?.slice(1)}
+              {location.pathname === "/" 
+                ? "Muay Thai All in" 
+                : location.pathname
+                    .split("/")
+                    .filter((path) => path !== "")
+                    .pop()
+                    ?.charAt(0)
+                    .toUpperCase() +
+                  location.pathname
+                    .split("/")
+                    .filter((path) => path !== "")
+                    .pop()
+                    ?.slice(1)}
             </h1>
           )}
         </div>
       </div>
+    )}
     </>
   );
 }

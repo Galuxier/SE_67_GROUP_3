@@ -38,7 +38,8 @@ import EventRoutes from "./routes/EventRoute";
 import ShopRoutes from "./routes/ShopRoute";
 import UserRoutes from "./routes/UserRoute";
 import AdminRoutes from "./routes/AdminRoute";
-import AdminRouteGuard from "./routes/AdminRouteGuard";
+// import AdminRouteGuard from "./routes/guards/AdminRouteGuard";
+import { PlaceManagementRouteGuard, AdminRouteGuard } from "./routes/guards/RouteGuard";
 
 import PlaceManageLayout from "./layouts/PlaceManageLayout";
 import PlaceManageDashboard from "./pages/places/managements/PlaceManageDashboard";
@@ -56,10 +57,6 @@ const App = () => {
               {/* Routes ที่ใช้ MainLayout */}
               <Route path="/" element={<MainLayout />}>
                 <Route index element={<Home />} />
-              </Route>
-
-              <Route path="/place/management" element={<PlaceManageLayout />}>
-                <Route index element={<PlaceManageDashboard />} />              
               </Route>
 
               {/* Routes ที่ไม่มี Layout (Login/Signup) */}
@@ -85,6 +82,17 @@ const App = () => {
                   </AdminRouteGuard>
                 }
               />
+              <Route
+                path="/place/management/*"
+                element={
+                  <PlaceManagementRouteGuard>
+                    <PlaceManageLayout />
+                  </PlaceManagementRouteGuard>
+                }
+              >
+                <Route index element={<PlaceManageDashboard />} />
+                {/* Add other place management routes here */}
+              </Route>
             </Routes>
           </Suspense>
         </AuthProvider>

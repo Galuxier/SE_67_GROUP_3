@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import EventManageLayout from "../layouts/EnevtManageLayout";
+import { EventManagementRouteGuard } from "./guards/RouteGuard";
 
 import EventHome from "../pages/events/EventHome";
 import FormAddEvent from "../pages/events/AddEvent/AddEvent";
@@ -24,7 +25,14 @@ function EventRoutes() {
 
         </Route>
 
-        <Route path="/management" element={<EventManageLayout />} >
+        <Route
+          path="/management"
+          element={
+            <EventManagementRouteGuard>
+              <EventManageLayout />
+            </EventManagementRouteGuard>
+          }
+        >
           <Route index element={<EventManageDashboard />} />
         </Route>
 

@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import GymManageLayout from "../layouts/GymManageLayout";
+import { GymManagementRouteGuard } from "./guards/RouteGuard";
 
 import GymHome from "../pages/gyms/GymHome";
 import AddGym from "../pages/gyms/AddGym";
@@ -18,7 +19,14 @@ function GymRoutes() {
           
         </Route>
 
-        <Route path="/management" element={<GymManageLayout />}>
+        <Route
+          path="/management"
+          element={
+            <GymManagementRouteGuard>
+              <GymManageLayout />
+            </GymManagementRouteGuard>
+          }
+        >
           <Route index element={<GymManageDashboard />} />
         </Route>
 

@@ -1,21 +1,23 @@
 import Navbar from "../components/navbar/Navbar";
+import Footer from "../components/footer/Footer"; // Import the Footer component
+import FooterLite from "../components/footer/FooterLite";
 import { Outlet } from "react-router-dom";
-import { useTheme } from "../context/ThemeContext"; // นำเข้า useTheme
+import { useTheme } from "../context/ThemeContext";
 
 const MainLayout = () => {
-  const { isDarkMode } = useTheme(); // ดึงสถานะ Dark Mode
+  const { isDarkMode } = useTheme();
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
-      <div className="bg-white dark:bg-gray-800">
+    <div className={`min-h-screen flex flex-col ${isDarkMode ? "dark" : ""}`}>
+      <div className="bg-background flex-grow">
         <Navbar />
-        <div className="p-4 dark:bg-gray-800 dark:text-white">
-          <Outlet /> {/* ใช้ Outlet เพื่อให้แสดงหน้าที่แตกต่างกัน */}
-        </div>
+        <main className="w-full">
+          <Outlet />
+        </main>
       </div>
+      <FooterLite /> {/* Add the Footer component here */}
     </div>
   );
 };
 
 export default MainLayout;
-
