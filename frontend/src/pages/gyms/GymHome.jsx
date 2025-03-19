@@ -61,17 +61,6 @@ function GymHome() {
   return (
     <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
       <div className="container px-5 sm:px-0 pb-5 pt-5 mx-auto">
-        {/* Header */}
-        <div className="flex justify-center relative mb-6">
-          {user?.role?.includes("gym_owner") && (
-            <Link to="/gym/addgym">
-              <button className="bg-secondary hover:bg-primary rounded-full w-8 h-8 flex items-center justify-center absolute right-0">
-                <PlusCircleIcon className="h-10 w-10 text-white" />
-              </button>
-            </Link>
-          )}
-        </div>
-
         {/* Sidebar and GymList */}
         <div className="flex flex-col md:flex-row gap-4">
           {/* Filter Button สำหรับ Mobile */}

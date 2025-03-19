@@ -1,20 +1,20 @@
 import { Outlet } from "react-router-dom";
-import AdminSidebar from "../components/sidebars/AdminSidebar";
-import AdminNavbar from "../components/navbar/ManagementNavbar";
+import GymManageSidebar from "../components/sidebars/GymManageSidebar";
+import ManagementNavBar from "../components/navbar/ManagementNavbar";
 
-const AdminLayout = () => {
+const GymManageLayout = () => {
   return (
     <div className="min-h-screen flex bg-background text-text">
       {/* Sidebar */}
-      <AdminSidebar />
+      <GymManageSidebar />
 
       {/* Main Content */}
       <div className="flex-1 ml-64">
         {/* Navbar */}
-        <AdminNavbar />
+        <ManagementNavBar />
 
         {/* Page Content */}
-        <div className="p-4 mt-16">
+        <div className="p-6 mt-10">
           <Outlet />
         </div>
       </div>
@@ -22,4 +22,4 @@ const AdminLayout = () => {
   );
 };
 
-export default AdminLayout;
+export default GymManageLayout;

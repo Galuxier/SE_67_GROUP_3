@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { products } from "../../data/ProductsData";
 import { shops } from "../../data/ShopsData";
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -51,6 +51,9 @@ export default function ProductDetail() {
     return { ...product.variants[0].attribute };
   });
 
+  // เก็บจำนวนสินค้า
+  const [quantity, setQuantity] = useState(1);
+
   // หา variant ปัจจุบัน
   const findCurrentVariant = () => {
     if (!hasVariants) return null;
@@ -70,10 +73,21 @@ export default function ProductDetail() {
 
   // ฟังก์ชันเปลี่ยนค่าตัวเลือก
   const handleChangeAttr = (attrName, value) => {
-    setSelectedAttrs((prev) => ({
-      ...prev,
-      [attrName]: value,
-    }));
+    setSelectedAttrs((prev) => {
+      // ถ้ากดตัวเลือกที่ถูกเลือกอยู่แล้ว ให้ยกเลิกการเลือก
+      if (prev[attrName] === value) {
+        const newAttrs = { ...prev };
+        delete newAttrs[attrName];
+        return newAttrs;
+      }
+      // ไม่เช่นนั้นให้เลือกตัวเลือกใหม่
+      return {
+        ...prev,
+        [attrName]: value,
+      };
+    });
+    // รีเซ็ตจำนวนเมื่อเปลี่ยนตัวเลือก
+    setQuantity(1);
   };
 
   const getMainOptionValues = () => {
@@ -101,6 +115,20 @@ export default function ProductDetail() {
 
   // สร้างอาเรย์รูปเพื่อความปลอดภัย
   const productImages = product.images || [product.image_url || ''];
+
+  // ตรวจสอบว่าผู้ใช้เลือกตัวเลือกทั้งหมดครบหรือไม่
+  const isAllOptionsSelected = hasVariants
+    ? Object.keys(selectedAttrs).length === product.options.length
+    : true;
+
+  // ฟังก์ชันเพิ่ม/ลดจำนวน
+  const handleDecreaseQuantity = () => {
+    if (quantity > 1) setQuantity(quantity - 1);
+  };
+
+  const handleIncreaseQuantity = () => {
+    if (quantity < displayStock) setQuantity(quantity + 1);
+  };
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6 relative">
@@ -163,13 +191,12 @@ export default function ProductDetail() {
           <div className="md:w-1/2 bg-card p-4 rounded-md shadow-sm">
             <div>
               {/* ชื่อสินค้า */}
-              <h2 className="text-xl md:text-2xl font-bold mb-4 text-text">{product.product_name}</h2>
+              <h2 className="text-xl md:text-2xl font-bold mb-1 text-text">{product.product_name}</h2>
               
               <p className="text-lg font-bold mb-2 text-text">Price: {displayPrice} THB</p>
-              <p className="text-text mb-4">Stock: {displayStock}</p>
 
               {hasVariants && mainOption && (
-                <div className="space-y-4">
+                <div className="space-y-1">
                   {/* main option */}
                   <div>
                     <p className="font-semibold capitalize text-text">
@@ -180,11 +207,11 @@ export default function ProductDetail() {
                         <button
                           key={val}
                           onClick={() => handleChangeAttr(mainOption.name, val)}
-                          className={`px-3 py-1 rounded border border-border transition 
+                          className={`px-3 py-1 rounded border transition 
                             ${
                               selectedAttrs[mainOption.name] === val
-                                ? "bg-primary text-text"
-                                : "hover:bg-secondary"
+                                ? "border-secondary text-secondary"
+                                : "border-border hover:border-secondary"
                             }`}
                         >
                           {val}
@@ -204,11 +231,11 @@ export default function ProductDetail() {
                             <button
                               key={val}
                               onClick={() => handleChangeAttr(opt.name, val)}
-                              className={`px-3 py-1 rounded border border-border transition 
+                              className={`px-3 py-1 rounded border transition 
                                 ${
                                   selectedAttrs[opt.name] === val
-                                    ? "bg-primary text-text"
-                                    : "hover:bg-secondary"
+                                    ? "border-secondary text-secondary"
+                                    : "border-border hover:border-secondary"
                                 }`}
                             >
                               {val}
@@ -222,18 +249,62 @@ export default function ProductDetail() {
               )}
             </div>
 
-            {/* ปุ่ม */}
+            {/* ปุ่มและช่องใส่จำนวน */}
+            <div className="mt-2">
+              <div className="flex items-center gap-2">
+                <span className="text-text text-sm">Quantity</span>
+                <div className="flex items-center gap-0 ">
+                  <button
+                    onClick={handleDecreaseQuantity}
+                    disabled={!isAllOptionsSelected || quantity === 1}
+                    className="px-2  py-1 border border-border rounded hover:bg-secondary transition disabled:opacity-50"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max={displayStock}
+                    value={quantity}
+                    onChange={(e) => {
+                      const newValue = parseInt(e.target.value, 10);
+                      if (!isNaN(newValue) && newValue >= 1 && newValue <= displayStock) 
+                        setQuantity(newValue);
+                    }}
+                    disabled={!isAllOptionsSelected}
+                    className="w-16 px-2 py-1 border border-border rounded bg-background text-text text-center 
+                      disabled:opacity-50 appearance-none [-moz-appearance:textfield] 
+                      [&::-webkit-outer-spin-button]:appearance-none 
+                      [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <button
+                    onClick={handleIncreaseQuantity}
+                    disabled={!isAllOptionsSelected || quantity === displayStock}
+                    className="px-2 py-1 border border-border rounded hover:bg-secondary transition disabled:opacity-50"
+                  >
+                    +
+                  </button>
+                </div>
+                {isAllOptionsSelected && (
+                  <span className="text-text text-sm">Stock: {displayStock}</span>
+                )}
+              </div>
+            </div>
+
+            {/* ปุ่ม Add to Cart และ Buy Now */}
             <div className="mt-6">
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={handleAddToCart}
-                  className="bg-primary text-text px-4 py-2 rounded hover:bg-secondary transition"
+                  disabled={!isAllOptionsSelected}
+                  className="bg-primary text-text px-4 py-2 rounded hover:bg-secondary transition disabled:opacity-50"
                 >
                   Add to Cart
                 </button>
                 <button
                   onClick={handleBuyNow}
-                  className="bg-primary text-text px-4 py-2 rounded hover:bg-secondary transition"
+                  disabled={!isAllOptionsSelected}
+                  className="bg-primary text-text px-4 py-2 rounded hover:bg-secondary transition disabled:opacity-50"
                 >
                   Buy Now
                 </button>

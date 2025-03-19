@@ -1,6 +1,6 @@
 // src/components/shops/EditShopModal.jsx
 import { useState } from "react";
-import AddressForm from "../AddressForm";
+import AddressForm from "../forms/AddressForm";
 import CropImageModal from "./CropImageModal";
 import { updateShop } from "../../services/api/ShopApi";
 
