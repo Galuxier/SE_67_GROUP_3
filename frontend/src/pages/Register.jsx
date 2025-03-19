@@ -272,7 +272,7 @@ function RegisterForm() {
           <div className="bg-white shadow-xl rounded-2xl dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
             <motion.div 
               variants={itemVariants} 
-              className="bg-gradient-to-r from-rose-600 to-rose-500 py-8 px-6 text-center"
+              className="bg-gradient-to-r from-rose-600 to-rose-500 py-5 px-6 text-center"
             >
               <h2 className="text-2xl md:text-3xl font-bold text-white">Create Account</h2>
               <p className="text-white/80 mt-2">Join our Muay Thai community</p>
