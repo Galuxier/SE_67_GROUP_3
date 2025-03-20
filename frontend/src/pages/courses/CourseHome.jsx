@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PlusCircleIcon, Cog6ToothIcon, FireIcon, CalendarIcon, UsersIcon, AcademicCapIcon, SparklesIcon } from "@heroicons/react/24/outline";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 // import { getAllCourses } from "../../services/api/CourseApi"; 
 import CourseCard from "../../components/CourseCard";
 import provinceData from "../../data/thailand/address/provinces.json";
@@ -17,7 +17,6 @@ function CourseHome() {
   const [featuredCourses, setFeaturedCourses] = useState([]);
   const [visibleCourses, setVisibleCourses] = useState(30);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [visibleHeroText, setVisibleHeroText] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -201,20 +200,6 @@ function CourseHome() {
     }
   };
 
-  // Handle scroll to hide hero text for a more dynamic feel
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 100) {
-        setVisibleHeroText(false);
-      } else {
-        setVisibleHeroText(true);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   // Loading skeleton UI
   const renderSkeletonCards = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -254,148 +239,77 @@ function CourseHome() {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
-      {/* Unique Hero Section with Interactive Elements */}
-      <div className="relative bg-gradient-to-br from-rose-600 via-red-500 to-amber-500 overflow-hidden">
-        {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          {/* Muay Thai silhouettes */}
-          <div className="absolute -bottom-10 -left-10 w-72 h-72 opacity-10">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-              <path d="M50,10 C70,10 85,25 85,45 C85,65 70,80 50,80 C30,80 15,65 15,45 C15,25 30,10 50,10 Z" fill="white"/>
-            </svg>
-          </div>
-          <div className="absolute -top-10 -right-10 w-64 h-64 opacity-10">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20,20 L80,20 L80,80 L20,80 Z" fill="white"/>
-            </svg>
-          </div>
-          
-          {/* Animated dots */}
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div 
-              key={i}
-              className="absolute rounded-full bg-white"
-              style={{
-                width: Math.random() * 6 + 2 + "px",
-                height: Math.random() * 6 + 2 + "px",
-                top: Math.random() * 100 + "%",
-                left: Math.random() * 100 + "%",
-                opacity: Math.random() * 0.2,
-                animation: `float ${Math.random() * 10 + 10}s linear infinite`
-              }}
-            />
-          ))}
+      {/* Simplified Hero Banner - Similar to GymHome */}
+      <div className="relative w-full h-[40vh] md:h-[50vh] z-0 bg-gradient-to-r from-rose-600 via-red-500 to-amber-500 overflow-hidden">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
+          <motion.div 
+            className="max-w-3xl"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
+              Find Your Perfect <span className="text-yellow-300">Muay Thai Course</span>
+            </h1>
+            <p className="text-lg text-white/90 mb-8 max-w-2xl">
+              Discover authentic training taught by champions and master trainers across Thailand
+            </p>
+            
+            {/* Search Bar */}
+            <div className="relative flex items-center max-w-xl">
+              <input
+                type="text"
+                ref={searchInputRef}
+                placeholder="Search for courses, techniques, or locations..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="w-full py-3 pl-5 pr-12 rounded-full border-0 shadow-lg text-gray-800 focus:ring-2 focus:ring-primary"
+              />
+              <button className="absolute right-3 text-gray-500 ">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            </div>
+          </motion.div>
         </div>
         
-        <div className="relative z-10 container mx-auto px-4 py-16 md:py-24">
-          <AnimatePresence>
-            {visibleHeroText && (
-              <motion.div 
-                className="max-w-3xl mx-auto text-center"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-              >
-                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight">
-                  Master the Art of <span className="text-yellow-300 drop-shadow-md">Eight Limbs</span>
-                </h1>
-                <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-                  Discover authentic Muay Thai courses taught by champions and master trainers across Thailand
-                </p>
-                
-                {/* Interactive course search form */}
-                <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl shadow-lg max-w-2xl mx-auto">
-                  <div className="relative flex items-center mb-4">
-                    <input
-                      type="text"
-                      ref={searchInputRef}
-                      placeholder="Search for courses, techniques, or locations..."
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                      className="w-full py-3 pl-5 pr-12 rounded-full border-0 shadow-md text-gray-800 focus:ring-2 focus:ring-primary"
-                    />
-                    <button className="absolute right-3 text-gray-500">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </button>
-                  </div>
-                  
-                  <div className="flex flex-wrap justify-center gap-3 mt-4">
-                    <select 
-                      value={province}
-                      onChange={(e) => handleProvinceSelect(e.target.value)}
-                      className="px-4 py-2 rounded-full bg-white/20 text-white border-0 focus:ring-2 focus:ring-white"
-                    >
-                      <option value="All">All Locations</option>
-                      {provinceData
-                        .sort((a, b) => a.provinceNameTh.localeCompare(b.provinceNameTh))
-                        .map((province, index) => (
-                          <option key={index} value={province.provinceNameTh} className="text-gray-800">
-                            {province.provinceNameTh}
-                          </option>
-                        ))}
-                    </select>
-                    
-                    <select 
-                      value={activeCategory}
-                      onChange={(e) => handleCategorySelect(e.target.value)}
-                      className="px-4 py-2 rounded-full bg-white/20 text-white border-0 focus:ring-2 focus:ring-white"
-                    >
-                      {categories.map((category) => (
-                        <option key={category} value={category} className="text-gray-800">
-                          {category}
-                        </option>
-                      ))}
-                    </select>
-                    
-                    <button
-                      onClick={handleClearFilters}
-                      className="px-4 py-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
-                    >
-                      Clear Filters
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          
-          {/* Courses stats bar - shows at the bottom of hero */}
-          <div className="mt-16 p-4 bg-white/10 backdrop-blur-sm rounded-xl">
+        {/* Courses stats bar - shows at the bottom of hero */}
+        <div className="absolute bottom-0 left-0 right-0 bg-white/10 backdrop-blur-sm p-4">
+          <div className="container mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center p-2">
                 <div className="flex items-center justify-center">
-                  <AcademicCapIcon className="h-6 w-6 text-yellow-300 mr-2" />
-                  <span className="text-xl font-bold text-white">{courses.length}+ Courses</span>
+                  <AcademicCapIcon className="h-5 w-5 text-yellow-300 mr-2" />
+                  <span className="text-lg font-bold text-white">{courses.length}+ Courses</span>
                 </div>
-                <p className="text-white/70 text-sm">Available across Thailand</p>
+                <p className="text-white/70 text-xs">Available across Thailand</p>
               </div>
               
               <div className="text-center p-2">
                 <div className="flex items-center justify-center">
-                  <UsersIcon className="h-6 w-6 text-yellow-300 mr-2" />
-                  <span className="text-xl font-bold text-white">50+ Trainers</span>
+                  <UsersIcon className="h-5 w-5 text-yellow-300 mr-2" />
+                  <span className="text-lg font-bold text-white">50+ Trainers</span>
                 </div>
-                <p className="text-white/70 text-sm">Championship fighters & masters</p>
+                <p className="text-white/70 text-xs">Championship fighters & masters</p>
               </div>
               
               <div className="text-center p-2">
                 <div className="flex items-center justify-center">
-                  <CalendarIcon className="h-6 w-6 text-yellow-300 mr-2" />
-                  <span className="text-xl font-bold text-white">Flexible Schedules</span>
+                  <CalendarIcon className="h-5 w-5 text-yellow-300 mr-2" />
+                  <span className="text-lg font-bold text-white">Flexible Schedules</span>
                 </div>
-                <p className="text-white/70 text-sm">Morning, evening & weekend classes</p>
+                <p className="text-white/70 text-xs">Morning, evening & weekend classes</p>
               </div>
             </div>
           </div>
         </div>
       </div>
-  
-      <div className="container px-4 sm:px-6 lg:px-8 mx-auto pb-12 -mt-10 relative z-20">
+
+      <div className="container px-4 sm:px-6 lg:px-8 mx-auto pb-12 -mt-0 relative z-20">
         {/* Category Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 hide-scrollbar snap-x">
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 hide-scrollbar snap-x bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-3 rounded-lg shadow-sm">
           {categories.map((category) => (
             <motion.button
               key={category}
@@ -487,7 +401,7 @@ function CourseHome() {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Filter Panel for Desktop */}
           <motion.div 
-            className="hidden lg:block lg:w-72 bg-card rounded-2xl shadow-lg border border-border/30 overflow-hidden flex-shrink-0 transition-all duration-300"
+            className="hidden lg:block lg:w-72 bg-card rounded-2xl shadow-lg border border-border/30 overflow-hidden flex-shrink-0 h-fit sticky top-28"
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
@@ -508,7 +422,7 @@ function CourseHome() {
                 provinceData={provinceData}
               />
               
-              {/* Additional filter options - Level Filter */}
+              {/* Level Filter */}
               <div className="mt-6">
                 <h4 className="text-sm font-semibold text-text mb-2">Level</h4>
                 <div className="space-y-2">
@@ -548,28 +462,6 @@ function CourseHome() {
                   <span>฿0</span>
                   <span>฿10,000+</span>
                 </div>
-              </div>
-  
-              {/* Duration Filter */}
-              <div className="mt-6">
-                <h4 className="text-sm font-semibold text-text mb-2">Duration</h4>
-                <div className="space-y-2">
-                  {["1-4 Weeks", "1-3 Months", "3+ Months", "Flexible"].map((duration) => (
-                    <div key={duration} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={`duration-${duration}`}
-                        className="rounded text-primary focus:ring-primary"
-                      />
-                      <label 
-                        htmlFor={`duration-${duration}`} 
-                        className="ml-2 text-text"
-                      >
-                        {duration}
-                      </label>
-                    </div>
-                  ))}
-                </div>  
               </div>
             </div>
           </motion.div>
@@ -644,9 +536,6 @@ function CourseHome() {
                   <option>Price: High to Low</option>
                   <option>Start Date: Earliest</option>
                   <option>Start Date: Latest</option>
-                  <option>Duration: Shortest</option>
-                  <option>Duration: Longest</option>
-                  <option>Popularity</option>
                 </select>
                 
                 {/* Filter button for mobile */}
@@ -662,27 +551,12 @@ function CourseHome() {
   
             {/* Course List */}
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Array(6).fill().map((_, index) => (
-                  <div key={index} className="animate-pulse bg-card border border-border/30 rounded-xl overflow-hidden shadow-lg">
-                    <div className="h-48 bg-gray-300 dark:bg-gray-700"></div>
-                    <div className="p-4">
-                      <div className="h-5 bg-gray-300 dark:bg-gray-700 rounded mb-2 w-3/4"></div>
-                      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded mb-3 w-1/2"></div>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="h-4 w-12 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
-                        <div className="h-4 w-16 bg-gray-300 dark:bg-gray-700 rounded"></div>
-                      </div>
-                      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded mb-3 w-3/4"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              renderSkeletonCards()
             ) : filteredCourses.length > 0 ? (
               <motion.div
-                // variants={containerVariants}
-                initial="hidden"
-                animate="visible"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
               >
                 <CourseCard courses={filteredCourses.slice(0, visibleCourses)} />
                 
