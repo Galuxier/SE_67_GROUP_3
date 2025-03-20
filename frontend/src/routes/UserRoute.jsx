@@ -1,7 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import UserProfile from "../pages/users/UserProfile";
 import MainLayout from "../layouts/MainLayout";
-import AddRole from "../pages/users/AddRole";
 import Enrollment from "../pages/Enrollment";
 
 function UserRoutes() {
@@ -14,7 +13,6 @@ function UserRoutes() {
       </Route>
 
       {/* ไม่มี Layout(Navbar) */}
-      <Route path="/addRole" element={<AddRole />} />
       <Route path="/enrollment" element={<Enrollment />} />
     </Routes>
   );
