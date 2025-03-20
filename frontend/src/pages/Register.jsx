@@ -250,7 +250,7 @@ function RegisterForm() {
       <div className="hidden lg:flex lg:w-1/2 relative">
         <div className="absolute inset-0 bg-gradient-to-br from-rose-500/30 to-indigo-500/30 backdrop-blur-sm z-10"></div>
         <div className="w-full h-full bg-cover bg-center relative"
-          style={{ backgroundImage: `url(${new URL("../assets/images/muaythai-002.jpg", import.meta.url).href})` }}>
+          style={{ backgroundImage: `url(${new URL("../assets/images/background-001.jpg", import.meta.url).href})` }}>
           <div className="absolute inset-0 bg-black opacity-40"></div>
           <div className="absolute inset-0 flex flex-col justify-center items-center z-20 p-12">
             <h1 className="text-5xl font-bold text-white mb-4">Muay Thai</h1>

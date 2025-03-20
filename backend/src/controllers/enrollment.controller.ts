@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import mongoose, { Types } from 'mongoose'; // Ensure correct import
+import mongoose, { Schema, Types } from 'mongoose'; // Ensure correct import
 import EnrollmentService from '../services/enrollment.service';
 import { Enrollment, EnrollmentDocument } from '../models/enrollment.model';
 import { EnrollmentStatus } from '../models/enrollment.model';
@@ -12,11 +12,12 @@ export const createEnrollmentController = async (
 ): Promise<void> => {
   try {
     const { user_id, role, description } = req.body;
-    
+
+    // ✅ เช็คไฟล์แนบ
     const files = Array.isArray(req.files)
       ? req.files
       : req.files?.licenses as Express.Multer.File[] || [];
-    
+
     let licensePaths: string[] = [];
     if (files && files.length > 0) {
       licensePaths = files.map(file => file.path.replace(/^.*?uploads\//, ''));
@@ -29,18 +30,21 @@ export const createEnrollmentController = async (
       });
       return;
     }
-    
+
+    // ✅ สร้าง EnrollmentData
     const enrollmentData: Partial<EnrollmentDocument> = {
-      user_id: new Types.ObjectId(user_id), // Correct usage of Types.ObjectId
+      user_id: new Types.ObjectId(user_id),
       role,
       description,
       license_files: licensePaths,
       status: EnrollmentStatus.Pending,
       create_at: new Date()
     };
-    
+    console.log(enrollmentData);
+
+    // ✅ บันทึกลง database
     const enrollment = await EnrollmentService.add(enrollmentData);
-    
+
     res.status(201).json({
       success: true,
       message: 'Enrollment request created successfully',
@@ -51,49 +55,49 @@ export const createEnrollmentController = async (
   }
 };
 
-export const updateEnrollmentController = async (
-  req: Request, 
-  res: Response, 
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { status } = req.body;
+// export const updateEnrollmentController = async (
+//   req: Request, 
+//   res: Response, 
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const { status } = req.body;
     
-    if (!Object.values(EnrollmentStatus).includes(status)) {
-      res.status(400).json({
-        success: false,
-        message: 'Invalid enrollment status'
-      });
-      return;
-    }
+//     if (!Object.values(EnrollmentStatus).includes(status)) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Invalid enrollment status'
+//       });
+//       return;
+//     }
 
-    const token = req.headers['x-access-token'] as string;
-    const decodedToken = jwtDecode(token) as { _id: string };
-    const reviewerId = decodedToken._id;
+//     const token = req.headers['x-access-token'] as string;
+//     const decodedToken = jwtDecode(token) as { _id: string };
+//     const reviewerId = decodedToken._id;
     
-    const updatedEnrollment = await EnrollmentService.update(req.params.id, { 
-      status, 
-      updated_at: new Date(),
-      reviewer_id: new Types.ObjectId(reviewerId) // Correct usage of Types.ObjectId
-    });
+//     const updatedEnrollment = await EnrollmentService.update(req.params.id, { 
+//       status, 
+//       updated_at: new Date(),
+//       reviewer: new Types.ObjectId(reviewerId) // Correct usage of Types.ObjectId
+//     });
     
-    if (!updatedEnrollment) {
-      res.status(404).json({
-        success: false,
-        message: 'Enrollment not found'
-      });
-      return;
-    }
+//     if (!updatedEnrollment) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'Enrollment not found'
+//       });
+//       return;
+//     }
     
-    res.status(200).json({
-      success: true,
-      message: 'Enrollment updated successfully',
-      data: updatedEnrollment
-    });
-  } catch (err) {
-    next(err);
-  }
-};
+//     res.status(200).json({
+//       success: true,
+//       message: 'Enrollment updated successfully',
+//       data: updatedEnrollment
+//     });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 
 export const getEnrollmentsController = async (
   req: Request, 
@@ -101,7 +105,7 @@ export const getEnrollmentsController = async (
   next: NextFunction
 ) => {
   try {
-    const enrollments = await EnrollmentService.getAll();
+    const enrollments = await EnrollmentService.getAllEnrollment();
     res.status(200).json(enrollments);
   } catch (err) {
     next(err);

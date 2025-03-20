@@ -1,258 +1,866 @@
 import { useState, useEffect } from "react";
-import { api } from "../../services/Axios";
+import { useAuth } from "../../context/AuthContext";
+import { Link } from "react-router-dom";
+import { format } from "date-fns";
+import { th } from "date-fns/locale";
+import { 
+  CheckCircleIcon, 
+  XCircleIcon, 
+  EyeIcon, 
+  ChevronUpIcon, 
+  ChevronDownIcon,
+  UserCircleIcon,
+  XMarkIcon,
+  DocumentTextIcon
+} from "@heroicons/react/24/outline";
+import { 
+  CheckCircleIcon as CheckCircleSolidIcon, 
+  XCircleIcon as XCircleSolidIcon 
+} from "@heroicons/react/24/solid";
+import { toast } from "react-toastify";
+import { getAllEnrollment } from "../../services/api/AdminApi";
 
-export default function Approval() {
-  const [infoModal, setInfoModal] = useState(false);
-  const [fileModal, setFileModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [filterRole, setFilterRole] = useState("all");
+const statusColors = {
+  pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+  approved: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+  rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+};
+
+
+
+// Mock data for demonstration purposes
+const mockEnrollments = [
+  {
+    _id: "1",
+    user_id: {
+      _id: "user1",
+      username: "fighter1",
+      first_name: "สมชาย",
+      last_name: "ใจดี",
+      profile_picture: null,
+      email: "somchai@example.com"
+    },
+    role: "boxer",
+    description: "ฉันเป็นนักมวยมืออาชีพมานาน 5 ปี ปัจจุบันอยู่ที่ค่ายมวยเพชรเกษม อยากเข้าร่วมกับชุมชนมวยไทยเพื่อหาคู่ชกและเข้าร่วมการแข่งขันต่างๆ",
+    license_files: ["licenses/1741725685968-license_1.jpg", "licenses/1741725685968-license_2.jpg"],
+    status: "pending",
+    create_at: "2025-03-18T08:30:00.000Z",
+    updated_at: null,
+    reviewer_id: null
+  },
+  {
+    _id: "2",
+    user_id: {
+      _id: "user2",
+      username: "coach_niran",
+      first_name: "นิรันดร์",
+      last_name: "คงเดช",
+      profile_picture: null,
+      email: "niran@example.com"
+    },
+    role: "trainer",
+    description: "ผมเป็นโค้ชมวยไทยมา 10 ปี เคยฝึกนักมวยให้ได้แชมป์ลุมพินี อยากเข้าร่วมเพื่อหาลูกศิษย์เพิ่มและสอนมวยไทยให้เป็นที่รู้จักมากขึ้น",
+    license_files: ["licenses/1741725685968-license_3.jpg"],
+    status: "approved",
+    create_at: "2025-03-15T10:15:00.000Z",
+    updated_at: "2025-03-19T09:20:00.000Z",
+    reviewer_id: {
+      _id: "admin1",
+      username: "admin_muaythai",
+      first_name: "อดิศร",
+      last_name: "วงศ์พัฒนา"
+    }
+  },
+  {
+    _id: "3",
+    user_id: {
+      _id: "user3",
+      username: "gym_owner123",
+      first_name: "ประเสริฐ",
+      last_name: "ศรีวิไล",
+      profile_picture: null,
+      email: "prasert@example.com"
+    },
+    role: "gym_owner",
+    description: "ผมเป็นเจ้าของค่ายมวยพัทยาไฟท์คลับ ต้องการลงทะเบียนค่ายมวยในระบบเพื่อรับสมัครนักมวยและจัดการคอร์สเรียน",
+    license_files: ["licenses/1741725685968-license_4.jpg", "licenses/1741725685968-license_5.jpg"],
+    status: "rejected",
+    create_at: "2025-03-10T14:45:00.000Z",
+    updated_at: "2025-03-12T11:30:00.000Z",
+    reviewer_id: {
+      _id: "admin2",
+      username: "admin_system",
+      first_name: "สุรีย์",
+      last_name: "จันทร์เกษม"
+    },
+    reject_reason: "เอกสารไม่ครบถ้วน กรุณาส่งใบอนุญาตประกอบกิจการและแผนที่ตั้งค่ายมวยเพิ่มเติม"
+  },
+  {
+    _id: "4",
+    user_id: {
+      _id: "user4",
+      username: "event_planner",
+      first_name: "วิภาดา",
+      last_name: "มั่นคง",
+      profile_picture: null,
+      email: "wipada@example.com"
+    },
+    role: "organizer",
+    description: "บริษัทของเราจัดการแข่งขันมวยไทยระดับประเทศมาแล้วหลายรายการ ต้องการเข้าใช้ระบบเพื่อจัดการแข่งขันและประชาสัมพันธ์อีเวนท์",
+    license_files: ["licenses/1741725685968-license_6.jpg"],
+    status: "pending",
+    create_at: "2025-03-17T16:20:00.000Z",
+    updated_at: null,
+    reviewer_id: null
+  },
+  {
+    _id: "5",
+    user_id: {
+      _id: "user5",
+      username: "muaythai_shop",
+      first_name: "กิตติพงษ์",
+      last_name: "วงศ์ทอง",
+      profile_picture: null,
+      email: "kittipong@example.com"
+    },
+    role: "shop_owner",
+    description: "เราเป็นร้านขายอุปกรณ์มวยไทยคุณภาพดี นำเข้าและผลิตเอง ต้องการเปิดร้านค้าออนไลน์บนแพลตฟอร์มนี้",
+    license_files: ["licenses/1741725685968-license_7.jpg", "licenses/1741725685968-license_8.jpg"],
+    status: "approved",
+    create_at: "2025-03-14T09:10:00.000Z",
+    updated_at: "2025-03-16T13:45:00.000Z",
+    reviewer_id: {
+      _id: "admin1",
+      username: "admin_muaythai",
+      first_name: "อดิศร",
+      last_name: "วงศ์พัฒนา"
+    }
+  },
+  {
+    _id: "6",
+    user_id: {
+      _id: "user6",
+      username: "venue_service",
+      first_name: "ศิริพร",
+      last_name: "สุขสวัสดิ์",
+      profile_picture: null,
+      email: "siriporn@example.com"
+    },
+    role: "lessor",
+    description: "เรามีสถานที่ให้เช่าสำหรับการแข่งขันและฝึกซ้อมมวยไทย พื้นที่กว้างขวาง มีอุปกรณ์ครบครัน ต้องการลงทะเบียนสถานที่ในระบบ",
+    license_files: ["licenses/1741725685968-license_9.jpg"],
+    status: "pending",
+    create_at: "2025-03-19T11:30:00.000Z",
+    updated_at: null,
+    reviewer_id: null
+  },
+  // {
+  //   _id: "7",
+  //   user_id: {
+  //     _id: "test7",
+  //     username: "test7",
+  //     first_name: "test7",
+  //     last_name: "test6",
+  //     profile_picture: null,
+  //     email: "siriporn@example.com"
+  //   },
+  //   role: "lessor",
+  //   description: "เรามีสถานที่ให้เช่าสำหรับการแข่งขันและฝึกซ้อมมวยไทย พื้นที่กว้างขวาง มีอุปกรณ์ครบครัน ต้องการลงทะเบียนสถานที่ในระบบ",
+  //   license_files: ["licenses/1741725685968-license_9.jpg"],
+  //   status: "pending",
+  //   create_at: "2025-03-19T11:30:00.000Z",
+  //   updated_at: null,
+  //   reviewer_id: null
+  // },
+];
+
+const ROLE_DISPLAY = {
+  "boxer": "นักมวย",
+  "trainer": "โค้ชมวย",
+  "gym_owner": "เจ้าของค่ายมวย",
+  "organizer": "ผู้จัดการแข่งขัน",
+  "shop_owner": "เจ้าของร้านค้า",
+  "lessor": "ผู้ให้เช่าสถานที่",
+  "admin": "ผู้ดูแลระบบ"
+};
+
+export default function AdminApproval() {
+  const { user } = useAuth();
   const [enrollments, setEnrollments] = useState([]);
   const [filteredEnrollments, setFilteredEnrollments] = useState([]);
+  const [filterRole, setFilterRole] = useState("");
+  const [infoModal, setInfoModal] = useState(false);
+  const [fileModal, setFileModal] = useState(false);
+  const [rejectModal, setRejectModal] = useState(false);
+  const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
+  const [rejectReason, setRejectReason] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sortConfig, setSortConfig] = useState({
+    key: 'create_at',
+    direction: 'desc'
+  });
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch enrollments when component mounts
+  // Load mock data on component mount
   useEffect(() => {
-    const fetchEnrollments = async () => {
-      try {
-        const response = await api.get('/enrollments');
-        setEnrollments(response.data.data);
-      } catch (error) {
-        console.error("Error fetching enrollments:", error);
-      }
-    };
-
-    fetchEnrollments();
+    setEnrollments(mockEnrollments);
+    setFilteredEnrollments(mockEnrollments);
   }, []);
 
-  // Filter enrollments based on role
-  useEffect(() => {
-    if (filterRole === "all") {
-      setFilteredEnrollments(enrollments);
-    } else {
-      const filtered = enrollments.filter((enrollment) => 
-        enrollment.role.toLowerCase().replace(" ", "_") === filterRole
-      );
-      setFilteredEnrollments(filtered);
-    }
-  }, [filterRole, enrollments]);
+  // useEffect(() => {
+  //     const fetchEnrollment = async () => {
+  //       try {
+  //         const response = await getAllEnrollment();
+  //         setEnrollments(response);
+  //         setFilteredEnrollments(response);
+  //         console.log(response);
+          
+  //       } catch (error) {
+  //         console.error("Failed to fetch gyms:", error);
+  //       }
+  //     };
+  
+  //     fetchEnrollment();
+  //   }, []);
 
-  // Handle enrollment approval/rejection
-  const handleEnrollmentAction = async (id, status) => {
-    try {
-      await api.put(`/enrollment/${id}`, { status });
-      
-      // Update local state
-      setEnrollments(prevEnrollments => 
-        prevEnrollments.map(enrollment => 
-          enrollment._id === id 
-            ? { ...enrollment, status } 
-            : enrollment
-        )
+  // Filter enrollment data based on role and search term
+  useEffect(() => {
+    let filtered = [...enrollments];
+    
+    // Filter by role if set
+    if (filterRole) {
+      filtered = filtered.filter(enrollment => enrollment.role === filterRole);
+    }
+    
+    // Filter by search term if present
+    if (searchTerm) {
+      const lowercasedSearch = searchTerm.toLowerCase();
+      filtered = filtered.filter(enrollment => 
+        enrollment.user_id.username.toLowerCase().includes(lowercasedSearch) ||
+        enrollment.user_id.first_name.toLowerCase().includes(lowercasedSearch) ||
+        enrollment.user_id.last_name.toLowerCase().includes(lowercasedSearch) ||
+        enrollment.user_id.email.toLowerCase().includes(lowercasedSearch)
       );
+    }
+    
+    // Apply sorting
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        // Handle nested properties
+        if (sortConfig.key.includes('.')) {
+          const [parent, child] = sortConfig.key.split('.');
+          if (!a[parent] || !b[parent]) return 0;
+          
+          if (a[parent][child] < b[parent][child]) {
+            return sortConfig.direction === 'asc' ? -1 : 1;
+          }
+          if (a[parent][child] > b[parent][child]) {
+            return sortConfig.direction === 'asc' ? 1 : -1;
+          }
+          return 0;
+        }
+        
+        // Handle direct properties
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    
+    setFilteredEnrollments(filtered);
+  }, [enrollments, filterRole, sortConfig, searchTerm]);
+
+  const handleSortClick = (key) => {
+    let direction = 'asc';
+    
+    if (sortConfig.key === key) {
+      direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (columnName) => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUpIcon className="w-4 h-4 ml-1" /> 
+      : <ChevronDownIcon className="w-4 h-4 ml-1" />;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    try {
+      return format(new Date(dateString), "d MMM yyyy, HH:mm", { locale: th });
     } catch (error) {
-      console.error(`Error ${status} enrollment:`, error);
+      console.error("Date formatting error:", error);
+      return dateString;
     }
   };
 
-  // Role options matching the backend
+  const handleInfoClick = (enrollment) => {
+    setSelectedEnrollment(enrollment);
+    setInfoModal(true);
+  };
+
+  const handleFilesClick = (enrollment) => {
+    setSelectedEnrollment(enrollment);
+    setCurrentFileIndex(0);
+    setFileModal(true);
+  };
+
+  const handleRejectClick = (enrollment) => {
+    setSelectedEnrollment(enrollment);
+    setRejectReason("");
+    setRejectModal(true);
+  };
+
+  const handleEnrollmentAction = async (id, status, reason = null) => {
+    setIsSubmitting(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Update enrollment in state
+      const currentAdmin = {
+        _id: user._id,
+        username: user.username,
+        first_name: user.first_name,
+        last_name: user.last_name
+      };
+
+      console.log("Approval: ", currentAdmin);
+      
+      const now = new Date().toISOString();
+      
+      setEnrollments(prevEnrollments => 
+        prevEnrollments.map(enrollment => 
+          enrollment._id === id 
+            ? { 
+                ...enrollment, 
+                status, 
+                updated_at: now,
+                reviewer_id: currentAdmin,
+                ...(reason && { reject_reason: reason })
+              } 
+            : enrollment
+        )
+      );
+      
+      // Close modals
+      setRejectModal(false);
+      setInfoModal(false);
+      
+      // Show success toast
+      toast.success(`คำขอได้รับการ${status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'}แล้ว`);
+    } catch (error) {
+      console.error(`Error ${status} enrollment:`, error);
+      toast.error(`เกิดข้อผิดพลาดในการ${status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'}คำขอ`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmitReject = () => {
+    if (!rejectReason.trim()) {
+      toast.error("กรุณาระบุเหตุผลในการปฏิเสธคำขอ");
+      return;
+    }
+    
+    handleEnrollmentAction(selectedEnrollment._id, "rejected", rejectReason);
+  };
+
+  // Role options for filter
   const roleOptions = [
-    { value: "gym_owner", display: "Gym Owner" },
-    { value: "organizer", display: "Organizer" },
-    { value: "shop_owner", display: "Shop Owner" },
-    { value: "trainer", display: "Trainer" },
-    { value: "boxer", display: "Boxer" },
-    { value: "lessor", display: "Lessor" },
+    { value: "boxer", display: "นักมวย" },
+    { value: "trainer", display: "โค้ชมวย" },
+    { value: "gym_owner", display: "เจ้าของค่ายมวย" },
+    { value: "organizer", display: "ผู้จัดการแข่งขัน" },
+    { value: "shop_owner", display: "เจ้าของร้านค้า" },
+    { value: "lessor", display: "ผู้ให้เช่าสถานที่" },
   ];
 
   return (
     <div className="p-6 bg-background text-text min-h-screen">
-      {/* Filter Section */}
-      <div className="flex justify-end mb-4">
-        <select
-          value={filterRole}
-          onChange={(e) => setFilterRole(e.target.value)}
-          className="p-2 border border-border rounded bg-card text-text"
-        >
-          <option value="all">All Roles</option>
-          {roleOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.display}
-            </option>
-          ))}
-        </select>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">ระบบจัดการคำขอบทบาท</h1>
+        <p className="text-text/70">อนุมัติหรือปฏิเสธคำขอบทบาทจากผู้ใช้งาน</p>
       </div>
-
-      {/* Table */}
-      <div className="p-4 bg-card rounded-lg shadow-md">
-        <div className="grid grid-cols-7 bg-primary p-2 font-bold text-center text-white rounded-t-lg">
-          <div>User</div>
-          <div>Role</div>
-          <div>Name</div>
-          <div>Time</div>
-          <div>Status</div>
-          <div>Description</div>
-          <div>Action</div>
-        </div>
-        {filteredEnrollments.length === 0 ? (
-          <div className="text-center p-4 text-gray-500">
-            No enrollment requests found
+      
+      {/* Filters and Search */}
+      <div className="bg-card border border-border/50 rounded-lg p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4 items-end">
+          <div className="w-full md:w-64">
+            <label className="block text-sm font-medium mb-1">ค้นหาผู้ใช้</label>
+            <input 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="ชื่อผู้ใช้, อีเมล, ชื่อ-นามสกุล"
+              className="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+            />
           </div>
-        ) : (
-          filteredEnrollments.map((enrollment) => (
-            <div
-              key={enrollment._id}
-              className="grid grid-cols-7 p-2 border-b border-border items-center text-center hover:bg-gray-100 dark:hover:bg-gray-700"
+          
+          <div className="w-full md:w-48">
+            <label className="block text-sm font-medium mb-1">กรองตามบทบาท</label>
+            <select
+              value={filterRole}
+              onChange={(e) => setFilterRole(e.target.value)}
+              className="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-background"
             >
-              <div>
-                <img 
-                  src="/api/placeholder/50/50" 
-                  alt="Avatar" 
-                  className="w-12 h-12 rounded-full mx-auto" 
-                />
-              </div>
-              <div>{enrollment.role}</div>
-              <div>
-                {enrollment.user_id?.first_name} {enrollment.user_id?.last_name}
-              </div>
-              <div>{new Date(enrollment.created_at).toLocaleDateString()}</div>
-              <div>{enrollment.status}</div>
-              <div>{enrollment.description}</div>
-              <div className="flex justify-center space-x-2">
-                {enrollment.status === 'pending' && (
-                  <>
-                    <button 
-                      className="text-green-500 bg-green-100 p-1 rounded"
-                      onClick={() => handleEnrollmentAction(enrollment._id, 'approved')}
-                    >
-                      ✔️ Approve
-                    </button>
-                    <button 
-                      className="text-red-500 bg-red-100 p-1 rounded"
-                      onClick={() => handleEnrollmentAction(enrollment._id, 'rejected')}
-                    >
-                      ❌ Reject
-                    </button>
-                  </>
-                )}
-                <button
-                  className="text-blue-500 bg-blue-100 p-1 rounded"
-                  onClick={() => {
-                    setSelectedUser(enrollment);
-                    setInfoModal(true);
-                  }}
-                  aria-label="View enrollment details"
-                >
-                  ℹ️
-                </button>
-              </div>
-            </div>
-          ))
-        )}
+              <option value="">ทุกบทบาท</option>
+              {roleOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.display}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="w-full md:w-48">
+            <label className="block text-sm font-medium mb-1">กรองตามสถานะ</label>
+            <select
+              onChange={(e) => {
+                const status = e.target.value;
+                setEnrollments(prevEnrollments => 
+                  status ? mockEnrollments.filter(item => item.status === status) : mockEnrollments
+                );
+              }}
+              className="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+            >
+              <option value="">ทุกสถานะ</option>
+              <option value="pending">รอดำเนินการ</option>
+              <option value="approved">อนุมัติแล้ว</option>
+              <option value="rejected">ปฏิเสธแล้ว</option>
+            </select>
+          </div>
+          
+          <button 
+            onClick={() => {
+              setFilterRole("");
+              setSearchTerm("");
+              setEnrollments(mockEnrollments);
+              setSortConfig({
+                key: 'create_at',
+                direction: 'desc'
+              });
+            }}
+            className="px-4 py-2 border border-border rounded-lg hover:bg-background transition-colors"
+          >
+            รีเซ็ตตัวกรอง
+          </button>
+        </div>
       </div>
+      
+      {/* Enrollment Table */}
+      <div className="bg-card rounded-lg shadow-md overflow-hidden border border-border">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-bar">
+              <tr>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('user_id.username')}>
+                    <span>ผู้ใช้</span>
+                    {getSortIcon('user_id.username')}
+                  </div>
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('role')}>
+                    <span>บทบาทที่ขอ</span>
+                    {getSortIcon('role')}
+                  </div>
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('user_id.first_name')}>
+                    <span>ชื่อ-นามสกุล</span>
+                    {getSortIcon('user_id.first_name')}
+                  </div>
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('user_id.email')}>
+                    <span>อีเมล</span>
+                    {getSortIcon('user_id.email')}
+                  </div>
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('create_at')}>
+                    <span>เวลาร้องขอ</span>
+                    {getSortIcon('create_at')}
+                  </div>
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('updated_at')}>
+                    <span>เวลาตอบกลับ</span>
+                    {getSortIcon('updated_at')}
+                  </div>
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <span>ผู้ดำเนินการ</span>
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('status')}>
+                    <span>สถานะ</span>
+                    {getSortIcon('status')}
+                  </div>
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <span>การดำเนินการ</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-card divide-y divide-border">
+              {filteredEnrollments.length > 0 ? (
+                filteredEnrollments.map((enrollment) => (
+                  <tr key={enrollment._id} className="hover:bg-bar/30 transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex flex-col items-center">
+                        <Link 
+                          to={`/user/profile/${enrollment.user_id.username}`}
+                          className="relative group"
+                        >
+                          {enrollment.user_id.profile_picture ? (
+                            <img
+                              src={`/api/images/${enrollment.user_id.profile_picture}`}
+                              alt={enrollment.user_id.username}
+                              className="h-10 w-10 rounded-full object-cover border border-border group-hover:border-primary transition-colors"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-text/70 border border-border group-hover:border-primary transition-colors">
+                              <UserCircleIcon className="h-8 w-8" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+                        </Link>
+                        <Link 
+                          to={`/user/profile/${enrollment.user_id.username}`}
+                          className="mt-1 text-sm text-text hover:text-primary transition-colors"
+                        >
+                          {enrollment.user_id.username}
+                        </Link>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
+                        {ROLE_DISPLAY[enrollment.role] || enrollment.role}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="text-sm">
+                        {enrollment.user_id.first_name} {enrollment.user_id.last_name}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="text-sm">{enrollment.user_id.email}</div>
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <div className="text-sm">{formatDate(enrollment.create_at)}</div>
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <div className="text-sm">
+                        {enrollment.updated_at && enrollment.updated_at !== enrollment.create_at 
+                          ? formatDate(enrollment.updated_at)
+                          : "-"}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {enrollment.reviewer_id ? (
+                        <Link 
+                          to={`/user/profile/${enrollment.reviewer_id.username}`}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          {enrollment.reviewer_id.first_name} {enrollment.reviewer_id.last_name}
+                        </Link>
+                      ) : (
+                        <span className="text-sm text-text/50">-</span>
+                      )}
+                    </td>
+                    <td className="px-2 py-3 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs rounded-full ${statusColors[enrollment.status]}`}>
+                        {enrollment.status === "pending" && "รอดำเนินการ"}
+                        {enrollment.status === "approved" && "อนุมัติแล้ว"}
+                        {enrollment.status === "rejected" && "ปฏิเสธแล้ว"}
+                      </span>
+                    </td>
+                    <td className="px-2 py-3 whitespace-nowrap text-sm text-text/70">
+                      <div className="flex space-x-1">
+                        {enrollment.status === "pending" && (
+                          <>
+                            <button
+                              onClick={() => handleEnrollmentAction(enrollment._id, "approved")}
+                              className="p-1 text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-300 bg-green-100 dark:bg-green-900/30 rounded-md hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                              title="อนุมัติ"
+                            >
+                              <CheckCircleIcon className="h-5 w-5" />
+                            </button>
+                            <button
+                              onClick={() => handleRejectClick(enrollment)}
+                              className="p-1 text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-300 bg-red-100 dark:bg-red-900/30 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                              title="ปฏิเสธ"
+                            >
+                              <XCircleIcon className="h-5 w-5" />
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={() => handleInfoClick(enrollment)}
+                          className="p-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-500 dark:hover:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/30 rounded-md hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
+                          title="ดูรายละเอียด"
+                        >
+                          <EyeIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleFilesClick(enrollment)}
+                          className="p-1 text-amber-600 hover:text-amber-800 dark:text-amber-500 dark:hover:text-amber-300 bg-amber-100 dark:bg-amber-900/30 rounded-md hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+                          title="ดูเอกสาร"
+                        >
+                          <DocumentTextIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="9" className="px-4 py-6 text-center text-text/70 bg-background">
+                    ไม่พบคำขอในขณะนี้
+                  </td>
+                </tr>
+              )}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-      {/* Info Modal */}
-      {infoModal && selectedUser && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 p-6">
-          <div className="bg-card p-6 rounded-lg w-96 text-left shadow-lg border border-border">
-            <h2 className="mb-4 font-bold text-center">Enrollment Details</h2>
-            <div className="space-y-2">
-              <div>
-                <span className="block font-semibold">Role</span>
-                <input
-                  type="text"
-                  value={selectedUser.role}
-                  readOnly
-                  className="w-full border border-border p-2 rounded bg-background text-text"
-                />
-              </div>
-              <div>
-                <span className="block font-semibold">Description</span>
-                <textarea
-                  value={selectedUser.description}
-                  readOnly
-                  className="w-full border border-border p-2 rounded bg-background text-text h-24"
-                />
-              </div>
-              <div>
-                <span className="block font-semibold">Status</span>
-                <input
-                  type="text"
-                  value={selectedUser.status}
-                  readOnly
-                  className="w-full border border-border p-2 rounded bg-background text-text"
-                />
+  {/* Information Modal */}
+  {infoModal && selectedEnrollment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-border flex justify-between items-center">
+              <h2 className="text-xl font-bold text-text">รายละเอียดคำขอ</h2>
+              <button 
+                onClick={() => setInfoModal(false)}
+                className="text-text/70 hover:text-text transition-colors"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="flex items-center space-x-4">
+                {selectedEnrollment.user_id.profile_picture ? (
+                  <img
+                    src={`/api/images/${selectedEnrollment.user_id.profile_picture}`}
+                    alt={selectedEnrollment.user_id.username}
+                    className="h-16 w-16 rounded-full object-cover border border-border"
+                  />
+                ) : (
+                  <UserCircleIcon className="h-16 w-16 text-text/50" />
+                )}
+                <div>
+                  <h3 className="text-lg font-semibold text-text">
+                    {selectedEnrollment.user_id.first_name} {selectedEnrollment.user_id.last_name}
+                  </h3>
+                  <p className="text-text/70">@{selectedEnrollment.user_id.username}</p>
+                </div>
               </div>
               
-              <div className="flex justify-between items-center mt-4">
-                <span className="font-semibold">Documents</span>
-                <button
-                  className="text-blue-500"
-                  onClick={() => {
-                    setFileModal(true);
-                    setCurrentIndex(0);
-                  }}
-                  aria-label="View document"
-                >
-                  ตรวจสอบ
-                </button>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text/70 mb-1">บทบาทที่ขอ</label>
+                  <div className="px-3 py-2 bg-background border border-border rounded-lg">
+                    {ROLE_DISPLAY[selectedEnrollment.role] || selectedEnrollment.role}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-text/70 mb-1">อีเมล</label>
+                  <div className="px-3 py-2 bg-background border border-border rounded-lg">
+                    {selectedEnrollment.user_id.email}
+                  </div>
+                </div>
               </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-text/70 mb-1">คำอธิบาย</label>
+                <div className="px-3 py-2 bg-background border border-border rounded-lg min-h-[100px]">
+                  {selectedEnrollment.description}
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-text/70 mb-1">เอกสารประกอบ</label>
+                <div className="grid grid-cols-3 gap-4">
+                  {selectedEnrollment.license_files.map((file, index) => (
+                    <div 
+                      key={index} 
+                      className="border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => {
+                        setCurrentFileIndex(index);
+                        setFileModal(true);
+                      }}
+                    >
+                      <img
+                        src={`/api/images/${file}`}
+                        alt={`เอกสารที่ ${index + 1}`}
+                        className="w-full h-36 object-cover"
+                      />
+                      <div className="p-2 text-center text-sm text-text/70">
+                        เอกสารที่ {index + 1}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-text/70 mb-1">วันที่ร้องขอ</label>
+                  <div className="px-3 py-2 bg-background border border-border rounded-lg">
+                    {formatDate(selectedEnrollment.create_at)}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-text/70 mb-1">สถานะ</label>
+                  <div className={`px-3 py-2 border border-border rounded-lg text-center ${statusColors[selectedEnrollment.status]}`}>
+                    {selectedEnrollment.status === "pending" && "รอดำเนินการ"}
+                    {selectedEnrollment.status === "approved" && "อนุมัติแล้ว"}
+                    {selectedEnrollment.status === "rejected" && "ปฏิเสธแล้ว"}
+                  </div>
+                </div>
+              </div>
+              
+              {selectedEnrollment.status === "rejected" && selectedEnrollment.reject_reason && (
+                <div>
+                  <label className="block text-sm font-medium text-text/70 mb-1">เหตุผลการปฏิเสธ</label>
+                  <div className="px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-red-800 dark:text-red-300">
+                    {selectedEnrollment.reject_reason}
+                  </div>
+                </div>
+              )}
+              
+              {selectedEnrollment.status === "pending" && (
+                <div className="flex justify-end space-x-4 mt-6">
+                  <button
+                    onClick={() => handleEnrollmentAction(selectedEnrollment._id, "approved")}
+                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <CheckCircleSolidIcon className="h-5 w-5 mr-2" />
+                    อนุมัติ
+                  </button>
+                  <button
+                    onClick={() => handleRejectClick(selectedEnrollment)}
+                    className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    <XCircleSolidIcon className="h-5 w-5 mr-2" />
+                    ปฏิเสธ
+                  </button>
+                </div>
+              )}
             </div>
-            <button
-              className="mt-4 bg-red-500 w-full p-2 text-white rounded"
-              onClick={() => setInfoModal(false)}
-              aria-label="Close Info Modal"
-            >
-              ปิด
-            </button>
           </div>
         </div>
       )}
 
       {/* File Modal */}
-      {fileModal && selectedUser && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <div className="bg-card p-8 rounded-lg max-w-lg relative border border-border">
-            {selectedUser.license_files && selectedUser.license_files.length > 0 ? (
-              <div className="flex flex-col items-center">
-                <img
-                  src={`/api/images/${selectedUser.license_files[currentIndex]}`}
-                  alt={`Document ${currentIndex + 1}`}
-                  className="w-full h-auto mb-4"
+      {fileModal && selectedEnrollment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-card rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-border flex justify-between items-center">
+              <h2 className="text-xl font-bold text-text">
+                เอกสารประกอบ ({currentFileIndex + 1}/{selectedEnrollment.license_files.length})
+              </h2>
+              <button 
+                onClick={() => setFileModal(false)}
+                className="text-text/70 hover:text-text transition-colors"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="flex-grow relative">
+              <img
+                src={`/api/images/${selectedEnrollment.license_files[currentFileIndex]}`}
+                alt={`เอกสารที่ ${currentFileIndex + 1}`}
+                className="w-full h-full object-contain"
+              />
+              
+              {selectedEnrollment.license_files.length > 1 && (
+                <>
+                  {currentFileIndex > 0 && (
+                    <button
+                      onClick={() => setCurrentFileIndex(prev => prev - 1)}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/50 hover:bg-white/80 p-2 rounded-full transition-colors"
+                    >
+                      <ChevronUpIcon className="h-6 w-6 rotate-90" />
+                    </button>
+                  )}
+                  
+                  {currentFileIndex < selectedEnrollment.license_files.length - 1 && (
+                    <button
+                      onClick={() => setCurrentFileIndex(prev => prev + 1)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/50 hover:bg-white/80 p-2 rounded-full transition-colors"
+                    >
+                      <ChevronUpIcon className="h-6 w-6 -rotate-90" />
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {rejectModal && selectedEnrollment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-card rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6 border-b border-border flex justify-between items-center">
+              <h2 className="text-xl font-bold text-text">ปฏิเสธคำขอ</h2>
+              <button 
+                onClick={() => setRejectModal(false)}
+                className="text-text/70 hover:text-text transition-colors"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text/70 mb-1">เหตุผลการปฏิเสธ</label>
+                <textarea
+                  rows={4}
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="กรุณาระบุเหตุผลในการปฏิเสธคำขอ"
+                  className="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-background"
                 />
-                <div className="flex justify-between w-full">
-                  <button
-                    className="bg-primary p-2 rounded text-white"
-                    onClick={() => setCurrentIndex((prev) => Math.max(prev - 1, 0))}
-                    disabled={currentIndex === 0}
-                  >
-                    ก่อนหน้า
-                  </button>
-                  <button
-                    className="bg-primary p-2 rounded text-white"
-                    onClick={() =>
-                      setCurrentIndex((prev) =>
-                        Math.min(prev + 1, selectedUser.license_files.length - 1)
-                      )
-                    }
-                    disabled={currentIndex === selectedUser.license_files.length - 1}
-                  >
-                    ถัดไป
-                  </button>
-                </div>
               </div>
-            ) : (
-              <p>No documents available.</p>
-            )}
-            <button
-              className="mt-4 bg-primary w-full p-2 text-white rounded"
-              onClick={() => {
-                setFileModal(false);
-                setCurrentIndex(0);
-              }}
-              aria-label="Close Document Modal"
-            >
-              ปิด
-            </button>
+              
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setRejectModal(false)}
+                  className="px-4 py-2 border border-border rounded-lg hover:bg-background transition-colors"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={handleSubmitReject}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-70"
+                >
+                  {isSubmitting ? "กำลังดำเนินการ..." : "ปฏิเสธคำขอ"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
