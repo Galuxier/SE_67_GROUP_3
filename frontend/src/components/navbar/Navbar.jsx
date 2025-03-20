@@ -291,16 +291,16 @@ function Navbar() {
       </header>
 
       {/* Header และ Breadcrumbs */}
-      {!isHomePage && ( // ตรวจสอบว่าไม่ใช่หน้า Home จึงแสดง Breadcrumbs และ Page Title
-      <div className="bg-background py-4">
-        <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
-          {/* Breadcrumbs */}
+      {!isHomePage && (
+      <div className="absolute w-full z-10 left-0 py-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Breadcrumbs - Floating version */}
           <nav className="flex" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center space-x-1 md:space-x-2">
+            <ol className="inline-flex items-center px-2 py-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm">
               <li className="inline-flex items-center">
                 <Link
                   to="/"
-                  className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-400 dark:hover:text-white"
+                  className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-white"
                 >
                   <svg
                     className="w-3 h-3 mr-2.5"
@@ -337,7 +337,7 @@ function Navbar() {
                       </svg>
                       <Link
                         to={`/${arr.slice(0, index + 1).join("/")}`}
-                        className="ml-1 text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-400 dark:hover:text-white"
+                        className="ml-1 text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-white"
                       >
                         {path.charAt(0).toUpperCase() + path.slice(1)}
                       </Link>
@@ -346,26 +346,6 @@ function Navbar() {
                 ))}
             </ol>
           </nav>
-
-          {/* Page Title - Modified to show "Muay Thai All in" for the home page */}
-          {(location.pathname === "/" || 
-            location.pathname.split("/").filter((path) => path !== "").length <= 1) && (
-            <h1 className="mt-4 text-3xl font-bold text-text text-center w-full">
-              {location.pathname === "/" 
-                ? "Muay Thai All in" 
-                : location.pathname
-                    .split("/")
-                    .filter((path) => path !== "")
-                    .pop()
-                    ?.charAt(0)
-                    .toUpperCase() +
-                  location.pathname
-                    .split("/")
-                    .filter((path) => path !== "")
-                    .pop()
-                    ?.slice(1)}
-            </h1>
-          )}
         </div>
       </div>
     )}
