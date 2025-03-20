@@ -8,9 +8,9 @@ function AdminRoutes() {
     <Routes>
       {/* ใช้ AdminLayout สำหรับทุก Route ภายใต้ /admin */}
       <Route path="/" element={<AdminLayout />}>
-        <Route index element={<Dashboard />} /> 
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="approval" element={<Approval />} /> 
+        <Route index element={<Approval />} /> 
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/approval" element={<Approval />} /> 
       </Route>
     </Routes>
   );

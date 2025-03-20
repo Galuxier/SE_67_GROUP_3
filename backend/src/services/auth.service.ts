@@ -74,7 +74,9 @@ export const loginUser = async (credentials: { identifier: string; password: str
     var payload = {
       username: user.username,
       _id: user._id,
-      role: user.role
+      role: user.role,
+      first_name: user.first_name,
+      last_name: user.last_name
     }
     const token = jwt.sign(payload, `${process.env.TOKEN_KEY}`, { expiresIn: "2h" });
     // ส่งคืน token และข้อมูลผู้ใช้

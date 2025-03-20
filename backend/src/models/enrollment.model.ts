@@ -27,7 +27,7 @@ const EnrollmentSchema = new Schema<EnrollmentDocument>({
   role: { 
     type: String, 
     required: true,
-    enum: ['Gym Owner', 'Organizer', 'Shop Owner', 'Trainer', 'Boxer', 'Lessor']
+    enum: ['gym_owner', 'organizer', 'shop_owner', 'trainer', 'boxer', 'lessor']
   },
   description: { 
     type: String, 

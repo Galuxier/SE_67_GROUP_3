@@ -14,7 +14,7 @@ const AdminLayout = () => {
         <AdminNavbar />
 
         {/* Page Content */}
-        <div className="p-4 mt-16">
+        <div className="w-full">
           <Outlet />
         </div>
       </div>
