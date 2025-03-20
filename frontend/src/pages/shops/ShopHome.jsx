@@ -296,7 +296,7 @@ function ShopHome() {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Filter Panel for Desktop */}
           <motion.div 
-            className="hidden lg:block lg:w-72 bg-card rounded-2xl shadow-lg border border-border/30 overflow-hidden flex-shrink-0"
+            className="hidden lg:block lg:w-72 bg-card rounded-2xl shadow-lg border border-border/30 overflow-hidden flex-shrink-0 h-fit sticky top-28"
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
