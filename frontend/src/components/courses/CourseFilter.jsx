@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 const CourseFilter = ({ province, handleProvinceSelect, provinceData }) => {
   return (
     <div className="p-4 border border-border rounded-lg">

@@ -30,6 +30,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Ticket from "./pages/Ticket";
 import ProfileSetup from "./pages/ProfileSetup";
+import ContactPage from "./pages/ContactPage";
 
 // Import routes normally
 import GymRoutes from "./routes/GymRoute";
@@ -57,6 +58,7 @@ const App = () => {
               {/* Routes ที่ใช้ MainLayout */}
               <Route path="/" element={<MainLayout />}>
                 <Route index element={<Home />} />
+                <Route path="/contact" element={<ContactPage />} />
               </Route>
 
               {/* Routes ที่ไม่มี Layout (Login/Signup) */}
