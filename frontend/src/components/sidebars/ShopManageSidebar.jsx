@@ -1,3 +1,4 @@
+// ShopManageSidebar.jsx - ปรับปรุงใหม่ให้มีขนาดเล็กลงและเรียบง่ายขึ้น
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { 
@@ -5,33 +6,25 @@ import {
   ChartBarIcon,
   ShoppingBagIcon,
   CubeIcon,
-  TagIcon,
   CreditCardIcon,
   TruckIcon,
   UsersIcon,
   Cog6ToothIcon,
   ChevronDownIcon,
   PlusCircleIcon,
-  ArchiveBoxIcon,
   InboxIcon,
-  StarIcon,
-  ExclamationCircleIcon,
-  BellIcon
+  BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
 
-const ShopManageSidebar = ({ shopData }) => {
+const ShopManageSidebar = ({ shopData, userShops = [] }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [expandedMenus, setExpandedMenus] = useState({
+    shops: false,
     products: true,
     orders: false,
     settings: false
   });
-
-  // Check if the current path matches exactly
-  const isExactPath = (path) => {
-    return location.pathname === path;
-  };
 
   // Check if the current path includes the given path
   const isActive = (path) => {
@@ -45,49 +38,82 @@ const ShopManageSidebar = ({ shopData }) => {
     }));
   };
 
-  // Auto-expand menu based on current path
-  useEffect(() => {
-    if (isActive("/products")) {
-      setExpandedMenus(prev => ({ ...prev, products: true }));
-    } else if (isActive("/orders")) {
-      setExpandedMenus(prev => ({ ...prev, orders: true }));
-    } else if (isActive("/settings")) {
-      setExpandedMenus(prev => ({ ...prev, settings: true }));
-    }
-  }, [location.pathname]);
-
   // Set menu item styles based on active state
-  const getMenuItemStyles = (path, exact = false) => {
-    const isMenuActive = exact ? isExactPath(path) : isActive(path);
-    return `p-2 rounded-md transition-colors ${
-      isMenuActive 
+  const getMenuItemStyles = (path) => {
+    return `p-1.5 rounded text-sm ${
+      isActive(path) 
         ? "bg-primary/10 text-primary font-medium" 
-        : "text-text hover:bg-primary/10"
-    } flex items-center group`;
+        : "text-text hover:bg-gray-100 dark:hover:bg-gray-700"
+    } flex items-center transition-colors`;
+  };
+
+  // เปลี่ยนร้านค้า
+  const handleShopChange = (shopId) => {
+    navigate(`/shop/management/${shopId}`);
   };
 
   return (
-    <div className="fixed top-0 left-0 h-screen w-64 p-4 bg-bar border-r border-border overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
+    <div className="fixed top-0 left-0 h-screen w-56 p-3 bg-bar border-r border-border overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
       <div className="flex flex-col h-full">
-        {/* Header */}
-        <div className="flex items-center space-x-3 mb-8">
-          <div className="bg-primary rounded-md p-1.5">
-            <ShoppingBagIcon className="h-6 w-6 text-white" />
+        {/* Header - ปรับให้กะทัดรัด */}
+        <div className="flex items-center gap-2 mb-5 pb-3 border-b border-border/50">
+          <div className="bg-primary rounded p-1">
+            <ShoppingBagIcon className="h-4 w-4 text-white" />
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-text">{shopData?.shop_name || "Shop Manager"}</h2>
-            <p className="text-xs text-text/60">Shop Owner Dashboard</p>
+          <div className="truncate">
+            <h2 className="text-sm font-bold text-text">{shopData?.shop_name || "Shop Manager"}</h2>
           </div>
         </div>
 
         {/* Main Navigation */}
-        <nav className="flex flex-col space-y-1">
+        <nav className="flex flex-col space-y-0.5 text-sm">
+          {/* Shop Switcher - ถ้ามีหลายร้าน */}
+          {userShops.length > 1 && (
+            <div className="mb-1">
+              <button
+                onClick={() => toggleMenu('shops')}
+                className={`w-full ${getMenuItemStyles("/shops")} justify-between`}
+              >
+                <div className="flex items-center">
+                  <BuildingStorefrontIcon className="h-4 w-4 mr-2" />
+                  <span>My Shops</span>
+                </div>
+                <ChevronDownIcon className={`h-3 w-3 transition-transform ${expandedMenus.shops ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {expandedMenus.shops && (
+                <div className="pl-6 mt-0.5 space-y-0.5">
+                  {userShops.map(shop => (
+                    <button
+                      key={shop._id}
+                      onClick={() => handleShopChange(shop._id)}
+                      className={`block p-1.5 rounded w-full text-left text-xs ${
+                        shopData?._id === shop._id ? "text-primary font-medium" : "text-text"
+                      } hover:bg-gray-100 dark:hover:bg-gray-700`}
+                    >
+                      {shop.shop_name}
+                    </button>
+                  ))}
+                  <Link
+                    to="/shop/register"
+                    className="block p-1.5 rounded text-xs text-text hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <div className="flex items-center">
+                      <PlusCircleIcon className="h-3 w-3 mr-1.5" />
+                      New Shop
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Dashboard */}
           <Link
             to="/shop/management"
-            className={getMenuItemStyles("/shop/management", true)}
+            className={getMenuItemStyles("/shop/management")}
           >
-            <HomeIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
+            <HomeIcon className="h-4 w-4 mr-2" />
             Overview
           </Link>
 
@@ -95,125 +121,87 @@ const ShopManageSidebar = ({ shopData }) => {
             to="/shop/management/dashboard"
             className={getMenuItemStyles("/shop/management/dashboard")}
           >
-            <ChartBarIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
+            <ChartBarIcon className="h-4 w-4 mr-2" />
             Analytics
           </Link>
 
-          {/* Notifications */}
-          <Link
-            to="/shop/management/notifications"
-            className={getMenuItemStyles("/shop/management/notifications")}
-          >
-            <div className="relative">
-              <BellIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                3
-              </span>
-            </div>
-            <span>Notifications</span>
-          </Link>
-
           {/* Products Section */}
-          <div className="space-y-1">
+          <div>
             <button
               onClick={() => toggleMenu('products')}
               className={`w-full ${getMenuItemStyles("/products")} justify-between`}
             >
               <div className="flex items-center">
-                <CubeIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
+                <CubeIcon className="h-4 w-4 mr-2" />
                 <span>Products</span>
               </div>
-              <ChevronDownIcon className={`h-4 w-4 transition-transform ${expandedMenus.products ? 'rotate-180' : ''}`} />
+              <ChevronDownIcon className={`h-3 w-3 transition-transform ${expandedMenus.products ? 'rotate-180' : ''}`} />
             </button>
             
             {expandedMenus.products && (
-              <div className="pl-10 space-y-1">
+              <div className="pl-6 mt-0.5 space-y-0.5">
                 <Link
                   to="/shop/management/products"
-                  className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    isExactPath("/shop/management/products") ? "text-primary" : "text-text"
-                  } text-sm transition-colors`}
+                  className="block p-1.5 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   All Products
                 </Link>
                 <Link
                   to="/shop/management/products/inventory"
-                  className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    isActive("/shop/management/products/inventory") ? "text-primary" : "text-text"
-                  } text-sm transition-colors`}
+                  className="block p-1.5 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   Inventory
                 </Link>
                 <Link
-                  to="/shop/management/products/categories"
-                  className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    isActive("/shop/management/products/categories") ? "text-primary" : "text-text"
-                  } text-sm transition-colors`}
-                >
-                  Categories
-                </Link>
-                <Link
                   to="/shop/management/products/create"
-                  className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    isActive("/shop/management/products/create") ? "text-primary" : "text-text"
-                  } text-sm transition-colors`}
+                  className="block p-1.5 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                 >
-                  <div className="flex items-center">
-                    <PlusCircleIcon className="h-4 w-4 mr-2" />
-                    Add Product
-                  </div>
+                  <PlusCircleIcon className="h-3 w-3 mr-1.5" />
+                  Add Product
                 </Link>
               </div>
             )}
           </div>
 
           {/* Orders Section */}
-          <div className="space-y-1">
+          <div>
             <button
               onClick={() => toggleMenu('orders')}
               className={`w-full ${getMenuItemStyles("/orders")} justify-between`}
             >
               <div className="flex items-center">
-                <InboxIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
+                <InboxIcon className="h-4 w-4 mr-2" />
                 <span>Orders</span>
               </div>
-              <ChevronDownIcon className={`h-4 w-4 transition-transform ${expandedMenus.orders ? 'rotate-180' : ''}`} />
+              <ChevronDownIcon className={`h-3 w-3 transition-transform ${expandedMenus.orders ? 'rotate-180' : ''}`} />
             </button>
             
             {expandedMenus.orders && (
-              <div className="pl-10 space-y-1">
+              <div className="pl-6 mt-0.5 space-y-0.5">
                 <Link
                   to="/shop/management/orders"
-                  className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    isExactPath("/shop/management/orders") ? "text-primary" : "text-text"
-                  } text-sm transition-colors`}
+                  className="block p-1.5 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   All Orders
                 </Link>
                 <Link
                   to="/shop/management/orders/pending"
-                  className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    isActive("/shop/management/orders/pending") ? "text-primary" : "text-text"
-                  } text-sm transition-colors flex items-center justify-between`}
+                  className="block p-1.5 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between"
                 >
                   <span>Pending</span>
-                  <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  <span className="bg-yellow-100 text-yellow-800 text-xs px-1.5 rounded-full">
                     5
                   </span>
                 </Link>
                 <Link
                   to="/shop/management/orders/processing"
-                  className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    isActive("/shop/management/orders/processing") ? "text-primary" : "text-text"
-                  } text-sm transition-colors`}
+                  className="block p-1.5 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   Processing
                 </Link>
                 <Link
                   to="/shop/management/orders/completed"
-                  className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    isActive("/shop/management/orders/completed") ? "text-primary" : "text-text"
-                  } text-sm transition-colors`}
+                  className="block p-1.5 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   Completed
                 </Link>
@@ -226,22 +214,8 @@ const ShopManageSidebar = ({ shopData }) => {
             to="/shop/management/customers"
             className={getMenuItemStyles("/shop/management/customers")}
           >
-            <UsersIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
+            <UsersIcon className="h-4 w-4 mr-2" />
             Customers
-          </Link>
-
-          {/* Reviews */}
-          <Link
-            to="/shop/management/reviews"
-            className={`${getMenuItemStyles("/shop/management/reviews")} justify-between`}
-          >
-            <div className="flex items-center">
-              <StarIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
-              <span>Reviews</span>
-            </div>
-            <span className="bg-primary text-white text-xs font-medium px-2 py-0.5 rounded-full">
-              New
-            </span>
           </Link>
 
           {/* Shipping */}
@@ -249,7 +223,7 @@ const ShopManageSidebar = ({ shopData }) => {
             to="/shop/management/shipping"
             className={getMenuItemStyles("/shop/management/shipping")}
           >
-            <TruckIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
+            <TruckIcon className="h-4 w-4 mr-2" />
             Shipping
           </Link>
 
@@ -258,83 +232,53 @@ const ShopManageSidebar = ({ shopData }) => {
             to="/shop/management/payments"
             className={getMenuItemStyles("/shop/management/payments")}
           >
-            <CreditCardIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
+            <CreditCardIcon className="h-4 w-4 mr-2" />
             Payments
           </Link>
 
-          {/* Promotions */}
-          <Link
-            to="/shop/management/promotions"
-            className={getMenuItemStyles("/shop/management/promotions")}
-          >
-            <TagIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
-            Promotions
-          </Link>
-
           {/* Settings Section */}
-          <div className="space-y-1 mt-4">
+          <div className="mt-2">
             <button
               onClick={() => toggleMenu('settings')}
               className={`w-full ${getMenuItemStyles("/settings")} justify-between`}
             >
               <div className="flex items-center">
-                <Cog6ToothIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
+                <Cog6ToothIcon className="h-4 w-4 mr-2" />
                 <span>Settings</span>
               </div>
-              <ChevronDownIcon className={`h-4 w-4 transition-transform ${expandedMenus.settings ? 'rotate-180' : ''}`} />
+              <ChevronDownIcon className={`h-3 w-3 transition-transform ${expandedMenus.settings ? 'rotate-180' : ''}`} />
             </button>
             
             {expandedMenus.settings && (
-              <div className="pl-10 space-y-1">
+              <div className="pl-6 mt-0.5 space-y-0.5">
                 <Link
                   to="/shop/management/settings/profile"
-                  className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    isActive("/shop/management/settings/profile") ? "text-primary" : "text-text"
-                  } text-sm transition-colors`}
+                  className="block p-1.5 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   Shop Profile
                 </Link>
                 <Link
                   to="/shop/management/settings/payment"
-                  className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    isActive("/shop/management/settings/payment") ? "text-primary" : "text-text"
-                  } text-sm transition-colors`}
+                  className="block p-1.5 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   Payment Methods
                 </Link>
                 <Link
                   to="/shop/management/settings/shipping"
-                  className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    isActive("/shop/management/settings/shipping") ? "text-primary" : "text-text"
-                  } text-sm transition-colors`}
+                  className="block p-1.5 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   Shipping Options
-                </Link>
-                <Link
-                  to="/shop/management/settings/notifications"
-                  className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    isActive("/shop/management/settings/notifications") ? "text-primary" : "text-text"
-                  } text-sm transition-colors`}
-                >
-                  Notification Settings
                 </Link>
               </div>
             )}
           </div>
         </nav>
 
-        {/* Support and Help */}
-        <div className="mt-auto pt-6 border-t border-border">
-          <Link
-            to="/shop/management/help"
-            className="flex items-center text-text hover:text-primary text-sm p-2 rounded-md hover:bg-primary/10 transition-colors"
-          >
-            <ExclamationCircleIcon className="h-5 w-5 mr-2" />
-            Help & Support
-          </Link>
+        {/* Footer Link */}
+        <div className="mt-auto pt-4 border-t border-border/50 text-xs">
           <Link
             to="/shop"
-            className="flex items-center text-text hover:text-primary text-sm p-2 rounded-md hover:bg-primary/10 transition-colors mt-2"
+            className="flex items-center text-text/80 hover:text-primary p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             ← Return to Shop
           </Link>
