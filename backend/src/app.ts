@@ -51,8 +51,8 @@ app.post('/test/single', testUpload, (req, res) => {
 });
 
 app.post('/test/multi', testMultiUpload, (req, res) => {
-    console.log('Multi Images:', req.files);
-    res.json({ message: req.files });
+    console.log('Multi Images:', req.body);
+    res.json({ message: req.body });
 });
 
 

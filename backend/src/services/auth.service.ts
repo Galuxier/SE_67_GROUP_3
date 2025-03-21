@@ -14,7 +14,9 @@ export const registerUser = async (userData: {
   const { username, email, password, first_name, last_name } = userData;
   console.log(username);
   
-  const existingUserByUsername = await User.findOne({ username });
+  const existingUserByUsername = await User.findOne({ 
+    username: { $regex: new RegExp(`^${username}$`, 'i') } 
+  });
   if (existingUserByUsername) {
     throw new Error("Username already exists");
   }
@@ -56,7 +58,10 @@ export const loginUser = async (credentials: { identifier: string; password: str
 
     // ค้นหาผู้ใช้ในฐานข้อมูล
     const user = await User.findOne({
-      $or: [{ email: identifier }, { username: identifier }],
+      $or: [
+        { email: identifier }, 
+        { username: { $regex: new RegExp(`^${identifier}$`, 'i') }}
+      ],
     });
 
     // ตรวจสอบว่าพบผู้ใช้หรือไม่
