@@ -161,13 +161,13 @@ function Navbar() {
                       {/* Role-specific menu items */}
                       {user?.role && (
                         <>
-                          {/* <div className="flex items-center my-1">
+                          <div className="flex items-center my-1">
                             <hr className="flex-grow border-border dark:border-gray-600" />
                             <span className="px-2 text-sm text-gray-500 dark:text-gray-400">Management</span>
                             <hr className="flex-grow border-border dark:border-gray-600" />
-                          </div> */}
+                          </div>
 
-                          <hr className="flex-grow border-border dark:border-gray-600" />
+                          {/* <hr className="flex-grow border-border dark:border-gray-600" /> */}
 
                           {/* Gym Management for gym_owner */}
                           {user.role.includes('gym_owner') ? (
@@ -176,7 +176,8 @@ function Navbar() {
                                 to="/gym/management"
                                 className="block px-4 py-1 text-sm text-text hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                               >
-                                Gym Management
+                                {/* Gym/Course Management */}
+                                Gym/Course
                               </Link>
                             </MenuItem>
                           ) : null}
@@ -188,7 +189,7 @@ function Navbar() {
                                 to="/event/management"
                                 className="block px-4 py-1 text-sm text-text hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                               >
-                                Event Management
+                                Event
                               </Link>
                             </MenuItem>
                           ) : null}
@@ -200,7 +201,7 @@ function Navbar() {
                                 to="/shop/management"
                                 className="block px-4 py-1 text-sm text-text hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                               >
-                                Shop Management
+                                Shop
                               </Link>
                             </MenuItem>
                           )}
@@ -212,7 +213,7 @@ function Navbar() {
                                 to="/place/management"
                                 className="block px-4 py-1 text-sm text-text hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                               >
-                                Place Management
+                                Place
                               </Link>
                             </MenuItem>
                           )}

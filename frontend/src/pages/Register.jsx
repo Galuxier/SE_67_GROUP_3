@@ -115,13 +115,13 @@ function RegisterForm() {
       inputError.email = "Please enter a valid email address";
     }
 
-    if (!formInput.password) {
-      inputError.password = "Please enter your password";
-    } else if (formInput.password.length < 8) {
-      inputError.password = "Password must be at least 8 characters";
-    } else if (passwordStrength.score < 3) {
-      inputError.password = "Password is too weak. Add numbers, symbols, or uppercase letters";
-    }
+    // if (!formInput.password) {
+    //   inputError.password = "Please enter your password";
+    // } else if (formInput.password.length < 8) {
+    //   inputError.password = "Password must be at least 8 characters";
+    // } else if (passwordStrength.score < 3) {
+    //   inputError.password = "Password is too weak. Add numbers, symbols, or uppercase letters";
+    // }
 
     if (!formInput.repeatPassword) {
       inputError.repeatPassword = "Please confirm your password";
@@ -168,7 +168,7 @@ function RegisterForm() {
         password: formInput.password,
       };
 
-      const response = await registerUser(userData);
+      const { user } = await registerUser(userData);
       
       // Show success toast
       toast.success("Registration successful!", {
@@ -179,9 +179,9 @@ function RegisterForm() {
         pauseOnHover: true,
         draggable: true,
       });
-      
       // Store registered user for profile setup
-      setRegisteredUser(response);
+      setRegisteredUser(user);
+      console.log(registerUser);
       setRegistrationSuccess(true);
       
       // Clear form

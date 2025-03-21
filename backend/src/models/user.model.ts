@@ -10,7 +10,7 @@ export interface UserDocument extends Document {
   password: string;
   email: string;
   phone?: string;
-  profile_picture?: string;
+  profile_picture_url?: string;
   first_name: string;
   last_name: string;
   nickname: string;
@@ -29,7 +29,7 @@ const UserSchema = new Schema<UserDocument>({
   password: { type: String, required: true },
   email: { type: String, required: true },
   phone: { type: String },
-  profile_picture: { type: String },
+  profile_picture_url: { type: String },
   first_name: { type: String, required: true },
   last_name: { type: String, required: true },
   nickname: { type: String },

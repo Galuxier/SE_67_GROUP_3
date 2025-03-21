@@ -52,18 +52,12 @@ export const getUserByIdController = async (req: Request, res: Response) => {
 // อัปเดตข้อมูลผู้ใช้
 export const updateUserController = async (req: Request, res: Response) => {
   try {
+    console.log('Request body:', req.body);
+    
+    // ข้อมูลที่ต้องการอัพเดทรวมถึง profile_picture_url ที่ได้จาก middleware
     const userData = { ...req.body };
     
-    // Process the profile picture if it exists
-    if (req.files && 'profile_picture' in req.files) {
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      if (files.profile_picture && files.profile_picture.length > 0) {
-        // Store the file path in the database
-        userData.profile_picture_url = files.profile_picture[0].path.replace(/^.*?uploads\//, '');
-      }
-    }
-    
-    // Process contact info if it's a string (from FormData)
+    // แปลง contact_info จาก string เป็น object ถ้าจำเป็น
     if (typeof userData.contact_info === 'string') {
       try {
         userData.contact_info = JSON.parse(userData.contact_info);
@@ -71,6 +65,8 @@ export const updateUserController = async (req: Request, res: Response) => {
         console.error('Error parsing contact_info:', e);
       }
     }
+    
+    console.log('User data to update:', userData);
     
     const updatedUser = await UserService.update(req.params.id, userData);
     res.status(200).json(updatedUser);

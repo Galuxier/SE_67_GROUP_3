@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Cropper from "react-easy-crop";
 
 const ProfileSetup = ({ user }) => {
+  console.log("Profile of User: ", user);
+  
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -176,7 +178,7 @@ const ProfileSetup = ({ user }) => {
       const formData = new FormData();
       
       if (profileData.profilePicture) {
-        formData.append('profile_picture', profileData.profilePicture);
+        formData.append('profile_picture_url', profileData.profilePicture);
       }
       
       formData.append('bio', profileData.bio);
@@ -188,9 +190,10 @@ const ProfileSetup = ({ user }) => {
       };
       
       formData.append('contact_info', JSON.stringify(contactInfo));
-      
       // Update user profile
-      await updateUser(user._id, formData);
+      const res = await updateUser(user._id, formData);
+      console.log(res);
+      
       
       // Show success state
       setFormComplete(true);
