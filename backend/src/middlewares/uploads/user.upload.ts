@@ -1,9 +1,10 @@
 import createUploader from './base.upload';
 
-export const userProfileUpload = createUploader(
-    1, 
-    true, 
-    'users/profiles',
-    ['image/'],
-    'profile_picture'
-);
+export const userProfileUpload = createUploader([
+    {
+      subfolder: 'users/profiles',
+      allowedMimeTypes: ['image/'],
+      name: 'profile_picture',
+      maxCount: 1,
+    }
+  ]);

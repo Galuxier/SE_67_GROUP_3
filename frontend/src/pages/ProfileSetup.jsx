@@ -188,17 +188,19 @@ const ProfileSetup = ({ user }) => {
       };
       
       formData.append('contact_info', JSON.stringify(contactInfo));
-      
+      // console.log("user: ", user._id);
       // Update user profile
-      await updateUser(user._id, formData);
+      const res = await updateUser(user._id, formData);
+      console.log(res);
+      
       
       // Show success state
-      setFormComplete(true);
+      // setFormComplete(true);
       
       // Redirect to home page after a delay
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
+      // setTimeout(() => {
+      //   navigate('/');
+      // }, 2000);
       
     } catch (error) {
       console.error('Error updating profile:', error);

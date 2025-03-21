@@ -52,6 +52,8 @@ export const getUserByIdController = async (req: Request, res: Response) => {
 // อัปเดตข้อมูลผู้ใช้
 export const updateUserController = async (req: Request, res: Response) => {
   try {
+    console.log(req.body);
+    
     const userData = { ...req.body };
     
     // Process the profile picture if it exists

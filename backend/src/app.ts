@@ -27,7 +27,7 @@ bodyParserMiddleware(app);
 app.use('/api', userRoutes);
 app.use('/api', adsPackageRoutes);
 app.use('/api', shopRoutes);
-app.use('/api', gymRoutes);
+// app.use('/api', gymRoutes);
 app.use('/api', fightHistoryRoutes);
 app.use('/api', notificationRoutes);
 app.use('/api', courseRoutes);
@@ -42,8 +42,18 @@ app.use('/api', teachHistoryRoutes);
 app.use('/api', ticketRoutes);
 app.use('/api', authRoutes);
 app.use('/api', imageRoutes);
-app.use('/api', enrollmentRoutes);
+// app.use('/api', enrollmentRoutes);
 
+import { testUpload, testMultiUpload } from './middlewares/uploads/test.upload';
+app.post('/test/single', testUpload, (req, res) => {
+    console.log(req.files); // ควรตรวจสอบว่าไฟล์ถูกส่งมาถูกต้องหรือไม่
+    res.json({ message: 'Files uploaded successfully' });
+});
+
+app.post('/test/multi', testMultiUpload, (req, res) => {
+    console.log('Multi Images:', req.files);
+    res.json({ message: req.files });
+});
 
 
 export default app;

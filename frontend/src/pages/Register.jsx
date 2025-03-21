@@ -168,7 +168,7 @@ function RegisterForm() {
         password: formInput.password,
       };
 
-      const response = await registerUser(userData);
+      const { user } = await registerUser(userData);
       
       // Show success toast
       toast.success("Registration successful!", {
@@ -179,9 +179,8 @@ function RegisterForm() {
         pauseOnHover: true,
         draggable: true,
       });
-      
       // Store registered user for profile setup
-      setRegisteredUser(response);
+      setRegisteredUser(user);
       setRegistrationSuccess(true);
       
       // Clear form
