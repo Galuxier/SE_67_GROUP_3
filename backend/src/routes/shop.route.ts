@@ -31,6 +31,5 @@ router.put('/shop/:id', updateShopController);
 
 router.delete('/shop/:id', deleteShopController);
 
-router.get('/shops/user/:id', getUserShops);
 
 export default router;

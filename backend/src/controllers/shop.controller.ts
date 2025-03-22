@@ -84,22 +84,3 @@ export const deleteShopController = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error deleting shop', error: err });
   }
 };
-
-export const getUserShops = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;  // Change from user_id to id to match route parameter
-
-    if (!Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid user ID' });
-    }
-
-    const shops = await ShopService.getUserShops(new Types.ObjectId(id));
-
-    // Return an empty array instead of 404 when no shops are found
-    // This allows your frontend to handle the empty state properly
-    res.status(200).json(shops);
-  } catch (error) {
-    console.error('Error fetching user shops:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
