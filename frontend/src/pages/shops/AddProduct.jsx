@@ -704,7 +704,7 @@ export default function AddProduct() {
                 <div key={index} className="p-3 border border-gray-100 rounded-lg flex items-center">
                   <div className="w-12 h-12 rounded-md overflow-hidden mr-3 flex-shrink-0">
                     <img 
-                      src={variant.image_url} 
+                      src={variant.image_url instanceof File ? URL.createObjectURL(variant.image_url) : variant.image_url} 
                       alt="Variant" 
                       className="w-full h-full object-cover"
                     />
@@ -750,37 +750,119 @@ export default function AddProduct() {
         <div className="flex justify-between">
           {steps.map((step, index) => (
             <div key={index} className="flex flex-col items-center">
-                <div 
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    currentStep > index + 1 
-                    ? 'bg-primary text-white' 
-                    : currentStep === index + 1 
-                      ? 'bg-primary/20 border-2 border-primary text-primary font-medium' 
-                      : 'bg-gray-200 text-gray-600'
-                  }`}
-                >
-                  {currentStep > index + 1 ? (
-                    <CheckIcon className="w-5 h-5" />
-                  ) : (
-                    index + 1
-                  )}
-                </div>
-                <span className={`mt-2 text-xs ${
-                  currentStep >= index + 1 ? 'text-primary font-medium' : 'text-gray-600'
-                }`}>
-                  {step}
-                </span>
+              <div 
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  currentStep > index + 1 
+                  ? 'bg-primary text-white' 
+                  : currentStep === index + 1 
+                    ? 'bg-primary/20 border-2 border-primary text-primary font-medium' 
+                    : 'bg-gray-200 text-gray-600'
+                }`}
+              >
+                {currentStep > index + 1 ? (
+                  <CheckIcon className="w-5 h-5" />
+                ) : (
+                  index + 1
+                )}
               </div>
-            ))}
-          </div>
+              <span className={`mt-2 text-xs ${
+                currentStep >= index + 1 ? 'text-primary font-medium' : 'text-gray-600'
+              }`}>
+                {step}
+              </span>
+            </div>
+          ))}
+        </div>
+        
+        <div className="relative mt-2">
+          <div className="absolute top-0 h-1 bg-gray-200 w-full"></div>
+          <div 
+            className="absolute top-0 h-1 bg-primary transition-all duration-300" 
+            style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
+          ></div>
+        </div>
+      </div>
+    );
+  };
+
+  // Main component render
+  return (
+    <div className="min-h-screen bg-background p-6">
+      {/* Header */}
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center mb-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-lg text-text hover:bg-gray-100 dark:hover:bg-gray-700 mr-4"
+          >
+            <ArrowLeftIcon className="h-5 w-5" />
+          </button>
+          <h1 className="text-2xl font-bold text-text">Add New Product</h1>
+        </div>
+        
+        {/* Progress Bar */}
+        {renderProgressBar()}
+        
+        {/* Main Form */}
+        <div className="bg-card border border-border/20 rounded-xl shadow-lg p-6">
+          {renderStepContent()}
           
-          <div className="relative mt-2">
-            <div className="absolute top-0 h-1 bg-gray-200 w-full"></div>
-            <div 
-              className="absolute top-0 h-1 bg-primary transition-all duration-300" 
-              style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
-            ></div>
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-8">
+            {currentStep > 1 && (
+              <button
+                type="button"
+                onClick={handlePreviousStep}
+                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+              >
+                <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                Previous
+              </button>
+            )}
+            
+            {currentStep < 3 ? (
+              <button
+                type="button"
+                onClick={handleNextStep}
+                className="ml-auto px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors flex items-center"
+              >
+                Next
+                <ArrowRightIcon className="h-4 w-4 ml-2" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleSubmit}
+                className="ml-auto px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors flex items-center disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating Product...
+                  </>
+                ) : (
+                  <>
+                    Create Product
+                    <CheckIcon className="h-4 w-4 ml-2" />
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
-      );
-    };
+      </div>
+      
+      {/* Variant Modal */}
+      <VariantModal
+        show={showVariantModal}
+        onClose={() => setShowVariantModal(false)}
+        productOptions={product.options}
+        onSubmitVariant={handleAddVariant}
+      />
+    </div>
+  );
+}
