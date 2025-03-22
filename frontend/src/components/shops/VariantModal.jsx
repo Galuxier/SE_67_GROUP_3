@@ -121,9 +121,9 @@ export default function VariantModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full space-y-4 border border-gray-200 dark:border-gray-700">
+      <div className="bg-card dark:bg-background p-6 rounded-lg shadow-xl max-w-md w-full space-y-4 border border-border dark:border-border/50">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-white">Add Variant</h2>
+          <h2 className="text-xl font-bold text-text dark:text-text">Add Variant</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
@@ -134,14 +134,14 @@ export default function VariantModal({
         
         {/* Variant Image */}
         <div>
-          <label className="block font-medium text-gray-700 dark:text-gray-300 mb-1">Variant Image</label>
+          <label className="block font-medium text-text dark:text-text mb-1">Variant Image</label>
           <div className="flex flex-col items-center justify-center">
             {previewUrl ? (
               <div className="relative mb-2 group">
                 <img
                   src={previewUrl}
                   alt="Variant Preview"
-                  className="w-32 h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                  className="w-32 h-32 object-cover rounded-lg border border-border dark:border-border/50"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg">
                   <button
@@ -160,11 +160,11 @@ export default function VariantModal({
               <div 
                 onClick={() => document.getElementById('variant-image-upload').click()}
                 className={`w-32 h-32 border-2 ${
-                  errors.image ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  errors.image ? 'border-red-500' : 'border-border dark:border-border/50'
                 } border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors`}
               >
                 <PhotoIcon className="w-8 h-8 text-gray-400" />
-                <span className="text-sm text-gray-500 mt-1">Add Image</span>
+                <span className="text-sm text-gray-500 mt-1 dark:text-text">Add Image</span>
               </div>
             )}
             <input
@@ -193,13 +193,13 @@ export default function VariantModal({
         {/* Attributes */}
         {productOptions.map((opt, idx) => (
           <div key={idx}>
-            <label className="block font-medium text-gray-700 dark:text-gray-300 mb-1">{opt.name}</label>
+            <label className="block font-medium text-text dark:text-text mb-1">{opt.name}</label>
             
             {opt.values && opt.values.length > 0 ? (
               <select
                 className={`w-full p-2 border ${
-                  errors[opt.name] ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary'
-                } rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-1`}
+                  errors[opt.name] ? 'border-red-500 focus:ring-red-500' : 'border-border dark:border-border/50 focus:ring-primary'
+                } rounded-lg bg-background dark:bg-card text-text dark:text-text focus:outline-none focus:ring-1`}
                 value={attribute[opt.name] || ""}
                 onChange={(e) => handleChangeAttr(opt.name, e.target.value)}
               >
@@ -214,8 +214,8 @@ export default function VariantModal({
               <input
                 type="text"
                 className={`w-full p-2 border ${
-                  errors[opt.name] ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary'
-                } rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-1`}
+                  errors[opt.name] ? 'border-red-500 focus:ring-red-500' : 'border-border dark:border-border/50 focus:ring-primary'
+                } rounded-lg bg-background dark:bg-card text-text dark:text-text focus:outline-none focus:ring-1`}
                 placeholder={`Enter ${opt.name}`}
                 value={attribute[opt.name] || ""}
                 onChange={(e) => handleChangeAttr(opt.name, e.target.value)}
@@ -233,14 +233,14 @@ export default function VariantModal({
         
         {/* Price */}
         <div>
-          <label className="block font-medium text-gray-700 dark:text-gray-300 mb-1">Price (฿)</label>
+          <label className="block font-medium text-text dark:text-text mb-1">Price (฿)</label>
           <input
             type="number"
             min="0"
             step="0.01"
             className={`w-full p-2 border ${
-              errors.price ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary'
-            } rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-1`}
+              errors.price ? 'border-red-500 focus:ring-red-500' : 'border-border dark:border-border/50 focus:ring-primary'
+            } rounded-lg bg-background dark:bg-card text-text dark:text-text focus:outline-none focus:ring-1`}
             value={price}
             onChange={(e) => {
               setPrice(e.target.value);
@@ -257,14 +257,14 @@ export default function VariantModal({
         
         {/* Stock */}
         <div>
-          <label className="block font-medium text-gray-700 dark:text-gray-300 mb-1">Stock</label>
+          <label className="block font-medium text-text dark:text-text mb-1">Stock</label>
           <input
             type="number"
             min="0"
             step="1"
             className={`w-full p-2 border ${
-              errors.stock ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary'
-            } rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-1`}
+              errors.stock ? 'border-red-500 focus:ring-red-500' : 'border-border dark:border-border/50 focus:ring-primary'
+            } rounded-lg bg-background dark:bg-card text-text dark:text-text focus:outline-none focus:ring-1`}
             value={stock}
             onChange={(e) => {
               setStock(e.target.value);
@@ -284,7 +284,7 @@ export default function VariantModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
+            className="flex-1 px-4 py-2 border border-border dark:border-border/50 rounded-lg text-text dark:text-text hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
           >
             Cancel
           </button>

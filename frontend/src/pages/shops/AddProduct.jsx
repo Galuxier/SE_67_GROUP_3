@@ -425,6 +425,7 @@ export default function AddProduct() {
   );
 
   // Render the variants step (Step 2)
+  // Updated renderVariantsStep function with dark mode support
   const renderVariantsStep = () => (
     <div className="space-y-6">
       <div>
@@ -438,22 +439,22 @@ export default function AddProduct() {
               checked={product.hasOptions}
               onChange={() => setProduct(prev => ({ ...prev, hasOptions: !prev.hasOptions }))}
             />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary rounded-full peer dark:bg-gray-900 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
           </div>
         </label>
       </div>
-  
+
       {product.hasOptions ? (
         <>
           {/* Options Section */}
           <div className="p-4 border border-border rounded-lg bg-card dark:bg-background dark:border-border/50">
             <h3 className="text-lg font-medium mb-3 text-text dark:text-text">Product Options</h3>
-            <p className="text-sm text-gray-500 mb-4 dark:text-text">
+            <p className="text-sm text-gray-500 mb-4 dark:text-text/70">
               Add options like color, size, etc. that customers can choose from.
             </p>
             
             {/* Add new option form */}
-            <div className="flex flex-col space-y-3 mb-4 pb-4 border-b border-border">
+            <div className="flex flex-col space-y-3 mb-4 pb-4 border-b border-border dark:border-border/50">
               <div className="flex space-x-2">
                 <input
                   type="text"
@@ -476,7 +477,7 @@ export default function AddProduct() {
                 <button
                   type="button"
                   onClick={addOptionValue}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors dark:bg-secondary dark:hover:bg-secondary/90"
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors dark:bg-primary dark:hover:bg-secondary"
                 >
                   Add Value
                 </button>
@@ -487,11 +488,11 @@ export default function AddProduct() {
                 <div className="flex flex-wrap gap-2 mt-2">
                   {newOptionValues.map((value, index) => (
                     <div key={index} className="flex items-center bg-gray-100 rounded-full px-3 py-1 dark:bg-gray-700">
-                      <span className="text-sm dark:text-text">{value}</span>
+                      <span className="text-sm text-text dark:text-text">{value}</span>
                       <button
                         type="button"
                         onClick={() => removeOptionValue(value)}
-                        className="ml-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-600"
+                        className="ml-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
                       >
                         <XMarkIcon className="w-4 h-4" />
                       </button>
@@ -504,7 +505,7 @@ export default function AddProduct() {
                 type="button"
                 onClick={addOption}
                 disabled={!newOption || newOptionValues.length === 0}
-                className="self-start mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed dark:bg-secondary dark:hover:bg-secondary/90"
+                className="self-start mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed dark:bg-primary dark:hover:bg-secondary dark:disabled:bg-gray-600"
               >
                 Add Option
               </button>
@@ -538,7 +539,7 @@ export default function AddProduct() {
                 type="button"
                 onClick={() => setShowVariantModal(true)}
                 disabled={product.options.length === 0}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center dark:bg-secondary dark:hover:bg-secondary/90"
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center dark:bg-primary dark:hover:bg-secondary dark:disabled:bg-gray-600"
               >
                 <PlusCircleIcon className="w-5 h-5 mr-1" />
                 Add Variant
@@ -546,7 +547,7 @@ export default function AddProduct() {
             </div>
             
             {product.options.length === 0 && (
-              <div className="flex items-center p-4 mb-4 text-sm text-blue-800 border border-blue-300 rounded-lg bg-blue-50 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700">
+              <div className="flex items-center p-4 mb-4 text-sm text-blue-800 border border-blue-300 rounded-lg bg-blue-50 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-700">
                 <InformationCircleIcon className="flex-shrink-0 w-5 h-5 mr-3" />
                 <span>Add at least one option before creating variants.</span>
               </div>
@@ -559,7 +560,7 @@ export default function AddProduct() {
                   <div key={index} className="p-3 border border-border rounded-lg flex items-center bg-card dark:bg-background dark:border-border/50">
                     <div className="w-16 h-16 rounded-md overflow-hidden mr-4 flex-shrink-0">
                       <img 
-                        src={variant.image_url} 
+                        src={variant.image_url instanceof File ? URL.createObjectURL(variant.image_url) : variant.image_url} 
                         alt="Variant" 
                         className="w-full h-full object-cover"
                       />
@@ -584,7 +585,7 @@ export default function AddProduct() {
                     <button
                       type="button"
                       onClick={() => removeVariant(index)}
-                      className="ml-4 text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-700"
+                      className="ml-4 text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400"
                     >
                       <TrashIcon className="w-5 h-5" />
                     </button>
@@ -592,7 +593,7 @@ export default function AddProduct() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6 text-gray-500 dark:text-text">
+              <div className="text-center py-6 text-gray-500 dark:text-text/70">
                 No variants added yet
               </div>
             )}
