@@ -49,3 +49,14 @@ export const deleteProductController = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error deleting product', error: err });
   }
 };
+
+// New controller to get products by shop_id
+export const getProductsByShopIdController = async (req: Request, res: Response) => {
+  try {
+    const shopId = req.params.shopId;
+    const products = await ProductService.getProductsByShopId(shopId);
+    res.status(200).json(products);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching shop products', error: err });
+  }
+};

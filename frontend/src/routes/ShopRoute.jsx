@@ -16,34 +16,27 @@ import ShopManageDashboard from "../pages/shops/managements/ShopManageDashboard"
 
 function ShopRoutes() {
   return (
-      <Routes>
-        {/* มี Layout(Navbar) */}
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<ShopHome />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/profile/:id" element={<ShopProfile />} />
-        </Route>
+    <Routes>
+      {/* Main Shop Routes with Navbar */}
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<ShopHome />} />
+        <Route path="product/:id" element={<ProductDetail />} />
+        <Route path="cart" element={<Cart />} />
+        <Route path="profile/:id" element={<ShopProfile />} />
+      </Route>
 
-        <Route
-          path="/management/:shopId?"
-          element={
-            <ShopManagementRouteGuard>
-              <ShopManageLayout />
-            </ShopManagementRouteGuard>
-          }
-        >
-          <Route index element={<ShopManageDashboard />} />
-          
-          {/* <Route path="/management/addProduct" element={<AddProduct />} /> */}
-        </Route>
-          
-        {/* ไม่มี Layout(Navbar) */}
-        <Route path="/management/addShop" element={<ShopManagementRouteGuard><AddShop /></ShopManagementRouteGuard>} />
-          
-          <Route path="/summary" element={<Summary />} />
-          
-      </Routes>
+      {/* Shop Management Routes */}
+      <Route path="management" element={<ShopManagementRouteGuard><ShopManageLayout /></ShopManagementRouteGuard>}>
+        <Route index element={<ShopManageDashboard />} />
+        <Route path=":shopId" element={<ShopManageDashboard />} />
+        <Route path=":shopId/addProduct" element={<AddProduct />} />
+        <Route path="addProduct" element={<AddProduct />} />
+      </Route>
+      
+      {/* Routes without Navbar */}
+      <Route path="management/addShop" element={<ShopManagementRouteGuard><AddShop /></ShopManagementRouteGuard>} />
+      <Route path="summary" element={<Summary />} />
+    </Routes>
   );
 }
 

@@ -38,9 +38,6 @@ export const createShopController = async (req: Request, res: Response) => {
   }
 };
 
-
-
-
 // ดึงข้อมูลร้านค้าทั้งหมด
 export const getShopsController = async (req: Request, res: Response) => {
   try {
@@ -82,5 +79,33 @@ export const deleteShopController = async (req: Request, res: Response) => {
     res.status(200).json(deletedShop);
   } catch (err) {
     res.status(500).json({ message: 'Error deleting shop', error: err });
+  }
+};
+
+// ดึงข้อมูลร้านค้าทั้งหมดของผู้ใช้ (โดย user_id)
+export const getUserShopsController = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id;
+    
+    // ตรวจสอบว่า ID ถูกต้องหรือไม่
+    if (!Types.ObjectId.isValid(userId)) {
+      res.status(400).json({ message: 'Invalid user ID format' });
+    }
+    
+    const shops = await ShopService.getShopsByOwnerId(userId);
+    
+    // ส่งคืนข้อมูลร้านค้าทั้งหมดของผู้ใช้
+    res.status(200).json({
+      success: true,
+      count: shops.length,
+      data: shops
+    });
+  } catch (err) {
+    console.error('Error fetching user shops:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching user shops', 
+      error: err 
+    });
   }
 };

@@ -17,7 +17,6 @@ const ShopManageLayout = () => {
   const [userShops, setUserShops] = useState([]);
   const [error, setError] = useState(null);
   const { user } = useAuth();
-  
 
   // Check if we're on the addShop page
   const isAddShopPage = location.pathname.includes('/management/addShop');
@@ -25,19 +24,35 @@ const ShopManageLayout = () => {
   // Fetch user's shops and current shop data
   useEffect(() => {
     const fetchData = async () => {
+      if (!user || !user._id) {
+        setError("User session not found. Please login again.");
+        navigate("/login", { state: { from: location.pathname } });
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
         
-        // Fetch user's shops
+        // Fetch all shops owned by the current user
+        console.log("Fetching shops for user:", user._id);
         const shopsResponse = await getUserShops(user._id);
-        const shops = shopsResponse || [];
+        const shops = shopsResponse.data || [];
         setUserShops(shops);
+        
+        console.log("Found shops:", shops.length, shops);
         
         if (shops.length > 0) {
           // If shopId is provided in URL, fetch that specific shop
           if (shopId) {
             try {
+              // Verify the shop belongs to this user
+              const userOwnsShop = shops.some(shop => shop._id === shopId);
+              
+              if (!userOwnsShop) {
+                throw new Error("You don't have access to this shop");
+              }
+              
               const shopResponse = await getShopById(shopId);
               setShopData(shopResponse);
             } catch (shopError) {
@@ -45,6 +60,7 @@ const ShopManageLayout = () => {
               // If specific shop fetch fails, default to first shop
               setShopData(shops[0]);
               navigate(`/shop/management/${shops[0]._id}`, { replace: true });
+              toast.error("Couldn't access the requested shop. Redirected to your default shop.");
             }
           } else if (!isAddShopPage) {
             // If no shop specified and not on addShop page, use first shop
@@ -66,7 +82,33 @@ const ShopManageLayout = () => {
     };
 
     fetchData();
-  }, [navigate, shopId, isAddShopPage]);
+  }, [navigate, shopId, isAddShopPage, user, location.pathname]);
+
+  // Handle shop switching - this function can be passed down to child components if needed
+  const switchShop = async (newShopId) => {
+    if (newShopId === shopData?._id) return; // Skip if same shop
+    
+    try {
+      setLoading(true);
+      
+      // Check if shop exists in userShops
+      const shopExists = userShops.some(shop => shop._id === newShopId);
+      
+      if (!shopExists) {
+        throw new Error("Shop not found or you don't have access");
+      }
+      
+      const shopDetails = await getShopById(newShopId);
+      setShopData(shopDetails);
+      navigate(`/shop/management/${newShopId}`);
+      
+    } catch (error) {
+      console.error("Error switching shops:", error);
+      toast.error("Failed to switch shops. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return <LoadingSpinner />;
@@ -96,16 +138,17 @@ const ShopManageLayout = () => {
       <ShopManageSidebar 
         shopData={shopData} 
         userShops={userShops}
+        onSwitchShop={switchShop}
       />
 
       {/* Main Content */}
-      <div className="flex-1 ml-56">
+      <div className="flex-1 ml-64">
         {/* Navbar */}
         <ManagementNavbar />
 
         {/* Page Content */}
         <div className="p-4 mt-6 bg-background">
-          <Outlet context={{ shopData, userShops }} />
+          <Outlet context={{ shopData, userShops, switchShop }} />
         </div>
       </div>
     </div>
