@@ -11,35 +11,10 @@ export const createEnrollmentController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { user_id, role, description } = req.body;
+    console.log('Request body:', req.body);
+    const enrollmentData = req.body;
 
-    // ✅ เช็คไฟล์แนบ
-    const files = Array.isArray(req.files)
-      ? req.files
-      : req.files?.licenses as Express.Multer.File[] || [];
 
-    let licensePaths: string[] = [];
-    if (files && files.length > 0) {
-      licensePaths = files.map(file => file.path.replace(/^.*?uploads\//, ''));
-    }
-    
-    if (licensePaths.length === 0) {
-      res.status(400).json({
-        success: false,
-        message: 'At least one license file is required'
-      });
-      return;
-    }
-
-    // ✅ สร้าง EnrollmentData
-    const enrollmentData: Partial<EnrollmentDocument> = {
-      user_id: new Types.ObjectId(user_id),
-      role,
-      description,
-      license_files: licensePaths,
-      status: EnrollmentStatus.Pending,
-      create_at: new Date()
-    };
     console.log(enrollmentData);
 
     // ✅ บันทึกลง database
@@ -55,49 +30,65 @@ export const createEnrollmentController = async (
   }
 };
 
-// export const updateEnrollmentController = async (
-//   req: Request, 
-//   res: Response, 
-//   next: NextFunction
-// ): Promise<void> => {
-//   try {
-//     const { status } = req.body;
-    
-//     if (!Object.values(EnrollmentStatus).includes(status)) {
-//       res.status(400).json({
-//         success: false,
-//         message: 'Invalid enrollment status'
-//       });
-//       return;
-//     }
+export const updateEnrollmentController = async (
+  req: Request, 
+  res: Response, 
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { status, reviewer_id, reject_reason } = req.body;
 
-//     const token = req.headers['x-access-token'] as string;
-//     const decodedToken = jwtDecode(token) as { _id: string };
-//     const reviewerId = decodedToken._id;
+    console.log("Req body: ", req.body);
     
-//     const updatedEnrollment = await EnrollmentService.update(req.params.id, { 
-//       status, 
-//       updated_at: new Date(),
-//       reviewer: new Types.ObjectId(reviewerId) // Correct usage of Types.ObjectId
-//     });
-    
-//     if (!updatedEnrollment) {
-//       res.status(404).json({
-//         success: false,
-//         message: 'Enrollment not found'
-//       });
-//       return;
-//     }
-    
-//     res.status(200).json({
-//       success: true,
-//       message: 'Enrollment updated successfully',
-//       data: updatedEnrollment
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
+
+    // ✅ ตรวจสอบค่า status ว่าเป็นค่า valid หรือไม่
+    if (!Object.values(EnrollmentStatus).includes(status)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid enrollment status'
+      });
+      return;
+    }
+
+    // ✅ ตรวจสอบค่า reviewer_id ว่ามีหรือไม่
+    if (!reviewer_id) {
+      res.status(400).json({
+        success: false,
+        message: 'Reviewer ID is required'
+      });
+      return;
+    }
+
+    const updateData: any = {
+      status,
+      updated_at: new Date(),
+      reviewer_id: reviewer_id // ✅ ใช้ reviewer_id ที่ส่งมาจาก FormData
+    };
+
+    // ✅ เพิ่ม reject_reason กรณีที่ status เป็น rejected
+    if (status === 'rejected' && reject_reason) {
+      updateData.reject_reason = reject_reason;
+    }
+
+    const updatedEnrollment = await EnrollmentService.updateEnrollment(req.params.id, updateData);
+
+    if (!updatedEnrollment) {
+      res.status(404).json({
+        success: false,
+        message: 'Enrollment not found'
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Enrollment updated successfully',
+      data: updatedEnrollment
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 export const getEnrollmentsController = async (
   req: Request, 

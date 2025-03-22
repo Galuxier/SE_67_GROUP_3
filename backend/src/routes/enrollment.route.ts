@@ -3,7 +3,7 @@ import {
   createEnrollmentController,
   getEnrollmentsController,
   getEnrollmentByIdController,
-  // updateEnrollmentController,
+  updateEnrollmentController,
   getEnrollmentsByUserIdController
 } from '../controllers/enrollment.controller';
 import { licenseUpload } from '../middlewares/uploads/license.upload';
@@ -31,10 +31,11 @@ router.get(
 );
 
 // Update enrollment request (for approving/rejecting)
-// router.put(
-//   '/enrollment/:id', 
-//   updateEnrollmentController
-// );
+router.put(
+  '/enrollment/:id', 
+  licenseUpload,
+  updateEnrollmentController
+);
 
 // Get enrollment requests by user ID
 router.get(

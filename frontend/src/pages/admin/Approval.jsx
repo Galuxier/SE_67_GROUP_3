@@ -18,7 +18,7 @@ import {
   XCircleIcon as XCircleSolidIcon 
 } from "@heroicons/react/24/solid";
 import { toast } from "react-toastify";
-import { getAllEnrollment } from "../../services/api/AdminApi";
+import { getAllEnrollment, updateEnrollment } from "../../services/api/AdminApi";
 
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
@@ -26,153 +26,6 @@ const statusColors = {
   rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
 };
 
-
-
-// Mock data for demonstration purposes
-const mockEnrollments = [
-  {
-    _id: "1",
-    user_id: {
-      _id: "user1",
-      username: "fighter1",
-      first_name: "สมชาย",
-      last_name: "ใจดี",
-      profile_picture: null,
-      email: "somchai@example.com"
-    },
-    role: "boxer",
-    description: "ฉันเป็นนักมวยมืออาชีพมานาน 5 ปี ปัจจุบันอยู่ที่ค่ายมวยเพชรเกษม อยากเข้าร่วมกับชุมชนมวยไทยเพื่อหาคู่ชกและเข้าร่วมการแข่งขันต่างๆ",
-    license_files: ["licenses/1741725685968-license_1.jpg", "licenses/1741725685968-license_2.jpg"],
-    status: "pending",
-    create_at: "2025-03-18T08:30:00.000Z",
-    updated_at: null,
-    reviewer_id: null
-  },
-  {
-    _id: "2",
-    user_id: {
-      _id: "user2",
-      username: "coach_niran",
-      first_name: "นิรันดร์",
-      last_name: "คงเดช",
-      profile_picture: null,
-      email: "niran@example.com"
-    },
-    role: "trainer",
-    description: "ผมเป็นโค้ชมวยไทยมา 10 ปี เคยฝึกนักมวยให้ได้แชมป์ลุมพินี อยากเข้าร่วมเพื่อหาลูกศิษย์เพิ่มและสอนมวยไทยให้เป็นที่รู้จักมากขึ้น",
-    license_files: ["licenses/1741725685968-license_3.jpg"],
-    status: "approved",
-    create_at: "2025-03-15T10:15:00.000Z",
-    updated_at: "2025-03-19T09:20:00.000Z",
-    reviewer_id: {
-      _id: "admin1",
-      username: "admin_muaythai",
-      first_name: "อดิศร",
-      last_name: "วงศ์พัฒนา"
-    }
-  },
-  {
-    _id: "3",
-    user_id: {
-      _id: "user3",
-      username: "gym_owner123",
-      first_name: "ประเสริฐ",
-      last_name: "ศรีวิไล",
-      profile_picture: null,
-      email: "prasert@example.com"
-    },
-    role: "gym_owner",
-    description: "ผมเป็นเจ้าของค่ายมวยพัทยาไฟท์คลับ ต้องการลงทะเบียนค่ายมวยในระบบเพื่อรับสมัครนักมวยและจัดการคอร์สเรียน",
-    license_files: ["licenses/1741725685968-license_4.jpg", "licenses/1741725685968-license_5.jpg"],
-    status: "rejected",
-    create_at: "2025-03-10T14:45:00.000Z",
-    updated_at: "2025-03-12T11:30:00.000Z",
-    reviewer_id: {
-      _id: "admin2",
-      username: "admin_system",
-      first_name: "สุรีย์",
-      last_name: "จันทร์เกษม"
-    },
-    reject_reason: "เอกสารไม่ครบถ้วน กรุณาส่งใบอนุญาตประกอบกิจการและแผนที่ตั้งค่ายมวยเพิ่มเติม"
-  },
-  {
-    _id: "4",
-    user_id: {
-      _id: "user4",
-      username: "event_planner",
-      first_name: "วิภาดา",
-      last_name: "มั่นคง",
-      profile_picture: null,
-      email: "wipada@example.com"
-    },
-    role: "organizer",
-    description: "บริษัทของเราจัดการแข่งขันมวยไทยระดับประเทศมาแล้วหลายรายการ ต้องการเข้าใช้ระบบเพื่อจัดการแข่งขันและประชาสัมพันธ์อีเวนท์",
-    license_files: ["licenses/1741725685968-license_6.jpg"],
-    status: "pending",
-    create_at: "2025-03-17T16:20:00.000Z",
-    updated_at: null,
-    reviewer_id: null
-  },
-  {
-    _id: "5",
-    user_id: {
-      _id: "user5",
-      username: "muaythai_shop",
-      first_name: "กิตติพงษ์",
-      last_name: "วงศ์ทอง",
-      profile_picture: null,
-      email: "kittipong@example.com"
-    },
-    role: "shop_owner",
-    description: "เราเป็นร้านขายอุปกรณ์มวยไทยคุณภาพดี นำเข้าและผลิตเอง ต้องการเปิดร้านค้าออนไลน์บนแพลตฟอร์มนี้",
-    license_files: ["licenses/1741725685968-license_7.jpg", "licenses/1741725685968-license_8.jpg"],
-    status: "approved",
-    create_at: "2025-03-14T09:10:00.000Z",
-    updated_at: "2025-03-16T13:45:00.000Z",
-    reviewer_id: {
-      _id: "admin1",
-      username: "admin_muaythai",
-      first_name: "อดิศร",
-      last_name: "วงศ์พัฒนา"
-    }
-  },
-  {
-    _id: "6",
-    user_id: {
-      _id: "user6",
-      username: "venue_service",
-      first_name: "ศิริพร",
-      last_name: "สุขสวัสดิ์",
-      profile_picture: null,
-      email: "siriporn@example.com"
-    },
-    role: "lessor",
-    description: "เรามีสถานที่ให้เช่าสำหรับการแข่งขันและฝึกซ้อมมวยไทย พื้นที่กว้างขวาง มีอุปกรณ์ครบครัน ต้องการลงทะเบียนสถานที่ในระบบ",
-    license_files: ["licenses/1741725685968-license_9.jpg"],
-    status: "pending",
-    create_at: "2025-03-19T11:30:00.000Z",
-    updated_at: null,
-    reviewer_id: null
-  },
-  // {
-  //   _id: "7",
-  //   user_id: {
-  //     _id: "test7",
-  //     username: "test7",
-  //     first_name: "test7",
-  //     last_name: "test6",
-  //     profile_picture: null,
-  //     email: "siriporn@example.com"
-  //   },
-  //   role: "lessor",
-  //   description: "เรามีสถานที่ให้เช่าสำหรับการแข่งขันและฝึกซ้อมมวยไทย พื้นที่กว้างขวาง มีอุปกรณ์ครบครัน ต้องการลงทะเบียนสถานที่ในระบบ",
-  //   license_files: ["licenses/1741725685968-license_9.jpg"],
-  //   status: "pending",
-  //   create_at: "2025-03-19T11:30:00.000Z",
-  //   updated_at: null,
-  //   reviewer_id: null
-  // },
-];
 
 const ROLE_DISPLAY = {
   "boxer": "นักมวย",
@@ -202,27 +55,24 @@ export default function AdminApproval() {
   });
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Load mock data on component mount
   useEffect(() => {
-    setEnrollments(mockEnrollments);
-    setFilteredEnrollments(mockEnrollments);
-  }, []);
-
-  // useEffect(() => {
-  //     const fetchEnrollment = async () => {
-  //       try {
-  //         const response = await getAllEnrollment();
-  //         setEnrollments(response);
-  //         setFilteredEnrollments(response);
-  //         console.log(response);
+      const fetchEnrollment = async () => {
+        try {
+          const response = await getAllEnrollment();
+          setEnrollments(response);
+          setFilteredEnrollments(response);
+          console.log(response);
           
-  //       } catch (error) {
-  //         console.error("Failed to fetch gyms:", error);
-  //       }
-  //     };
+        } catch (error) {
+          console.error("Failed to fetch gyms:", error);
+        }
+      };
   
-  //     fetchEnrollment();
-  //   }, []);
+      fetchEnrollment();
+    }, []);
+
+    console.log(enrollments);
+    
 
   // Filter enrollment data based on role and search term
   useEffect(() => {
@@ -323,51 +173,50 @@ export default function AdminApproval() {
   };
 
   const handleEnrollmentAction = async (id, status, reason = null) => {
-    setIsSubmitting(true);
+  setIsSubmitting(true);
+  
+  try {
+    // Prepare the data to send to the API
+    const formData = new FormData();
     
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Update enrollment in state
-      const currentAdmin = {
-        _id: user._id,
-        username: user.username,
-        first_name: user.first_name,
-        last_name: user.last_name
-      };
+    // Add the status to the FormData
+    formData.append('status', status);
 
-      console.log("Approval: ", currentAdmin);
-      
-      const now = new Date().toISOString();
-      
-      setEnrollments(prevEnrollments => 
-        prevEnrollments.map(enrollment => 
-          enrollment._id === id 
-            ? { 
-                ...enrollment, 
-                status, 
-                updated_at: now,
-                reviewer_id: currentAdmin,
-                ...(reason && { reject_reason: reason })
-              } 
-            : enrollment
-        )
-      );
-      
-      // Close modals
-      setRejectModal(false);
-      setInfoModal(false);
-      
-      // Show success toast
-      toast.success(`คำขอได้รับการ${status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'}แล้ว`);
-    } catch (error) {
-      console.error(`Error ${status} enrollment:`, error);
-      toast.error(`เกิดข้อผิดพลาดในการ${status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'}คำขอ`);
-    } finally {
-      setIsSubmitting(false);
+    formData.append('reviewer_id', user._id);
+    
+    // Add the reason if provided
+    if (reason) {
+      formData.append('reject_reason', reason);
     }
-  };
+
+    formData.forEach((value, key) => {
+      console.log(`${key}: ${value}`);
+    });
+    
+    // Make the API call to update the enrollment
+    const response = await updateEnrollment(id, formData);
+    console.log(response.data);
+    
+    // Update the enrollment in state with the response data
+    setEnrollments(prevEnrollments => 
+      prevEnrollments.map(enrollment => 
+        enrollment._id === id ? response.data : enrollment
+      )
+    );
+    
+    // Close modals
+    setRejectModal(false);
+    setInfoModal(false);
+    
+    // Show success toast
+    toast.success(`คำขอได้รับการ${status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'}แล้ว`);
+  } catch (error) {
+    console.error(`Error ${status === 'approved' ? 'approving' : 'rejecting'} enrollment:`, error);
+    toast.error(`เกิดข้อผิดพลาดในการ${status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'}คำขอ`);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleSubmitReject = () => {
     if (!rejectReason.trim()) {

@@ -205,9 +205,9 @@ function GymHome() {
         </div>
       </div>
 
-      <div className="container px-4 sm:px-6 lg:px-8 mx-auto pb-12 -mt-12 relative z-20">
+      <div className="container px-4 sm:px-6 lg:px-8 mx-auto mt-6 pb-12 -mt-12 relative z-20">
         {/* Category Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 hide-scrollbar snap-x">
+        {/* <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 hide-scrollbar snap-x">
           {categories.map((category) => (
             <motion.button
               key={category}
@@ -223,7 +223,7 @@ function GymHome() {
               {category}
             </motion.button>
           ))}
-        </div>
+        </div> */}
 
         {/* Featured Gyms
         {featuredGyms.length > 0 && !searchQuery && province === "All" && activeCategory === "All" && (

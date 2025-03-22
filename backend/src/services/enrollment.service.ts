@@ -1,40 +1,45 @@
 import { Enrollment, EnrollmentDocument } from '../models/enrollment.model';
 import { BaseService } from './base.service';
+import UserService from './user.service'; // เพิ่ม import เข้ามา
+import { Types } from 'mongoose';
 
 class EnrollmentService extends BaseService<EnrollmentDocument> {
   constructor() {
     super(Enrollment);
   }
 
-
   async getAllEnrollment() {
-    // const enrollment = await Enrollment.find()
-    //   .populate('user_id', 'username first_name last_name')
-    //   .populate('reviewer_id')
-    //   .exec();
-
-    // const result = enrollment.map(e => {
-    //   return {
-    //     ...e.toObject(),
-    //     user: e.user_id, // เปลี่ยนชื่อ field จาก user_id เป็น user
-    //     user_id: undefined
-    //   };
-    // });
-
-    // return result;
     return await Enrollment.find()
-    .populate('user_id', 'username first_name last_name')
-    .populate('reviewer_id')
-    .exec();
+      .populate('user_id', 'username first_name last_name email')
+      .populate('reviewer_id')
+      .exec();
   }
 
-
-  // Get enrollments by user ID
   async getEnrollmentsByUserId(userId: string): Promise<EnrollmentDocument[]> {
     return await Enrollment.find({ user_id: userId });
   }
 
-  // Additional methods can be added here as needed
+  // ✅ เพิ่ม method สำหรับอัปเดต Enrollment และ Role ของ User
+  async updateEnrollment(id: string, data: any): Promise<EnrollmentDocument | null> {
+    console.log(data);
+    const updatedEnrollment = await Enrollment.findByIdAndUpdate(
+      id,
+      { 
+        ...data,
+        updated_at: new Date(),
+        reviewer_id: data.reviewer_id,
+      },
+      { new: true }
+    );
+    
+    // ✅ ถ้าอัปเดตสถานะเป็น approved → ให้ไปอัปเดต role ด้วย
+    if (updatedEnrollment && data.status === 'approved') {
+      await UserService.addUserRole(updatedEnrollment.user_id, updatedEnrollment.role);
+    }
+    console.log(updatedEnrollment);
+    
+    return updatedEnrollment;
+  }
 }
 
 export default new EnrollmentService();

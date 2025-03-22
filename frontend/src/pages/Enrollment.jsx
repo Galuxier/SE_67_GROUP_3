@@ -132,13 +132,6 @@ function Enrollment() {
       setIsSubmitting(true);
       
       // Create form data to send to the server
-
-      // const submitUser = {
-      //   _id: user._id,
-      //   username: user.username,
-      //   first_name: user.first_name,
-      //   last_name: user.last_name
-      // };
       
       const formData = new FormData();
       formData.append("user_id", user._id);
@@ -147,13 +140,13 @@ function Enrollment() {
       
       // Add all license files
       licenseFiles.forEach((file) => {
-        formData.append("licenses", file);
+        formData.append("license_ulrs", file);
       });
       
       // 🔥 อ่านค่าใน formData
-      // for (const pair of formData.entries()) {
-      //   console.log(`${pair[0]}:`, pair[1]);
-      // }
+      for (const pair of formData.entries()) {
+        console.log(`${pair[0]}:`, pair[1]);
+      }
 
       // Send to API
       const response = await submitEnrollment(formData);
