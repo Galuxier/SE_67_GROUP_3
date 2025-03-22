@@ -1,14 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
-import { 
-  HomeIcon, 
-  ChartBarIcon, 
-  AcademicCapIcon, 
+import {
+  HomeIcon,
+  ChartBarIcon,
+  AcademicCapIcon,
   BuildingStorefrontIcon,
   UsersIcon,
   CalendarIcon,
   ClipboardDocumentListIcon,
   PlusCircleIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
@@ -16,13 +16,15 @@ const GymManageSidebar = () => {
   const location = useLocation();
   const [expandedMenus, setExpandedMenus] = useState({
     gyms: true,
-    courses: false
+    courses: false,
+    boxers: false,
+    trainers: false,
   });
 
   const toggleMenu = (menu) => {
-    setExpandedMenus(prev => ({
+    setExpandedMenus((prev) => ({
       ...prev,
-      [menu]: !prev[menu]
+      [menu]: !prev[menu],
     }));
   };
 
@@ -49,7 +51,9 @@ const GymManageSidebar = () => {
           <Link
             to="/gym/management/dashboard"
             className={`p-2 rounded-md hover:bg-primary/10 ${
-              isActive("/dashboard") ? "bg-primary/10 text-primary font-medium" : "text-text"
+              isActive("/dashboard")
+                ? "bg-primary/10 text-primary font-medium"
+                : "text-text"
             } flex items-center group transition-colors`}
           >
             <ChartBarIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
@@ -59,24 +63,32 @@ const GymManageSidebar = () => {
           {/* Gyms Section */}
           <div className="space-y-1">
             <button
-              onClick={() => toggleMenu('gyms')}
+              onClick={() => toggleMenu("gyms")}
               className={`w-full p-2 rounded-md hover:bg-primary/10 ${
-                isActive("/gyms") ? "bg-primary/10 text-primary font-medium" : "text-text"
+                isActive("/gyms")
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-text"
               } flex items-center justify-between group transition-colors`}
             >
               <div className="flex items-center">
                 <BuildingStorefrontIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
                 My Gyms
               </div>
-              <ChevronDownIcon className={`h-4 w-4 transition-transform ${expandedMenus.gyms ? 'rotate-180' : ''}`} />
+              <ChevronDownIcon
+                className={`h-4 w-4 transition-transform ${
+                  expandedMenus.gyms ? "rotate-180" : ""
+                }`}
+              />
             </button>
-            
+
             {expandedMenus.gyms && (
               <div className="pl-10 space-y-1">
                 <Link
                   to="/gym/management/gymlist"
                   className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    location.pathname === "/gym/manage/gyms" ? "text-primary" : "text-text"
+                    location.pathname === "/gym/manage/gyms"
+                      ? "text-primary"
+                      : "text-text"
                   } text-sm transition-colors`}
                 >
                   All Gyms
@@ -84,7 +96,9 @@ const GymManageSidebar = () => {
                 <Link
                   to="/gym/management/create"
                   className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    location.pathname === "/gym/manage/gyms/create" ? "text-primary" : "text-text"
+                    location.pathname === "/gym/manage/gyms/create"
+                      ? "text-primary"
+                      : "text-text"
                   } text-sm transition-colors`}
                 >
                   <div className="flex items-center">
@@ -99,24 +113,32 @@ const GymManageSidebar = () => {
           {/* Courses Section */}
           <div className="space-y-1">
             <button
-              onClick={() => toggleMenu('courses')}
+              onClick={() => toggleMenu("courses")}
               className={`w-full p-2 rounded-md hover:bg-primary/10 ${
-                isActive("/courses") ? "bg-primary/10 text-primary font-medium" : "text-text"
+                isActive("/courses")
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-text"
               } flex items-center justify-between group transition-colors`}
             >
               <div className="flex items-center">
                 <AcademicCapIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
                 Courses
               </div>
-              <ChevronDownIcon className={`h-4 w-4 transition-transform ${expandedMenus.courses ? 'rotate-180' : ''}`} />
+              <ChevronDownIcon
+                className={`h-4 w-4 transition-transform ${
+                  expandedMenus.courses ? "rotate-180" : ""
+                }`}
+              />
             </button>
-            
+
             {expandedMenus.courses && (
               <div className="pl-10 space-y-1">
                 <Link
                   to="/gym/manage/courses/active"
                   className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    location.pathname === "/gym/manage/courses/active" ? "text-primary" : "text-text"
+                    location.pathname === "/gym/manage/courses/active"
+                      ? "text-primary"
+                      : "text-text"
                   } text-sm transition-colors`}
                 >
                   Active Courses
@@ -124,7 +146,9 @@ const GymManageSidebar = () => {
                 <Link
                   to="/gym/manage/courses/completed"
                   className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    location.pathname === "/gym/manage/courses/completed" ? "text-primary" : "text-text"
+                    location.pathname === "/gym/manage/courses/completed"
+                      ? "text-primary"
+                      : "text-text"
                   } text-sm transition-colors`}
                 >
                   Completed Courses
@@ -132,7 +156,9 @@ const GymManageSidebar = () => {
                 <Link
                   to="/gym/manage/courses/create"
                   className={`block p-2 rounded-md hover:bg-primary/10 ${
-                    location.pathname === "/gym/manage/courses/create" ? "text-primary" : "text-text"
+                    location.pathname === "/gym/manage/courses/create"
+                      ? "text-primary"
+                      : "text-text"
                   } text-sm transition-colors`}
                 >
                   <div className="flex items-center">
@@ -144,22 +170,93 @@ const GymManageSidebar = () => {
             )}
           </div>
 
-          {/* Members/Trainers */}
-          <Link
-            to="/gym/manage/members"
-            className={`p-2 rounded-md hover:bg-primary/10 ${
-              isActive("/members") ? "bg-primary/10 text-primary font-medium" : "text-text"
-            } flex items-center group transition-colors`}
-          >
-            <UsersIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
-            Members & Trainers
-          </Link>
+          {/* Boxers */}
+          <div className="space-y-1">
+            <button
+              onClick={() => toggleMenu("boxers")}
+              className={`w-full p-2 rounded-md hover:bg-primary/10 ${
+                isActive("/boxers")
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-text"
+              } flex items-center justify-between group transition-colors`}
+            >
+              <div className="flex items-center">
+                <UsersIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
+                Boxers
+              </div>
+              <ChevronDownIcon
+                className={`h-4 w-4 transition-transform ${
+                  expandedMenus.boxers ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+            {expandedMenus.boxers && (
+              <div className="pl-10 space-y-1">
+                <Link
+                  to="/gym/management/addboxer"
+                  className={`block p-2 rounded-md hover:bg-primary/10 ${
+                    location.pathname === "/gym/manage/gyms/addboxer"
+                      ? "text-primary"
+                      : "text-text"
+                  } text-sm transition-colors`}
+                >
+                  <div className="flex items-center">
+                    <PlusCircleIcon className="h-4 w-4 mr-2" />
+                    Add New Boxer
+                  </div>
+                </Link>
+              </div>
+            )}
+          </div>
+
+
+
+         {/* Trainers */}
+          <div className="space-y-1">
+            <button
+              onClick={() => toggleMenu("trainers")}
+              className={`w-full p-2 rounded-md hover:bg-primary/10 ${
+                isActive("/trainers")
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-text"
+              } flex items-center justify-between group transition-colors`}
+            >
+              <div className="flex items-center">
+                <UsersIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
+                Trainers
+              </div>
+              <ChevronDownIcon
+                className={`h-4 w-4 transition-transform ${
+                  expandedMenus.trainers ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+            {expandedMenus.trainers && (
+              <div className="pl-10 space-y-1">
+                <Link
+                  to="/gym/management/addtrainer"
+                  className={`block p-2 rounded-md hover:bg-primary/10 ${
+                    location.pathname === "/gym/manage/gyms/addtrainer"
+                      ? "text-primary"
+                      : "text-text"
+                  } text-sm transition-colors`}
+                >
+                  <div className="flex items-center">
+                    <PlusCircleIcon className="h-4 w-4 mr-2" />
+                    Add New Trainer
+                  </div>
+                </Link>
+              </div>
+            )}
+          </div>
 
           {/* Schedule */}
           <Link
             to="/gym/manage/schedule"
             className={`p-2 rounded-md hover:bg-primary/10 ${
-              isActive("/schedule") ? "bg-primary/10 text-primary font-medium" : "text-text"
+              isActive("/schedule")
+                ? "bg-primary/10 text-primary font-medium"
+                : "text-text"
             } flex items-center group transition-colors`}
           >
             <CalendarIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
@@ -170,7 +267,9 @@ const GymManageSidebar = () => {
           <Link
             to="/gym/manage/reports"
             className={`p-2 rounded-md hover:bg-primary/10 ${
-              isActive("/reports") ? "bg-primary/10 text-primary font-medium" : "text-text"
+              isActive("/reports")
+                ? "bg-primary/10 text-primary font-medium"
+                : "text-text"
             } flex items-center group transition-colors`}
           >
             <ClipboardDocumentListIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
