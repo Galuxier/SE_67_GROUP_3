@@ -1,4 +1,3 @@
-// ShopManageSidebar.jsx - ปรับปรุงใหม่ให้มีขนาดเล็กลงและเรียบง่ายขึ้น
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { 
@@ -52,6 +51,9 @@ const ShopManageSidebar = ({ shopData, userShops = [] }) => {
     navigate(`/shop/management/${shopId}`);
   };
 
+  // Determine if multiple shops section should be shown
+  const showMultipleShops = userShops && userShops.length > 1;
+
   return (
     <div className="fixed top-0 left-0 h-screen w-56 p-3 bg-bar border-r border-border overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
       <div className="flex flex-col h-full">
@@ -68,7 +70,7 @@ const ShopManageSidebar = ({ shopData, userShops = [] }) => {
         {/* Main Navigation */}
         <nav className="flex flex-col space-y-0.5 text-sm">
           {/* Shop Switcher - ถ้ามีหลายร้าน */}
-          {userShops.length > 1 && (
+          {showMultipleShops && (
             <div className="mb-1">
               <button
                 onClick={() => toggleMenu('shops')}
