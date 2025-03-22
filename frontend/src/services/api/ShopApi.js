@@ -142,16 +142,16 @@ export async function updateProductStock(productId, stock) {
   }
 }
 
-export default {
-  createProduct,
-  registerShop,
-  updateShop,
-  getShopById,
-  getUserShops,
-  getShopProducts,
-  getShopOrders,
-  updateOrderStatus,
-  getShopAnalytics,
-  deleteProduct,
-  updateProductStock
-};
+// export default {
+//   createProduct,
+//   registerShop,
+//   updateShop,
+//   getShopById,
+//   getUserShops,
+//   getShopProducts,
+//   getShopOrders,
+//   updateOrderStatus,
+//   getShopAnalytics,
+//   deleteProduct,
+//   updateProductStock
+// };

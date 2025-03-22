@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BsShop } from "react-icons/bs";
 import EditShopModal from "../../components/shops/EditShopModal";
-import { getShopFromId } from "../../services/api/ShopApi"; 
+import { getShopById } from "../../services/api/ShopApi"; 
 import { getImage } from "../../services/api/ImageApi"; // นำเข้า getImage
 import ProductCard from "../../components/ProductCard";
 import { shops } from "../../data/ShopsData";
@@ -29,7 +29,7 @@ export default function ShopProfile() {
   useEffect(() => {
     const fetchShop = async () => {
       try {
-        const response = await getShopFromId(id);
+        const response = await getShopById(id);
         setShop(response);
         
         if (response.logo) {

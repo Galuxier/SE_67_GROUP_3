@@ -26,7 +26,7 @@ function ShopRoutes() {
         </Route>
 
         <Route
-          path="/management"
+          path="/management/:shopId?"
           element={
             <ShopManagementRouteGuard>
               <ShopManageLayout />
@@ -34,12 +34,12 @@ function ShopRoutes() {
           }
         >
           <Route index element={<ShopManageDashboard />} />
-          <Route path="/management/addShop" element={<AddShop />} />
-          <Route path="/management/addProduct" element={<AddProduct />} />
+          
+          {/* <Route path="/management/addProduct" element={<AddProduct />} /> */}
         </Route>
           
         {/* ไม่มี Layout(Navbar) */}
-          
+        <Route path="/management/addShop" element={<ShopManagementRouteGuard><AddShop /></ShopManagementRouteGuard>} />
           
           <Route path="/summary" element={<Summary />} />
           

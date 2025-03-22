@@ -2,28 +2,27 @@ import { Outlet } from "react-router-dom";
 import ShopManageSidebar from "../components/sidebars/ShopManageSidebar";
 import ManagementNavbar from "../components/navbar/ManagementNavbar";
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { toast } from "react-toastify";
 
 const ShopManageLayout = () => {
-  const { user, isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const { shopId } = useParams();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [shopData, setShopData] = useState(null);
   const [userShops, setUserShops] = useState([]);
   const [error, setError] = useState(null);
+
+  // Check if we're on the addShop page
+  const isAddShopPage = location.pathname.includes('/management/addShop');
 
   // Fetch user's shops
   useEffect(() => {
     const fetchUserShops = async () => {
       try {
         setLoading(true);
-        
-        // In a production environment, replace with actual API call
-        // Example: const response = await api.get('/shops/user');
         
         // Simulating API request with a delay
         const response = await new Promise((resolve) => {
@@ -54,44 +53,36 @@ const ShopManageLayout = () => {
               // Redirect to first shop if specific shop not found
               navigate(`/shop/management/${response.data[0]._id}`, { replace: true });
             }
-          } else {
-            // If no shop specified, use first shop
+          } else if (!isAddShopPage) {
+            // If no shop specified and not on addShop page, use first shop
             setShopData(response.data[0]);
             // Redirect to first shop
             navigate(`/shop/management/${response.data[0]._id}`, { replace: true });
           }
-        } else {
-          // No shops found, redirect to shop creation
+        } else if (!isAddShopPage) {
+          // No shops found and not on addShop page, redirect to shop creation
           setError("You don't have any shops yet. Create your first shop to continue.");
           navigate("/shop/management/addShop");
         }
+        
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching shop data:", error);
         setError("Failed to load your shops. Please try again later.");
         toast.error("Failed to load shop data. Please try again.");
-      } finally {
         setLoading(false);
       }
     };
 
-    // Only fetch data if user is logged in and has shop_owner role
-    if (isLoggedIn && user) {
-      if (user.role && user.role.includes('shop_owner')) {
-        fetchUserShops();
-      } else {
-        setError("You don't have permission to access shop management.");
-        navigate('/');
-      }
-    } else {
-      navigate('/login', { state: { from: location.pathname } });
-    }
-  }, [isLoggedIn, user, navigate, shopId]);
+    fetchUserShops();
+  }, [navigate, shopId, isAddShopPage]);
 
   if (loading) {
     return <LoadingSpinner />;
   }
 
-  if (error) {
+  // Special case: When on addShop page with no shops, still render the layout without error
+  if (error && !isAddShopPage) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-text">
         <div className="text-center p-8 max-w-md">

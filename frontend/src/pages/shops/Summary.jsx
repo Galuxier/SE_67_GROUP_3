@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import VariantModal from "../../components/shops/VariantModal";
-import { creatProduct } from "../../services/api/ShopApi";
+import { createProduct } from "../../services/api/ShopApi";
 
 export default function Summary() {
   const location = useLocation();
@@ -103,7 +103,7 @@ export default function Summary() {
       });
       console.log("=============================");
 
-      const res = await creatProduct(formData);
+      const res = await createProduct(formData);
       console.log("Create Product Success:", res);
       navigate("/shop");
     } catch (err) {
