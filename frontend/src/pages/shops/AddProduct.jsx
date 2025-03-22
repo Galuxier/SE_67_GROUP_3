@@ -1,242 +1,271 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import VariantModal from "../../components/shops/VariantModal";
 
 export default function AddProduct() {
   const navigate = useNavigate();
 
-  const [product, setProduct] = useState({
-    name: "",
-    category: "",
-    description: "",
-    baseImage: "",
-    hasOptions: false,
-    price: "",
-    stock: "",
-    options: [],
-    variants: [],
-  });
-
+  const [productName, setProductName] = useState("");
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [hasOptions, setHasOptions] = useState(false);
+  const [price, setPrice] = useState("");
+  const [stock, setStock] = useState("");
+  const [options, setOptions] = useState([]);
+  const [image_url, setImageUrl] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
+  const fileInputRef = useRef(null);
   const [newOption, setNewOption] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [variants, setVariants] = useState([]);
 
-  const handleBaseImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setProduct((prev) => ({ ...prev, baseImage: reader.result }));
+  useEffect(() => {
+    previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    const urls = image_url.map((file) => URL.createObjectURL(file));
+    setPreviewUrls(urls);
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
     };
-    reader.readAsDataURL(file);
+  }, [image_url]);
+
+  const handleImageChange = (e) => {
+    const files = e.target.files;
+    if (!files) return;
+    const fileArr = Array.from(files);
+    if (fileArr.length + image_url.length > 10) {
+      alert("You can upload a maximum of 10 images.");
+      return;
+    }
+    setImageUrl((prev) => [...prev, ...fileArr]);
+  };
+
+  const handleRemoveImage = (index) => {
+    setImageUrl((prev) => prev.filter((_, i) => i !== index));
   };
 
   const addOption = () => {
     if (!newOption.trim()) return;
-    setProduct((prev) => ({
-      ...prev,
-      options: [...prev.options, { name: newOption, isMain: false, values: [] }],
-    }));
+    setOptions((prev) => [...prev, { name: newOption, isMain: false }]);
     setNewOption("");
   };
 
-  const setAsMainOption = (index) => {
-    setProduct((prev) => {
-      const updatedOptions = prev.options.map((opt, i) => ({
-        ...opt,
-        isMain: i === index,
-      }));
-      return { ...prev, options: updatedOptions };
-    });
+  const setAsMainOption = (idx) => {
+    setOptions((prev) =>
+      prev.map((o, i) => ({ ...o, isMain: i === idx }))
+    );
   };
 
-  const openModal = () => {
-    if (!product.hasOptions) {
-      const mainVariant = {
-        attribute: {},
-        image_url: product.baseImage,
-        price: parseFloat(product.price) || 0,
-        stock: parseInt(product.stock) || 0,
+  const handleNext = () => {
+    if (!hasOptions) {
+      const productObj = {
+        product_name: productName,
+        category,
+        description,
+        image_url, // array of Files
+        price: parseFloat(price) || 0,
+        stock: parseInt(stock) || 0,
       };
-      const updatedProduct = {
-        ...product,
-        variants: [mainVariant],
-      };
-      navigate("/shop/summary", { state: { product: updatedProduct } });
-      return;
+      navigate("/shop/summary", { state: { product: productObj } });
+    } else {
+      setShowModal(true);
     }
-    setShowModal(true);
   };
 
-  const handleSubmitVariant = (newVar) => {
-    const updatedProduct = {
-      ...product,
-      variants: [...product.variants, newVar],
+  const handleSubmitVariant = (newVariant) => {
+    const updatedVariants = [...variants, newVariant];
+    const productObj = {
+      product_name: productName,
+      category,
+      description,
+      image_url, // array of Files
+      options,
+      variants: updatedVariants,
     };
     setShowModal(false);
-    navigate("/shop/summary", { state: { product: updatedProduct } });
+    navigate("/shop/summary", { state: { product: productObj } });
   };
 
   return (
-    <div className="flex justify-center items-start min-h-screen bg-gray-100 pt-10 pb-10">
-      <div className="w-full max-w-2xl p-6 shadow-lg bg-white rounded-md overflow-y-auto">
-        {/* ส่วนหัว */}
-        <div className="flex justify-between items-center mb-4">
-        <button
-        onClick={() => navigate(-1)}
-        className="bg-rose-400 text-white px-4 py-2 rounded hover:bg-rose-500 transition"
-      >
-        Back
-      </button>
-          <h1 className="text-3xl font-semibold py-2">Add Product</h1>
-          <div className="w-20"></div>
+    <div className="min-h-screen bg-gray-100 flex justify-center items-start p-6">
+      <div className="w-full max-w-2xl bg-white p-6 rounded-lg shadow-md space-y-6">
+        <h1 className="text-3xl font-bold text-center">Add Product</h1>
+
+        <div>
+          <label className="block font-medium mb-1">Product Name</label>
+          <input
+            className="border w-full p-3 rounded"
+            value={productName}
+            onChange={(e) => setProductName(e.target.value)}
+          />
         </div>
-        <hr className="mb-6" />
 
-        {/* ฟอร์ม */}
-        <div className="space-y-4">
-          <div>
-            <label className="block text-lg font-medium mb-2">Product Name</label>
-            <input
-              type="text"
-              placeholder="Enter product name"
-              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-pink-500"
-              onChange={(e) => setProduct({ ...product, name: e.target.value })}
-            />
-          </div>
+        <div>
+          <label className="block font-medium mb-1">Category</label>
+          <input
+            className="border w-full p-3 rounded"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          />
+        </div>
 
-          <div>
-            <label className="block text-lg font-medium mb-2">Category</label>
-            <input
-              type="text"
-              placeholder="Enter product category"
-              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-pink-500"
-              onChange={(e) => setProduct({ ...product, category: e.target.value })}
-            />
-          </div>
+        <div>
+          <label className="block font-medium mb-1">Description</label>
+          <textarea
+            rows="3"
+            className="border w-full p-3 rounded"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
 
-          <div>
-            <label className="block text-lg font-medium mb-2">Description</label>
-            <textarea
-              rows="4"
-              placeholder="Enter product description"
-              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-pink-500"
-              onChange={(e) => setProduct({ ...product, description: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="block text-lg font-medium mb-2">Product Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none"
-              onChange={handleBaseImageUpload}
-            />
-          </div>
-
-          <div>
-            <label className="block text-lg font-medium mb-2">Product Options</label>
-            <div className="flex items-center gap-4 mb-2">
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="hasOptions"
-                  onChange={() => setProduct({ ...product, hasOptions: true })}
-                />
-                Yes
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="hasOptions"
-                  onChange={() =>
-                    setProduct({
-                      ...product,
-                      hasOptions: false,
-                      options: [],
-                      price: "",
-                      stock: "",
-                    })
-                  }
-                />
-                No
-              </label>
-            </div>
-
-            {!product.hasOptions && (
-              <div className="border border-gray-300 p-3 rounded-lg space-y-4">
-                <div>
-                  <label className="block text-lg font-medium mb-2">Price</label>
-                  <input
-                    type="number"
-                    placeholder="Enter price"
-                    className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-pink-500"
-                    onChange={(e) => setProduct({ ...product, price: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-lg font-medium mb-2">Stock Quantity</label>
-                  <input
-                    type="number"
-                    placeholder="Enter stock quantity"
-                    className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-pink-500"
-                    onChange={(e) => setProduct({ ...product, stock: e.target.value })}
-                  />
-                </div>
-              </div>
-            )}
-
-            {product.hasOptions && (
-              <div className="border border-gray-300 p-3 rounded-lg space-y-3">
-                <div className="flex items-center gap-2">
-                  <label className="text-lg font-medium">Add Option:</label>
-                  <input
-                    type="text"
-                    className="border border-gray-300 rounded-lg p-2 flex-grow focus:outline-none focus:border-pink-500"
-                    placeholder="e.g. Size, Color"
-                    value={newOption}
-                    onChange={(e) => setNewOption(e.target.value)}
-                  />
-                  <button
-                    onClick={addOption}
-                    className="bg-rose-600 text-white px-4 py-2 rounded hover:bg-rose-700 transition-colors"
-                  >
-                    +
-                  </button>
-                </div>
-
-                {product.options.map((opt, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <p>{opt.name}</p>
-                    <input
-                      type="radio"
-                      name="mainOption"
-                      checked={opt.isMain}
-                      onChange={() => setAsMainOption(index)}
-                    />
-                    <span className="text-sm">Main Option</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
+        <div>
+          <label className="block font-medium mb-1">Product Images</label>
+          <div className="border-2 border-dashed rounded-lg p-2 text-center">
+  {previewUrls.length > 0 ? (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
+      {previewUrls.map((url, index) => (
+        <div key={index} className="relative group w-20 h-20">
+          <img
+            src={url}
+            alt={`Preview ${index}`}
+            className="w-full h-full object-cover rounded border"
+          />
           <button
-            onClick={openModal}
-            className="w-full bg-rose-600 text-white py-2 rounded-lg hover:bg-rose-700 transition-colors"
+            type="button"
+            onClick={() => handleRemoveImage(index)}
+            className="absolute top-0 right-0 p-0.5 bg-red-600 text-white text-xs rounded opacity-0 group-hover:opacity-100"
           >
-            Next
+            X
           </button>
         </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => fileInputRef.current.click()}
+        className="flex items-center justify-center w-20 h-20 border-2 border-dashed rounded-lg hover:border-primary transition-colors"
+      >
+        <span className="text-xs">Add More</span>
+      </button>
+    </div>
+  ) : (
+    <button
+      type="button"
+      onClick={() => fileInputRef.current.click()}
+      className="flex flex-col items-center justify-center w-full py-6 hover:bg-gray-200 transition-colors"
+    >
+      <p className="text-sm">Click to upload images</p>
+      <p className="text-xs">PNG, JPG up to 10 files</p>
+    </button>
+  )}
+  <input
+    type="file"
+    multiple
+    accept="image/*"
+    ref={fileInputRef}
+    onChange={handleImageChange}
+    className="hidden"
+  />
+</div>
+
+        </div>
+
+        <div>
+          <label className="block font-medium mb-1">Has Options?</label>
+          <div className="flex gap-4">
+            <label>
+              <input
+                type="radio"
+                name="hasOptions"
+                onChange={() => {
+                  setHasOptions(true);
+                  setPrice("");
+                  setStock("");
+                }}
+              />
+              Yes
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="hasOptions"
+                onChange={() => {
+                  setHasOptions(false);
+                  setOptions([]);
+                }}
+              />
+              No
+            </label>
+          </div>
+        </div>
+
+        {!hasOptions && (
+          <div className="border p-4 rounded-lg">
+            <div className="mb-4">
+              <label className="block font-medium mb-1">Price</label>
+              <input
+                type="number"
+                className="border w-full p-3 rounded"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block font-medium mb-1">Stock</label>
+              <input
+                type="number"
+                className="border w-full p-3 rounded"
+                value={stock}
+                onChange={(e) => setStock(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+
+        {hasOptions && (
+          <div className="border p-4 rounded-lg">
+            <label className="block font-medium mb-2">Options</label>
+            <div className="flex gap-2 mb-2">
+              <input
+                placeholder="e.g. color, size"
+                className="border p-2 flex-1 rounded"
+                value={newOption}
+                onChange={(e) => setNewOption(e.target.value)}
+              />
+              <button
+                onClick={addOption}
+                className="bg-rose-600 text-white px-3 py-1 rounded"
+              >
+                +
+              </button>
+            </div>
+            {options.map((opt, idx) => (
+              <div key={idx} className="flex items-center gap-2 mb-1">
+                <span className="text-lg">{opt.name}</span>
+                <input
+                  type="radio"
+                  name="mainOption"
+                  checked={opt.isMain}
+                  onChange={() => setAsMainOption(idx)}
+                />
+                <span className="text-sm">Main Option</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button
+          onClick={handleNext}
+          className="bg-rose-600 text-white px-4 py-2 rounded w-full"
+        >
+          Next
+        </button>
       </div>
 
       <VariantModal
-        show={showModal && product.hasOptions}
+        show={showModal && hasOptions}
         onClose={() => setShowModal(false)}
-        productOptions={product.options}
-        baseImage={product.baseImage}
-        onSubmitVariant={(newVar) => handleSubmitVariant(newVar)}
+        productOptions={options}
+        onSubmitVariant={handleSubmitVariant}
       />
     </div>
   );

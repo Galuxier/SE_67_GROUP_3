@@ -95,7 +95,7 @@ const ShopManageSidebar = ({ shopData, userShops = [] }) => {
                     </button>
                   ))}
                   <Link
-                    to="/shop/register"
+                    to="/shop/management/addShop"
                     className="block p-1.5 rounded text-xs text-text hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     <div className="flex items-center">
@@ -153,7 +153,7 @@ const ShopManageSidebar = ({ shopData, userShops = [] }) => {
                   Inventory
                 </Link>
                 <Link
-                  to="/shop/management/products/create"
+                  to="/shop/management/addProduct"
                   className="block p-1.5 rounded text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                 >
                   <PlusCircleIcon className="h-3 w-3 mr-1.5" />
