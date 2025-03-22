@@ -6,13 +6,16 @@ class ProductService extends BaseService<ProductDocument> {
     super(Product);
   }
   
-  // Add a new method to get products by shop_id
+  // You can add custom methods here for specific product operations
+  
+  // Example: Get products by shop ID
   async getProductsByShopId(shopId: string): Promise<ProductDocument[]> {
-    try {
-      return await Product.find({ shop_id: shopId });
-    } catch (error) {
-      throw error;
-    }
+    return await Product.find({ shop_id: shopId });
+  }
+  
+  // Example: Get products by category
+  async getProductsByCategory(category: string): Promise<ProductDocument[]> {
+    return await Product.find({ category });
   }
 }
 

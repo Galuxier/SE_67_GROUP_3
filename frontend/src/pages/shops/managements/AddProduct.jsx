@@ -14,9 +14,12 @@ import {
 } from "@heroicons/react/24/outline";
 import VariantModal from "../../../components/shops/VariantModal";
 import OptionEditor from "../../../components/shops/OptionEditor";
+import { useOutletContext } from "react-router-dom";
+import { createProduct } from "../../../services/api/ShopApi";
 
 export default function AddProduct() {
   const navigate = useNavigate();
+  const { shopData } = useOutletContext() || {};
   const fileInputRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [showVariantModal, setShowVariantModal] = useState(false);
@@ -65,15 +68,15 @@ export default function AddProduct() {
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-
+  
     // Preview images
     const newImages = files.map(file => ({
-      file,
+      file,  // Store the actual File object
       preview: URL.createObjectURL(file)
     }));
-
+  
     setCurrentImages([...currentImages, ...newImages]);
-
+  
     // Set base image if it's the first image
     if (!product.baseImage && newImages.length > 0) {
       setProduct(prev => ({ ...prev, baseImage: newImages[0].preview }));
@@ -260,26 +263,58 @@ export default function AddProduct() {
     try {
       setIsSubmitting(true);
       
-      // Create the final product object
-      let finalProduct = { ...product };
+      // Create FormData for API call
+      const formData = new FormData();
       
-      if (!product.hasOptions) {
-        // For products without variants, create a single variant
-        finalProduct.variants = [{
-          attribute: {},
-          image_url: product.baseImage,
-          price: parseFloat(product.price) || 0,
-          stock: parseInt(product.stock) || 0
-        }];
+      // Add basic product info
+      formData.append("shop_id", shopData._id);
+      formData.append("product_name", product.name);
+      formData.append("category", product.category);
+      formData.append("description", product.description);
+      
+      // Add product images
+      if (currentImages && currentImages.length > 0) {
+        currentImages.forEach((image, index) => {
+          formData.append(`product_image_urls`, image.file);
+        });
       }
       
-      // Here you would normally call your API to save the product
-      console.log("Submitting product:", finalProduct);
+      // For products with variants
+      if (product.hasOptions && product.variants.length > 0) {
+        // Add variant count to help backend setup upload fields
+        formData.append("variantCount", product.variants.length.toString());
+        
+        // Store variants as a structured array
+        product.variants.forEach((variant, index) => {
+          // Append variant image
+          formData.append(`variants[${index}][variant_image_url]`, variant.image_url);
+          
+          // Append variant details as JSON
+          formData.append(`variants[${index}][price]`, variant.price);
+          formData.append(`variants[${index}][stock]`, variant.stock);
+          formData.append(`variants[${index}][attribute]`, JSON.stringify(variant.attribute));
+        });
+      } else {
+        // For products without variants, create a single variant
+        formData.append("variantCount", "1"); // Include this even for no variants
+        formData.append("variants[0][price]", product.price);
+        formData.append("variants[0][stock]", product.stock);
+        formData.append("variants[0][attribute]", JSON.stringify({}));
+        
+        // If there's at least one image, use the first one as variant image
+        if (currentImages && currentImages.length > 0) {
+          formData.append("variants[0][variant_image_url]", currentImages[0].file);
+        }
+      }
       
-      // For now, we'll just navigate to a summary page
-      navigate("/shop/summary", { state: { product: finalProduct } });
+      // Send the form data to the API
+      const response = await createProduct(formData);
+      console.log("Product created successfully:", response);
+      
+      // Navigate to product view or shop dashboard
+      navigate(`/shop/management/${shopData._id}`);
     } catch (error) {
-      console.error("Error submitting product:", error);
+      console.error("Error creating product:", error);
       toast.error("Failed to create product. Please try again.");
     } finally {
       setIsSubmitting(false);

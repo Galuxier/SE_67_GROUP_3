@@ -12,7 +12,7 @@ export interface ProductDocument extends Document {
   product_name: string;
   category: string;
   description: string;
-  image_url: string[];
+  product_image_urls: string[];
   variants: Variant[];
 }
 
@@ -21,10 +21,10 @@ const ProductSchema = new Schema<ProductDocument>({
   product_name: { type: String, required: true },
   category: { type: String, required: true },
   description: { type: String, required: true },
-  image_url: { type: [String], required: true },
+  product_image_urls: { type: [String], required: true },
   variants: [{
     attribute: { type: Schema.Types.Mixed },
-    image_url: { type: String, required: true },
+    variant_image_url: { type: String, required: true },
     price: { type: Number, required: true },
     stock: { type: Number, required: true },
   }],
