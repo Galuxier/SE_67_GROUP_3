@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { Shop, ShopDocument } from '../models/shop.model';
 import { BaseService } from './base.service';
 
@@ -35,6 +36,17 @@ class ShopService extends BaseService<ShopDocument> {
     } catch (error) {
       console.error("Failed to create shop:", error);
       throw new Error("Failed to create shop");
+    }
+  }
+
+  async getUserShops(user_id: Types.ObjectId): Promise<ShopDocument[]> {
+    try {
+      console.log(user_id);
+      const shops = await Shop.find({ owner_id: user_id }).exec();
+      return shops;
+    } catch (error) {
+      console.error('Error fetching user shops:', error);
+      throw error;
     }
   }
 }

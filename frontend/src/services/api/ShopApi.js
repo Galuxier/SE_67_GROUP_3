@@ -62,9 +62,9 @@ export async function getShopById(id) {
 }
 
 // Get all shops for the current user
-export async function getUserShops() {
+export async function getUserShops(user_id) {
   try {
-    const response = await api.get('/shops/user');
+    const response = await api.get(`/shops/user/${user_id}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching user shops:", error);

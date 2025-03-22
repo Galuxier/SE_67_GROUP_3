@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import ShopService from '../services/shop.service';
+import { Types } from 'mongoose';
 
 // สร้างร้านค้าใหม่
 export const createShopController = async (req: Request, res: Response) => {
@@ -82,5 +83,26 @@ export const deleteShopController = async (req: Request, res: Response) => {
     res.status(200).json(deletedShop);
   } catch (err) {
     res.status(500).json({ message: 'Error deleting shop', error: err });
+  }
+};
+
+export const getUserShops = async (req: Request, res: Response) => {
+  try {
+    const { user_id } = req.params;
+
+    if (!Types.ObjectId.isValid(user_id)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
+    const shops = await ShopService.getUserShops(new Types.ObjectId(user_id));
+
+    if (!shops.length) {
+      res.status(404).json({ message: 'No shops found for this user' });
+    } else {
+      res.status(200).json(shops);
+    }
+  } catch (error) {
+    console.error('Error fetching user shops:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };

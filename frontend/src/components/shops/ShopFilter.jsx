@@ -59,7 +59,7 @@ const ShopFilter = ({
               ↑ Low to High
             </button>
             <button
-              className={`p-2 rounded ${
+              className={`p-2 ro    unded ${
                 sortOrder === "high-to-low" ? "bg-gray-400" : "bg-gray-300"
               } dark:bg-gray-600`}
               onClick={() => setSortOrder("high-to-low")}
