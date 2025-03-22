@@ -4,44 +4,13 @@ import { BaseService } from './base.service';
 
 class ShopService extends BaseService<ShopDocument> {
   constructor() {
-    super(Shop); // ส่ง Model ไปยัง BaseService
+    super(Shop); // Pass Model to BaseService
   }
 
-  // สร้างร้านค้าใหม่
-  async createShop(shopData: any, filePaths: string[]) {
-    console.log(shopData);
-    console.log(filePaths);
-
-    try {
-      // แปลง JSON string เป็น object (ถ้าจำเป็น)
-      if (typeof shopData.address === 'string') {
-        shopData.address = JSON.parse(shopData.address);
-      }
-
-      if (typeof shopData.contact === 'string') {
-        shopData.contact = JSON.parse(shopData.contact);
-      }
-
-      // สร้างร้านค้าใหม่
-      const shop = new Shop({
-        ...shopData,
-        address: shopData.address, // ใส่ address อย่างชัดเจน
-        logo_url: filePaths[0] || '', // เก็บ path ของไฟล์โลโก้
-        license_url: filePaths[1] || '', // เก็บ path ของไฟล์ใบอนุญาต
-      });
-
-      console.log(shop);
-      await shop.save();
-      return shop;
-    } catch (error) {
-      console.error("Failed to create shop:", error);
-      throw new Error("Failed to create shop");
-    }
-  }
-
+  // Get shops by owner ID
   async getUserShops(user_id: Types.ObjectId): Promise<ShopDocument[]> {
     try {
-      console.log(user_id);
+      // Use 'owner_id' field to query shops belonging to the user
       const shops = await Shop.find({ owner_id: user_id }).exec();
       return shops;
     } catch (error) {
@@ -50,5 +19,5 @@ class ShopService extends BaseService<ShopDocument> {
     }
   }
 }
-
+ 
 export default new ShopService();

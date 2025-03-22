@@ -20,7 +20,6 @@ export const createShopController = async (req: Request, res: Response) => {
       }
     }
 
-    // ✅ แปลง JSON string เป็น object ก่อนบันทึกลง Database
     if (req.body.contacts) {
       req.body.contacts = JSON.parse(req.body.contacts);
     }
@@ -88,19 +87,17 @@ export const deleteShopController = async (req: Request, res: Response) => {
 
 export const getUserShops = async (req: Request, res: Response) => {
   try {
-    const { user_id } = req.params;
+    const { id } = req.params;  // Change from user_id to id to match route parameter
 
-    if (!Types.ObjectId.isValid(user_id)) {
+    if (!Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
 
-    const shops = await ShopService.getUserShops(new Types.ObjectId(user_id));
+    const shops = await ShopService.getUserShops(new Types.ObjectId(id));
 
-    if (!shops.length) {
-      res.status(404).json({ message: 'No shops found for this user' });
-    } else {
-      res.status(200).json(shops);
-    }
+    // Return an empty array instead of 404 when no shops are found
+    // This allows your frontend to handle the empty state properly
+    res.status(200).json(shops);
   } catch (error) {
     console.error('Error fetching user shops:', error);
     res.status(500).json({ message: 'Server error' });
