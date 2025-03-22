@@ -42,7 +42,7 @@ app.use('/api', teachHistoryRoutes);
 app.use('/api', ticketRoutes);
 app.use('/api', authRoutes);
 app.use('/api', imageRoutes);
-// app.use('/api', enrollmentRoutes);
+app.use('/api', enrollmentRoutes);
 
 import { testUpload, testMultiUpload } from './middlewares/uploads/test.upload';
 app.post('/test/single', testUpload, (req, res) => {
