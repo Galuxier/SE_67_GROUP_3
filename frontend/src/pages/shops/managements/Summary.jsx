@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import VariantModal from "../../components/shops/VariantModal";
-import { createProduct } from "../../services/api/ShopApi";
+import VariantModal from "../../../components/shops/VariantModal";
+import { createProduct } from "../../../services/api/ShopApi";
 
 export default function Summary() {
   const location = useLocation();

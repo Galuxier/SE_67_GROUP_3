@@ -12,8 +12,8 @@ import {
   CheckIcon,
   InformationCircleIcon
 } from "@heroicons/react/24/outline";
-import VariantModal from "../../components/shops/VariantModal";
-import OptionEditor from "../../components/shops/OptionEditor";
+import VariantModal from "../../../components/shops/VariantModal";
+import OptionEditor from "../../../components/shops/OptionEditor";
 
 export default function AddProduct() {
   const navigate = useNavigate();

@@ -5,9 +5,9 @@ import ShopManageLayout from "../layouts/ShopManageLayout";
 import { ShopManagementRouteGuard } from "./guards/RouteGuard";
 
 import ShopHome from "../pages/shops/ShopHome";
-import AddProduct from "../pages/shops/AddProduct";
-import AddShop from "../pages/shops/AddShop";
-import Summary from "../pages/shops/Summary";
+import AddProduct from "../pages/shops/managements/AddProduct";
+import AddShop from "../pages/shops/managements/AddShop";
+import Summary from "../pages/shops/managements/Summary";
 import ProductDetail from "../pages/shops/ProductDetail";
 import Cart from "../pages/shops/Cart";
 import ShopProfile from "../pages/shops/ShopProfile";

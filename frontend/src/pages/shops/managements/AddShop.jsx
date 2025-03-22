@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { registerShop } from "../../services/api/ShopApi";
-import { useAuth } from "../../context/AuthContext";
+import { registerShop } from "../../../services/api/ShopApi";
+import { useAuth } from "../../../context/AuthContext";
 import { toast } from "react-toastify";
 import { 
   ArrowLeftIcon,
@@ -10,9 +10,9 @@ import {
   XMarkIcon,
   CheckCircleIcon
 } from "@heroicons/react/24/outline";
-import AddressForm from "../../components/forms/AddressForm";
-import ContactForm from "../../components/forms/ContactForm";
-import CropImageModal from "../../components/shops/CropImageModal";
+import AddressForm from "../../../components/forms/AddressForm";
+import ContactForm from "../../../components/forms/ContactForm";
+import CropImageModal from "../../../components/shops/CropImageModal";
 
 export default function AddShop() {
   const navigate = useNavigate();
