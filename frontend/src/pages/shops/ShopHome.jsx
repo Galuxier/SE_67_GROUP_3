@@ -6,6 +6,8 @@ import ProductCard from "../../components/ProductCard";
 import ShopFilter from "../../components/shops/ShopFilter";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { getProducts } from "../../services/api/ProductApi";
+import { toast } from "react-toastify"; 
 
 function ShopHome() {
   const navigate = useNavigate();
@@ -21,30 +23,74 @@ function ShopHome() {
   const searchInputRef = useRef(null);
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
-
-  // Dummy products data - replace with API call in production
-  const dummyProducts = [
-  ];
+  const [categories, setCategories] = useState(["All"]);
 
   // Categories for quick filtering
-  const categories = ["All", "Gloves", "Protection", "Apparel", "Accessories", "Equipment"];
+  // const categories = ["All", "Gloves", "Protection", "Apparel", "Accessories", "Equipment"];
 
   // Load products
   useEffect(() => {
-    // Simulate API call
     const fetchProducts = async () => {
       setIsLoading(true);
-      // In production, replace with actual API call
-      setTimeout(() => {
-        setProducts(dummyProducts);
-        setFilteredProducts(dummyProducts);
+      try {
+        // Fetch products from API
+        const response = await getProducts();
+        
+        // Handle the response
+        const fetchedProducts = response.data;
+        console.log("Fetched products:", fetchedProducts);
+        
+        // Update state with fetched products
+        setProducts(fetchedProducts);
+        setFilteredProducts(fetchedProducts);
+        
+        // Extract unique categories from products
+        if (Array.isArray(fetchedProducts) && fetchedProducts.length > 0) {
+          const uniqueCategories = [...new Set(fetchedProducts.map(product => product.category))];
+          setCategories(["All", ...uniqueCategories.filter(Boolean)]);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        toast.error("Failed to load products. Please try again later.");
+        
+        // Use dummy data as fallback
+        // This could be removed in production, but it's helpful during development
+        const dummyProducts = [
+          {
+            id: 1,
+            product_name: "Muay Thai Boxing Gloves",
+            description: "Professional grade boxing gloves for training and competition",
+            image_url: new URL("../../assets/images/Glove_black.jpg", import.meta.url).href,
+            price: 1200,
+            category: "Gloves",
+            shop_name: "FightGear Pro",
+            isNew: true
+          },
+          {
+            id: 2,
+            product_name: "Hand Wraps - 180cm",
+            description: "Premium quality hand wraps for maximum wrist support",
+            image_url: new URL("../../assets/images/product-003.webp", import.meta.url).href,
+            price: 350,
+            category: "Accessories",
+            shop_name: "FightGear Pro"
+          },
+          // ... other dummy products
+        ];
+        
+        // setProducts(dummyProducts);
+        // setFilteredProducts(dummyProducts);
+        
+        // Extract categories from dummy data as well
+        // const uniqueCategories = [...new Set(dummyProducts.map(product => product.category))];
+        // setCategories(["All", ...uniqueCategories.filter(Boolean)]);
+      } finally {
         setIsLoading(false);
-      }, 800);
+      }
     };
 
     fetchProducts();
   }, []);
-
   // Apply filters when they change
   useEffect(() => {
     let filtered = [...products];
