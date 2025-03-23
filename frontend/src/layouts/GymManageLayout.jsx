@@ -10,7 +10,7 @@ import { useAuth } from "../context/AuthContext";
 
 const GymManageLayout = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { gym_id } = useParams();
   const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [gymData, setGymData] = useState(null);
@@ -46,16 +46,16 @@ const GymManageLayout = () => {
         
         if (userOwnedGyms.length > 0) {
           // If id is provided in URL, fetch that specific gym
-          if (id) {
+          if (gym_id) {
             try {
               // Verify the gym belongs to this user
-              const userOwnsGym = userOwnedGyms.some(gym => gym._id === id);
+              const userOwnsGym = userOwnedGyms.some(gym => gym._id === gym_id);
               
               if (!userOwnsGym) {
                 throw new Error("You don't have access to this gym");
               }
               
-              const gymResponse = await getGymFromId(id);
+              const gymResponse = await getGymFromId(gym_id);
               setGymData(gymResponse);
             } catch (gymError) {
               console.error("Error fetching specific gym:", gymError);
@@ -84,7 +84,7 @@ const GymManageLayout = () => {
     };
 
     fetchData();
-  }, [navigate, id, isAddGymPage, user, location.pathname]);
+  }, [navigate, gym_id, isAddGymPage, user, location.pathname]);
 
   // Handle gym switching - this function can be passed down to child components if needed
   const switchGym = async (newGymId) => {
