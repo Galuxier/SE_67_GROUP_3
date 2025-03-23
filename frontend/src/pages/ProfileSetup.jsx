@@ -177,10 +177,10 @@ const ProfileSetup = ({ user }) => {
       // Create FormData
       const formData = new FormData();
       
-      if (profileData.profilePicture) {
-        formData.append('profile_picture_url', profileData.profilePicture);
+      if (profileData.profilePicture instanceof File) {
+        formData.append('profile_picture', profileData.profilePicture);
       }
-      
+
       formData.append('bio', profileData.bio);
       
       const contactInfo = {
@@ -191,6 +191,9 @@ const ProfileSetup = ({ user }) => {
       
       formData.append('contact_info', JSON.stringify(contactInfo));
       // Update user profile
+      formData.forEach((value, key) => {
+        console.log(`${key}: ${value}`);
+      });
       const res = await updateUser(user._id, formData);
       console.log(res);
       
@@ -253,11 +256,11 @@ const ProfileSetup = ({ user }) => {
       </motion.div>
       
       <motion.h2 variants={itemVariants} className="text-2xl font-bold mb-2 text-gray-800 dark:text-white">
-        Welcome to Muay Thai, {user?.first_name || 'Fighter'}!
+        Welcome to Our Website, {user?.first_name || 'Fighter'}!
       </motion.h2>
       
       <motion.p variants={itemVariants} className="text-gray-600 dark:text-gray-300 mb-8">
-        Let's set up your profile to help you get the most out of your experience.
+        Let's set up your profile.
       </motion.p>
       
       <motion.div variants={itemVariants} className="flex gap-4 justify-center">

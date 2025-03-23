@@ -14,7 +14,7 @@ export const serveImage = async (req: Request, res: Response): Promise<void> => 
     }
 
     // สร้าง full path ของรูปภาพ
-    const fullImagePath = path.join(__dirname, '../uploads', imagePath);
+    const fullImagePath = path.join(__dirname, '../../uploads', imagePath);
 
     // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
     if (!fs.existsSync(fullImagePath)) {

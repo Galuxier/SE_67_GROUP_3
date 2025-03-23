@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { PlusCircleIcon, Cog6ToothIcon, TagIcon, FireIcon } from "@heroicons/react/24/outline";
+import { PlusCircleIcon, Cog6ToothIcon, TagIcon, FireIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import ProductCard from "../../components/ProductCard";
 import ShopFilter from "../../components/shops/ShopFilter";
@@ -396,7 +396,7 @@ function ShopHome() {
         </div>
 
         {/* Add Product button for shop owners */}
-        {user && user.role && user.role.includes("shop_owner") && (
+        {user && user.role && user.role.includes("shop_owner") ? (
           <motion.div 
             className="fixed bottom-6 right-6 z-30"
             initial={{ scale: 0 }}
@@ -409,6 +409,21 @@ function ShopHome() {
             >
               <PlusCircleIcon className="h-5 w-5" />
               <span>Add New Product</span>
+            </Link>
+          </motion.div>
+        ) : (
+          <motion.div 
+            className="fixed bottom-6 right-6 z-30"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 15 }}
+          >
+            <Link
+              to="/shop/cart"
+              className="flex items-center gap-2 bg-primary hover:bg-secondary text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
+            >
+              <ShoppingCartIcon className="h-5 w-5" />
+              <span>View Cart</span>
             </Link>
           </motion.div>
         )}
