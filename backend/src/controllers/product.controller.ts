@@ -12,7 +12,7 @@ export const createProductController = async (req: Request, res: Response) => {
       category, 
       description,
       base_price,
-      variants 
+      variantData  // This might come as a JSON string
     } = req.body;
 
     // Process image URLs from the upload middleware
@@ -24,20 +24,48 @@ export const createProductController = async (req: Request, res: Response) => {
       product_name,
       category,
       description,
-      base_price,
+      base_price: parseFloat(base_price),
       product_image_urls: Array.isArray(product_image_urls) ? product_image_urls : [product_image_urls]
     };
     
     // Save the product
     const newProduct = await ProductService.add(productData);
     
+    // Parse variants data if it's provided as a string
+    let variants = [];
+    if (variantData) {
+      try {
+        // Try to parse if it's a string
+        variants = typeof variantData === 'string' ? JSON.parse(variantData) : variantData;
+      } catch (error) {
+        console.error('Error parsing variant data:', error);
+        // Continue without variants, but log the error
+      }
+    }
+    
     // If variants are provided, save them with the product ID
     if (variants && Array.isArray(variants) && variants.length > 0) {
-      // Add product_id to each variant
-      const variantsWithProductId = variants.map(variant => ({
-        ...variant,
-        product_id: newProduct._id
-      }));
+      // Add product_id to each variant and ensure attributes are parsed
+      const variantsWithProductId = variants.map(variant => {
+        const processedVariant = { ...variant, product_id: newProduct._id };
+        
+        // Make sure attributes is a proper object, not a string
+        if (typeof processedVariant.attribute === 'string') {
+          try {
+            processedVariant.attributes = JSON.parse(processedVariant.attribute);
+            delete processedVariant.attribute; // Remove the old attribute field
+          } catch (error) {
+            console.error('Error parsing variant attribute:', error);
+            processedVariant.attributes = {}; // Default to empty object if parsing fails
+          }
+        } else if (processedVariant.attribute && !processedVariant.attributes) {
+          // If attribute exists but attributes doesn't, copy attribute to attributes
+          processedVariant.attributes = processedVariant.attribute;
+          delete processedVariant.attribute;
+        }
+        
+        return processedVariant;
+      });
       
       // Save variants
       await VariantService.addMany(variantsWithProductId);

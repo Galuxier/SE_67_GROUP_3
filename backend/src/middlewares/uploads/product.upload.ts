@@ -3,7 +3,7 @@ import createUploader from './base.upload';
 // For product main images
 export const productImageUpload = createUploader([
   {
-    subfolder: 'products',
+    subfolder: 'shops/products',
     allowedMimeTypes: ['image/'],
     name: 'product_image_urls',
     maxCount: 10, // Allow up to 10 product images
@@ -13,7 +13,7 @@ export const productImageUpload = createUploader([
 // For variant images
 export const variantImageUpload = createUploader([
   {
-    subfolder: 'products/variants',
+    subfolder: 'shops/variants',
     allowedMimeTypes: ['image/'],
     name: 'variant_image_url',
     maxCount: 1, // Only one image per variant

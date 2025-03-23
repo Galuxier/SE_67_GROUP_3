@@ -5,7 +5,27 @@ import { Types } from 'mongoose';
 // Create a new variant
 export const createVariantController = async (req: Request, res: Response) => {
   try {
-    const newVariant = await VariantService.add(req.body);
+    // Parse attributes if they're sent as a string
+    const variantData = { ...req.body };
+    
+    // Check if attributes is a string and try to parse it
+    if (typeof variantData.attributes === 'string') {
+      try {
+        variantData.attributes = JSON.parse(variantData.attributes);
+      } catch (error) {
+        console.error('Error parsing attributes JSON:', error);
+        res.status(400).json({ 
+          success: false,
+          message: 'Invalid attributes format', 
+          error
+        });
+        return;
+      }
+    }
+
+    // Create the variant with parsed attributes
+    const newVariant = await VariantService.add(variantData);
+    
     res.status(201).json({
       success: true,
       data: newVariant
@@ -31,7 +51,24 @@ export const createManyVariantsController = async (req: Request, res: Response) 
       return;
     }
 
-    const variants = await VariantService.addMany(req.body);
+    // Process each variant to ensure attributes are parsed properly
+    const processedVariants = req.body.map(variant => {
+      const processedVariant = { ...variant };
+      
+      // Parse attributes if it's a string
+      if (typeof processedVariant.attributes === 'string') {
+        try {
+          processedVariant.attributes = JSON.parse(processedVariant.attributes);
+        } catch (error) {
+          console.error('Error parsing attributes JSON:', error);
+          // Continue with the string value, but log the error
+        }
+      }
+      
+      return processedVariant;
+    });
+
+    const variants = await VariantService.addMany(processedVariants);
     res.status(201).json({
       success: true,
       count: variants.length,
@@ -122,7 +159,25 @@ export const getVariantsByProductIdController = async (req: Request, res: Respon
 // Update a variant
 export const updateVariantController = async (req: Request, res: Response) => {
   try {
-    const updatedVariant = await VariantService.update(req.params.id, req.body);
+    // Parse attributes if they're sent as a string
+    const updateData = { ...req.body };
+    
+    // Check if attributes is a string and try to parse it
+    if (typeof updateData.attributes === 'string') {
+      try {
+        updateData.attributes = JSON.parse(updateData.attributes);
+      } catch (error) {
+        console.error('Error parsing attributes JSON:', error);
+        res.status(400).json({ 
+          success: false,
+          message: 'Invalid attributes format', 
+          error
+        });
+        return;
+      }
+    }
+
+    const updatedVariant = await VariantService.update(req.params.id, updateData);
     if (!updatedVariant) {
       res.status(404).json({
         success: false,

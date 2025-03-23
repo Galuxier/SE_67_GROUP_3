@@ -162,7 +162,7 @@ const ShopManageSidebar = ({ shopData, userShops = [], onSwitchShop }) => {
                     Inventory
                   </Link>
                   <Link
-                    to="/shop/management/addProduct"
+                    to={`/shop/management/${shopData._id}/addProduct`}
                     className="block p-1.5 rounded-lg text-xs hover:bg-gray-100 dark:hover:bg-gray-700 text-text flex items-center"
                   >
                     <PlusCircleIcon className="h-3 w-3 mr-1.5" />

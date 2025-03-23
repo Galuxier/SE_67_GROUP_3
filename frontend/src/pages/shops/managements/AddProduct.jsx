@@ -15,7 +15,8 @@ import {
 import VariantModal from "../../../components/shops/VariantModal";
 import OptionEditor from "../../../components/shops/OptionEditor";
 import { useOutletContext } from "react-router-dom";
-import { createProduct } from "../../../services/api/ShopApi";
+import { createProduct } from "../../../services/api/ProductApi";
+import { createVariant } from "../../../services/api/VariantApi";
 
 export default function AddProduct() {
   const navigate = useNavigate();
@@ -263,71 +264,106 @@ export default function AddProduct() {
     try {
       setIsSubmitting(true);
       
-      // Create FormData for API call
-      const formData = new FormData();
+      // Step 1: Create the product first
+      const productFormData = new FormData();
       
       // Add basic product info
-      formData.append("shop_id", shopData._id);
-      formData.append("product_name", product.name);
-      formData.append("category", product.category);
-      formData.append("description", product.description);
+      productFormData.append("shop_id", shopData._id);
+      productFormData.append("product_name", product.name);
+      productFormData.append("category", product.category);
+      productFormData.append("description", product.description);
+      productFormData.append("base_price", product.hasOptions ? "0" : product.price);
       
       // Add product images
       if (currentImages && currentImages.length > 0) {
         currentImages.forEach(image => {
-          formData.append("product_image_urls", image.file);
+          productFormData.append("product_image_urls", image.file);
         });
       }
       
+      // Create the product
+      const productResponse = await createProduct(productFormData);
+      
+      if (!productResponse.success) {
+        throw new Error(productResponse.message || "Failed to create product");
+      }
+      
+      // Get the product ID
+      const productId = productResponse.data._id;
+      
+      // Step 2: Create variants
+      let variantCreationSuccessful = true;
+      
       if (product.hasOptions && product.variants.length > 0) {
-        // Prepare variant data
-        const variantsWithoutImages = product.variants.map(variant => {
-          // Create a copy without the image file
-          return {
-            price: variant.price,
-            stock: variant.stock,
-            attribute: variant.attribute || {}
-          };
-        });
-        
-        // Add variant count
-        formData.append("variantCount", product.variants.length.toString());
-        
-        // Add variant data as a JSON string
-        formData.append("variantData", JSON.stringify(variantsWithoutImages));
-        
-        // Add variant images separately
-        product.variants.forEach((variant, index) => {
+        // Create variants in parallel
+        const variantPromises = product.variants.map(async (variant) => {
+          const variantFormData = new FormData();
+          
+          variantFormData.append("product_id", productId);
+          variantFormData.append("attributes", JSON.stringify(variant.attribute || {}));
+          variantFormData.append("price", variant.price.toString());
+          variantFormData.append("stock", variant.stock.toString());
+          
+          // Generate SKU
+          const timestamp = Date.now();
+          const prefix = product.name.substring(0, 3).toUpperCase();
+          const variantCode = Object.values(variant.attribute || {}).join('-').toUpperCase();
+          const sku = `${prefix}-${variantCode}-${timestamp}`;
+          variantFormData.append("sku", sku);
+          
+          // Add variant image
           if (variant.image_url) {
-            formData.append(`variants[${index}][variant_image_url]`, variant.image_url);
+            variantFormData.append("variant_image_url", variant.image_url);
+          }
+          
+          try {
+            return await createVariant(variantFormData);
+          } catch (error) {
+            console.error(`Failed to create variant:`, error);
+            variantCreationSuccessful = false;
+            return null;
           }
         });
-      } else {
-        // For products without variants, create a single variant
-        const singleVariant = [{
-          price: product.price,
-          stock: product.stock,
-          attribute: {}
-        }];
         
-        formData.append("variantCount", "1");
-        formData.append("variantData", JSON.stringify(singleVariant));
+        await Promise.all(variantPromises);
+      } else if (!product.hasOptions) {
+        // Create a single default variant
+        const variantFormData = new FormData();
         
-        // If there's at least one image, use the first one as variant image
+        variantFormData.append("product_id", productId);
+        variantFormData.append("attributes", JSON.stringify({}));
+        variantFormData.append("price", product.price.toString());
+        variantFormData.append("stock", product.stock.toString());
+        
+        // Generate a simple SKU
+        const sku = `${product.name.substring(0, 3).toUpperCase()}-DEFAULT-${Date.now()}`;
+        variantFormData.append("sku", sku);
+        
+        // Use first product image as variant image
         if (currentImages && currentImages.length > 0) {
-          formData.append("variants[0][variant_image_url]", currentImages[0].file);
+          variantFormData.append("variant_image_url", currentImages[0].file);
+        }
+        
+        try {
+          await createVariant(variantFormData);
+        } catch (error) {
+          console.error("Failed to create default variant:", error);
+          variantCreationSuccessful = false;
         }
       }
       
-      // Send the form data to the API
-      const response = await createProduct(formData);
-      console.log("Product created successfully:", response);
+      // Show appropriate success/warning message
+      if (variantCreationSuccessful) {
+        toast.success("Product and all variants created successfully!");
+      } else {
+        toast.warning("Product created but some variants failed. You can add them later.");
+      }
       
-      // Navigate to product view or shop dashboard
+      // Navigate to shop management
       navigate(`/shop/management/${shopData._id}`);
     } catch (error) {
       console.error("Error creating product:", error);
-      toast.error("Failed to create product. Please try again.");
+      toast.error(error.message || "Failed to create product. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
