@@ -16,6 +16,7 @@ import {
   FaUsers,
 } from "react-icons/fa";
 import ProfileEditModal from "../../components/users/ProfileEditModal";
+import { getImage } from "../../services/api/ImageApi";
 
 function UserProfile() {
   const { user } = useAuth(); // user ที่ล็อกอินอยู่
@@ -24,6 +25,7 @@ function UserProfile() {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [profileUser, setProfileUser] = useState(null); // state สำหรับข้อมูลผู้ใช้ที่กำลังดู
+  const [profileImageUrl, setProfileImageUrl] = useState("");
 
   // ตรวจสอบว่าเป็นโปรไฟล์ของตัวเองหรือไม่
   const isCurrentUserProfile = user?.username === username;
@@ -31,16 +33,25 @@ function UserProfile() {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        setIsLoading(true); // เริ่มโหลด
+        setIsLoading(true);
         const response = await getUserProfile(username);
-        
-        // อัปเดต state สำหรับข้อมูลผู้ใช้ที่กำลังดู
         setProfileUser(response);
+        
+        // Fetch profile image if available
+        if (response.profile_picture_url) {
+          try {
+            const imageUrl = await getImage(response.profile_picture_url);
+            setProfileImageUrl(imageUrl);
+          } catch (imageError) {
+            console.error("Error fetching profile image:", imageError);
+            // Keep the default avatar in case of error
+          }
+        }
       } catch (error) {
         console.error("Error fetching user profile:", error);
         setError("เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้");
       } finally {
-        setIsLoading(false); // หยุดโหลดไม่ว่าจะสำเร็จหรือไม่
+        setIsLoading(false);
       }
     };
   
@@ -51,6 +62,18 @@ function UserProfile() {
 
   const handleProfileUpdate = (updatedUser) => {
     setProfileUser(updatedUser);
+    
+    // If the updated user has a profile picture, fetch it
+    if (updatedUser.profile_picture_url) {
+      getImage(updatedUser.profile_picture_url)
+        .then(imageUrl => {
+          setProfileImageUrl(imageUrl);
+        })
+        .catch(error => {
+          console.error("Error fetching updated profile image:", error);
+        });
+    }
+    
     setIsModalOpen(false);
   };
   
@@ -87,19 +110,19 @@ function UserProfile() {
 
   // Sample data for boxer and trainer sections (replace with actual API calls in a real implementation)
   const fightHistory = [
-    { id: 1, event: "Bangkok Championship 2022", opponent: "Somchai P.", result: "Win", date: "2022-05-15" },
-    { id: 2, event: "Phuket Open Tournament", opponent: "John Smith", result: "Loss", date: "2022-07-22" },
-    { id: 3, event: "Chiang Mai Exhibition", opponent: "Tanawat S.", result: "Win", date: "2022-09-10" }
+    // { id: 1, event: "Bangkok Championship 2022", opponent: "Somchai P.", result: "Win", date: "2022-05-15" },
+    // { id: 2, event: "Phuket Open Tournament", opponent: "John Smith", result: "Loss", date: "2022-07-22" },
+    // { id: 3, event: "Chiang Mai Exhibition", opponent: "Tanawat S.", result: "Win", date: "2022-09-10" }
   ];
 
   const teachingHistory = [
-    { id: 1, course: "Beginner Muay Thai", gym: "Bangkok Fight Club", date: "Jan 2022 - Mar 2022", students: 12 },
-    { id: 2, course: "Advanced Clinch Techniques", gym: "Tiger Muay Thai", date: "Apr 2022 - Jun 2022", students: 8 }
+    // { id: 1, course: "Beginner Muay Thai", gym: "Bangkok Fight Club", date: "Jan 2022 - Mar 2022", students: 12 },
+    // { id: 2, course: "Advanced Clinch Techniques", gym: "Tiger Muay Thai", date: "Apr 2022 - Jun 2022", students: 8 }
   ];
 
   const openCourses = [
-    { id: 1, course: "Muay Thai for Fitness", gym: "Bangkok Fight Club", schedule: "Mon, Wed, Fri", slots: "5/10 filled" },
-    { id: 2, course: "Competition Preparation", gym: "Tiger Muay Thai", schedule: "Tue, Thu, Sat", slots: "3/6 filled" }
+    // { id: 1, course: "Muay Thai for Fitness", gym: "Bangkok Fight Club", schedule: "Mon, Wed, Fri", slots: "5/10 filled" },
+    // { id: 2, course: "Competition Preparation", gym: "Tiger Muay Thai", schedule: "Tue, Thu, Sat", slots: "3/6 filled" }
   ];
 
   return (
@@ -127,7 +150,7 @@ function UserProfile() {
             className="w-full h-48 md:h-64 bg-gradient-to-r from-rose-400 to-purple-500 rounded-t-2xl overflow-hidden relative"
             variants={itemVariants}
           >
-            {/* Edit Button - Only show if it's the user's own profile */}
+            {/* Edit Button */}
             {isCurrentUserProfile && (
               <button
                 onClick={() => setIsModalOpen(true)}
@@ -146,7 +169,7 @@ function UserProfile() {
           >
             <div className="relative w-40 h-40">
               <img
-                src={profileUser?.profile_picture_url || defaultAvatar}
+                src={profileImageUrl || defaultAvatar}
                 alt={`${profileUser?.first_name}'s profile`}
                 className="absolute inset-0 w-full h-full object-cover rounded-full border-4 border-white dark:border-gray-800 shadow-xl"
               />

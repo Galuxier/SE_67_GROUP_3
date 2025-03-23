@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Cropper from "react-easy-crop";
 
 const ProfileSetup = ({ user }) => {
-  console.log("Profile of User: ", user);
+  console.log("Profile Setup for User: ", user);
   
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -80,12 +80,13 @@ const ProfileSetup = ({ user }) => {
   };
 
   const createCroppedImage = async () => {
-    if (!previewImage || !croppedAreaPixels) return;
+    if (!previewImage || !croppedAreaPixels) return null;
 
     try {
       const image = new Image();
       image.src = previewImage;
       
+      // Wait for image to load
       await new Promise((resolve) => {
         image.onload = resolve;
       });
@@ -110,36 +111,53 @@ const ProfileSetup = ({ user }) => {
         croppedAreaPixels.height
       );
       
-      // Convert canvas to blob
+      // Convert canvas to blob with promise
       return new Promise((resolve) => {
         canvas.toBlob((blob) => {
-          // Create a File object from the blob
-          const croppedFile = new File([blob], "profile_picture.png", {
-            type: "image/png",
-          });
+          if (!blob) {
+            console.error("Canvas to Blob conversion failed");
+            resolve(null);
+            return;
+          }
           
-          // Set the cropped image as the profile picture
-          setProfileData((prevState) => ({
-            ...prevState,
-            profilePicture: croppedFile
-          }));
+          // Create a File object from the blob
+          // Always use a consistent filename for better backend processing
+          const fileName = "profile_picture.jpg";
+          const fileType = "image/jpeg";
+          
+          // Create a File object with a name the backend expects
+          const croppedFile = new File([blob], fileName, {
+            type: fileType,
+            lastModified: new Date().getTime()
+          });
           
           // Create a URL for preview
           const previewUrl = URL.createObjectURL(blob);
           setPreviewImage(previewUrl);
           
-          resolve();
-        }, "image/png");
+          console.log("Created cropped file:", croppedFile.name, "Size:", croppedFile.size, "Type:", croppedFile.type);
+          resolve(croppedFile);
+        }, 'image/jpeg', 0.95); // Always use JPEG with 95% quality for consistency
       });
     } catch (error) {
       console.error("Error creating cropped image:", error);
       toast.error("Error cropping image. Please try again.");
+      return null;
     }
   };
 
   const handleCropSave = async () => {
-    await createCroppedImage();
-    setShowCropper(false);
+    const croppedFile = await createCroppedImage();
+    if (croppedFile) {
+      setProfileData((prevState) => ({
+        ...prevState,
+        profilePicture: croppedFile
+      }));
+      setShowCropper(false);
+    } else {
+      toast.error("Failed to crop image. Please try uploading again.");
+      setShowCropper(false);
+    }
   };
 
   const handleCropCancel = () => {
@@ -177,30 +195,45 @@ const ProfileSetup = ({ user }) => {
       // Create FormData
       const formData = new FormData();
       
+      // Add profile picture if available
       if (profileData.profilePicture instanceof File) {
-        formData.append('profile_picture', profileData.profilePicture);
+        formData.append('profile_picture_url', profileData.profilePicture);
+        console.log("Appending profile picture:", profileData.profilePicture.name, profileData.profilePicture.type, profileData.profilePicture.size);
       }
 
+      // Add bio
       formData.append('bio', profileData.bio);
       
+      // Add phone separately as the API expects
+      if (profileData.contactInfo.phone) {
+        formData.append('phone', profileData.contactInfo.phone);
+      }
+      
+      // Add contact info as JSON string (but exclude phone as it's passed separately)
       const contactInfo = {
-        phone: profileData.contactInfo.phone,
-        line: profileData.contactInfo.line,
-        facebook: profileData.contactInfo.facebook
+        phone: profileData.contactInfo.phone || "",
+        line: profileData.contactInfo.line || "",
+        facebook: profileData.contactInfo.facebook || ""
       };
       
       formData.append('contact_info', JSON.stringify(contactInfo));
-      // Update user profile
-      formData.forEach((value, key) => {
-        console.log(`${key}: ${value}`);
-      });
-      const res = await updateUser(user._id, formData);
-      console.log(res);
       
+      console.log("Submitting profile data to API...");
+      // Log form data for debugging
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value instanceof File ? 'File: ' + value.name : value}`);
+      }
       
-      // Show success state
+      // Make the API call with the FormData
+      const response = await updateUser(user._id, formData);
+      console.log("API Response:", response);
+      
+      toast.success("Profile updated successfully!");
+      
+      // Show success state and hide the form step
+      setStep(null); // Hide the form step
       setFormComplete(true);
-      
+
       // Redirect to home page after a delay
       setTimeout(() => {
         navigate('/');
@@ -208,7 +241,7 @@ const ProfileSetup = ({ user }) => {
       
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile. Please try again.');
+      toast.error('Failed to update profile: ' + (error.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -624,15 +657,20 @@ const ProfileSetup = ({ user }) => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-rose-100 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
       <ToastContainer />
       
-      {renderStepIndicator()}
+      {!formComplete && renderStepIndicator()}
       
       <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-xl max-w-md w-full border border-gray-200 dark:border-gray-700">
         <AnimatePresence mode="wait">
-          {step === 1 && renderWelcomeScreen()}
-          {step === 2 && renderProfilePictureStep()}
-          {step === 3 && renderBioStep()}
-          {step === 4 && renderContactInfoStep()}
-          {formComplete && renderSuccessScreen()}
+          {!formComplete ? (
+            <>
+              {step === 1 && renderWelcomeScreen()}
+              {step === 2 && renderProfilePictureStep()}
+              {step === 3 && renderBioStep()}
+              {step === 4 && renderContactInfoStep()}
+            </>
+          ) : (
+            renderSuccessScreen()
+          )}
         </AnimatePresence>
       </div>
     </div>

@@ -27,7 +27,11 @@ export async function getUserProfile(username) {
 
 export async function updateUser(userId, userData) { 
     try {
-        const response = await api.put(`/user/${userId}`, userData);
+        const response = await api.put(`/user/${userId}`, userData,  {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
         return response.data;
     } catch(error) {
         console.error('Update User Failed: ', error);
