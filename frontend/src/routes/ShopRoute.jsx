@@ -34,11 +34,13 @@ function ShopRoutes() {
           }
         >
           <Route index element={<ShopManageDashboard />} />
+          <Route path="/management/addShop" element={<AddShop />} />
+          <Route path="/management/addProduct" element={<AddProduct />} />
         </Route>
           
         {/* ไม่มี Layout(Navbar) */}
-          <Route path="/addProduct" element={<AddProduct />} />
-          <Route path="/addShop" element={<AddShop />} />
+          
+          
           <Route path="/summary" element={<Summary />} />
           
       </Routes>

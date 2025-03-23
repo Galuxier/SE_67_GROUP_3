@@ -82,7 +82,7 @@ const ShopManageLayout = () => {
         <ManagementNavbar />
 
         {/* Page Content */}
-        <div className="p-4 mt-6">
+        <div className="p-4 mt-6 bg-background">
           <Outlet context={{ shopData, userShops }} />
         </div>
       </div>

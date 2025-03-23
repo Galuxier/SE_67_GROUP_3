@@ -10,6 +10,8 @@ import { GymManagementRouteGuard } from "./guards/RouteGuard";
 import GymManageDashboard from "../pages/gyms/managements/GymManageDashboard";
 import GymList from "../pages/gyms/managements/GymList";
 import AddGym from "../pages/gyms/managements/AddGym";
+import AddBoxer from "../pages/gyms/managements/AddBoxer";
+import AddTrainer from "../pages/gyms/managements/AddTrainer";
 
 import CreateCourse from "../pages/courses/CreateCourse";
 function GymRoutes() {
@@ -33,7 +35,8 @@ function GymRoutes() {
           <Route index element={<GymManageDashboard />} />
           <Route path="/management/gymlist" element={<GymList />} />
           <Route path="/management/create" element={<AddGym />} />
-          
+          <Route path="/management/addboxer" element={<AddBoxer />}/>
+          <Route path="/management/addtrainer" element={<AddTrainer />}/>
         </Route>
 
       {/* ไม่มี Layout(Navbar) */}

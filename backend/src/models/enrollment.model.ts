@@ -11,11 +11,12 @@ export interface EnrollmentDocument extends Document {
   user_id: Types.ObjectId; // เปลี่ยนจาก Schema.Types.ObjectId เป็น Types.ObjectId
   role: string;
   description: string;
-  license_files: string[]; // Paths to uploaded license files
+  license_urls: string[]; // Paths to uploaded license files
   status: EnrollmentStatus;
   create_at: Date;
   updated_at?: Date;
   reviewer_id?: Types.ObjectId; // เปลี่ยนจาก Schema.Types.ObjectId เป็น Types.ObjectId
+  reject_reason: String;
 }
 
 const EnrollmentSchema = new Schema<EnrollmentDocument>({
@@ -33,7 +34,7 @@ const EnrollmentSchema = new Schema<EnrollmentDocument>({
     type: String, 
     required: true 
   },
-  license_files: { 
+  license_urls: { 
     type: [String], 
     required: true 
   },
@@ -53,7 +54,10 @@ const EnrollmentSchema = new Schema<EnrollmentDocument>({
   reviewer_id: { 
     type: Schema.Types.ObjectId, 
     ref: 'User' 
-  }
+  },
+  reject_reason:{
+    type: String,
+  },
 });
 
 export const Enrollment = model<EnrollmentDocument>('Enrollment', EnrollmentSchema);
