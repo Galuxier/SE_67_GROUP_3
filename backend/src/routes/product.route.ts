@@ -7,17 +7,26 @@ import {
   deleteProductController,
   getProductsByShopIdController
 } from '../controllers/product.controller';
+import { productImageUpload } from '../middlewares/uploads/product.upload';
 
 const router = express.Router();
 
-// Existing routes
-router.post('/products', createProductController);
+// Create a new product
+router.post('/products', productImageUpload, createProductController);
+
+// Get all products with optional filtering
 router.get('/products', getProductsController);
+
+// Get a specific product by ID (with its variants)
 router.get('/product/:id', getProductByIdController);
-router.put('/product/:id', updateProductController);
+
+// Update a product
+router.put('/product/:id', productImageUpload, updateProductController);
+
+// Delete a product and all its variants
 router.delete('/product/:id', deleteProductController);
 
-// New route to get products by shop_id
+// Get all products for a specific shop
 router.get('/shops/:shopId/products', getProductsByShopIdController);
 
 export default router;

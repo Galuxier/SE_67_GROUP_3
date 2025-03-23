@@ -274,32 +274,44 @@ export default function AddProduct() {
       
       // Add product images
       if (currentImages && currentImages.length > 0) {
-        currentImages.forEach((image, index) => {
-          formData.append(`product_image_urls`, image.file);
+        currentImages.forEach(image => {
+          formData.append("product_image_urls", image.file);
         });
       }
       
-      // For products with variants
       if (product.hasOptions && product.variants.length > 0) {
-        // Add variant count to help backend setup upload fields
+        // Prepare variant data
+        const variantsWithoutImages = product.variants.map(variant => {
+          // Create a copy without the image file
+          return {
+            price: variant.price,
+            stock: variant.stock,
+            attribute: variant.attribute || {}
+          };
+        });
+        
+        // Add variant count
         formData.append("variantCount", product.variants.length.toString());
         
-        // Store variants as a structured array
+        // Add variant data as a JSON string
+        formData.append("variantData", JSON.stringify(variantsWithoutImages));
+        
+        // Add variant images separately
         product.variants.forEach((variant, index) => {
-          // Append variant image
-          formData.append(`variants[${index}][variant_image_url]`, variant.image_url);
-          
-          // Append variant details as JSON
-          formData.append(`variants[${index}][price]`, variant.price);
-          formData.append(`variants[${index}][stock]`, variant.stock);
-          formData.append(`variants[${index}][attribute]`, JSON.stringify(variant.attribute));
+          if (variant.image_url) {
+            formData.append(`variants[${index}][variant_image_url]`, variant.image_url);
+          }
         });
       } else {
         // For products without variants, create a single variant
-        formData.append("variantCount", "1"); // Include this even for no variants
-        formData.append("variants[0][price]", product.price);
-        formData.append("variants[0][stock]", product.stock);
-        formData.append("variants[0][attribute]", JSON.stringify({}));
+        const singleVariant = [{
+          price: product.price,
+          stock: product.stock,
+          attribute: {}
+        }];
+        
+        formData.append("variantCount", "1");
+        formData.append("variantData", JSON.stringify(singleVariant));
         
         // If there's at least one image, use the first one as variant image
         if (currentImages && currentImages.length > 0) {

@@ -1,55 +1,22 @@
 import { Request, Response } from 'express';
 import ProductService from '../services/product.service';
+import VariantService from '../services/variant.service';
+import { Types } from 'mongoose';
 
 export const createProductController = async (req: Request, res: Response) => {
   try {
-    // Extract the basic product data
+    // Extract product data
     const { 
       shop_id, 
       product_name, 
       category, 
       description,
-      variantCount // We don't need to use this directly, just extracted here for clarity
+      base_price,
+      variants 
     } = req.body;
-    
+
     // Process image URLs from the upload middleware
     const product_image_urls = req.body.product_image_urls || [];
-    
-    // Initialize an array to store variant data
-    const variants = [];
-    
-    // Parse variants from form data
-    const variantKeys = Object.keys(req.body).filter(key => key.startsWith('variants['));
-    
-    // Group variant keys by index
-    const variantIndices = new Set();
-    variantKeys.forEach(key => {
-      const match = key.match(/variants\[(\d+)\]/);
-      if (match) {
-        variantIndices.add(match[1]);
-      }
-    });
-    
-    // Process each variant
-    for (const index of variantIndices) {
-      try {
-        const price = parseFloat(req.body[`variants[${index}][price]`] || '0');
-        const stock = parseInt(req.body[`variants[${index}][stock]`] || '0');
-        const attribute = req.body[`variants[${index}][attribute]`] ? 
-          JSON.parse(req.body[`variants[${index}][attribute]`]) : {};
-        const image_url = req.body[`variants[${index}][variant_image_url]`] || '';
-        
-        variants.push({
-          attribute,
-          image_url,
-          price,
-          stock
-        });
-      } catch (err) {
-        console.error(`Error processing variant ${index}:`, err);
-        // Continue with other variants
-      }
-    }
     
     // Create the product data object
     const productData = {
@@ -57,18 +24,33 @@ export const createProductController = async (req: Request, res: Response) => {
       product_name,
       category,
       description,
-      image_url: Array.isArray(product_image_urls) ? product_image_urls : [product_image_urls],
-      variants
+      base_price,
+      product_image_urls: Array.isArray(product_image_urls) ? product_image_urls : [product_image_urls]
     };
     
     // Save the product
     const newProduct = await ProductService.add(productData);
     
-    // Return success response
+    // If variants are provided, save them with the product ID
+    if (variants && Array.isArray(variants) && variants.length > 0) {
+      // Add product_id to each variant
+      const variantsWithProductId = variants.map(variant => ({
+        ...variant,
+        product_id: newProduct._id
+      }));
+      
+      // Save variants
+      await VariantService.addMany(variantsWithProductId);
+    }
+    
+    // Get the complete product with variants
+    const completeProduct = await ProductService.getProductWithVariants(newProduct._id as unknown as string);
+    
+    // Send success response
     res.status(201).json({
       success: true,
       message: 'Product created successfully',
-      data: newProduct
+      data: completeProduct
     });
   } catch (err) {
     console.error('Error creating product:', err);
@@ -82,51 +64,163 @@ export const createProductController = async (req: Request, res: Response) => {
 
 export const getProductsController = async (req: Request, res: Response) => {
   try {
-    const products = await ProductService.getAll();
-    res.status(200).json(products);
+    // Extract query parameters
+    const { 
+      query = '', 
+      category, 
+      shop_id, 
+      min_price, 
+      max_price,
+      page = '1',
+      limit = '10'
+    } = req.query;
+    
+    // Parse numeric parameters
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 10;
+    const minPrice = min_price ? parseFloat(min_price as string) : undefined;
+    const maxPrice = max_price ? parseFloat(max_price as string) : undefined;
+    
+    // Search for products with filters
+    const { products, total } = await ProductService.searchProducts(
+      query as string,
+      category as string | undefined,
+      shop_id as string | undefined,
+      minPrice,
+      maxPrice,
+      pageNum,
+      limitNum
+    );
+    
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limitNum);
+    
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+      data: products
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching products', error: err });
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching products', 
+      error: err 
+    });
   }
 };
 
 export const getProductByIdController = async (req: Request, res: Response) => {
   try {
-    const product = await ProductService.getById(req.params.id);
+    // Get product with its variants
+    const product = await ProductService.getProductWithVariants(req.params.id);
+    
     if (!product) {
-      res.status(404).json({ message: 'Product not found' });
+      res.status(404).json({ 
+        success: false,
+        message: 'Product not found' 
+      });
       return;
     }
-    res.status(200).json(product);
+    
+    res.status(200).json({
+      success: true,
+      data: product
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching product', error: err });
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching product', 
+      error: err 
+    });
   }
 };
 
 export const updateProductController = async (req: Request, res: Response) => {
   try {
+    // Update product data
     const updatedProduct = await ProductService.update(req.params.id, req.body);
-    res.status(200).json(updatedProduct);
+    
+    if (!updatedProduct) {
+      res.status(404).json({ 
+        success: false,
+        message: 'Product not found' 
+      });
+      return;
+    }
+    
+    // Get the updated product with its variants
+    const completeProduct = await ProductService.getProductWithVariants(req.params.id);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Product updated successfully',
+      data: completeProduct
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Error updating product', error: err });
+    res.status(500).json({ 
+      success: false,
+      message: 'Error updating product', 
+      error: err 
+    });
   }
 };
 
 export const deleteProductController = async (req: Request, res: Response) => {
   try {
-    const deletedProduct = await ProductService.delete(req.params.id);
-    res.status(200).json(deletedProduct);
+    // Delete product and all its variants
+    const deletedProduct = await ProductService.deleteProductWithVariants(req.params.id);
+    
+    if (!deletedProduct) {
+      res.status(404).json({ 
+        success: false,
+        message: 'Product not found' 
+      });
+      return;
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: 'Product and all variants deleted successfully',
+      data: deletedProduct
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Error deleting product', error: err });
+    res.status(500).json({ 
+      success: false,
+      message: 'Error deleting product', 
+      error: err 
+    });
   }
 };
 
-// New controller to get products by shop_id
 export const getProductsByShopIdController = async (req: Request, res: Response) => {
   try {
     const shopId = req.params.shopId;
+    
+    // Validate shop ID
+    if (!Types.ObjectId.isValid(shopId)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid shop ID format'
+      });
+      return;
+    }
+    
     const products = await ProductService.getProductsByShopId(shopId);
-    res.status(200).json(products);
+    
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      data: products
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching shop products', error: err });
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching shop products', 
+      error: err 
+    });
   }
 };

@@ -1,7 +1,27 @@
 import createUploader from './base.upload';
 
-// Dynamic product upload middleware that reads variant count from the request
-export const productUpload = (req: any, res: any, next: any) => {
+// For product main images
+export const productImageUpload = createUploader([
+  {
+    subfolder: 'products',
+    allowedMimeTypes: ['image/'],
+    name: 'product_image_urls',
+    maxCount: 10, // Allow up to 10 product images
+  }
+]);
+
+// For variant images
+export const variantImageUpload = createUploader([
+  {
+    subfolder: 'products/variants',
+    allowedMimeTypes: ['image/'],
+    name: 'variant_image_url',
+    maxCount: 1, // Only one image per variant
+  }
+]);
+
+// For batch uploading variant images (useful when creating a product with multiple variants)
+export const batchVariantImageUpload = (req: any, res: any, next: any) => {
   // First, read the form data to get the number of variants
   const multer = require('multer');
   const parseForm = multer().none();
@@ -14,13 +34,13 @@ export const productUpload = (req: any, res: any, next: any) => {
     // Get the number of variants from the request
     const variantCount = parseInt(req.body.variantCount || '0', 10);
     
-    // Create upload field configurations
+    // Create upload field configurations for product and variants
     const uploadFields = [
       {
         subfolder: 'products',
         allowedMimeTypes: ['image/'],
         name: 'product_image_urls',
-        maxCount: 20,
+        maxCount: 10,
       }
     ];
     
