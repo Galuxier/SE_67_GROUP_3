@@ -19,6 +19,7 @@ import ticketRoutes from './routes/ticket.route';
 import authRoutes from './routes/auth.route';
 import imageRoutes from './routes/image.route';
 import enrollmentRoutes from './routes/enrollment.route';
+import variantRoutes from './routes/variant.route';
 
 const app: Application = express();
 
@@ -43,6 +44,7 @@ app.use('/api', ticketRoutes);
 app.use('/api', authRoutes);
 app.use('/api', imageRoutes);
 app.use('/api', enrollmentRoutes);
+app.use('/api', variantRoutes);
 
 import { testUpload, testMultiUpload } from './middlewares/uploads/test.upload';
 app.post('/test/single', testUpload, (req, res) => {

@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { PlusCircleIcon, Cog6ToothIcon, TagIcon, FireIcon } from "@heroicons/react/24/outline";
+import { PlusCircleIcon, Cog6ToothIcon, TagIcon, FireIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import ProductCard from "../../components/ProductCard";
 import ShopFilter from "../../components/shops/ShopFilter";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { getProducts } from "../../services/api/ProductApi";
+import { toast } from "react-toastify"; 
 
 function ShopHome() {
   const navigate = useNavigate();
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
   const [priceFilter, setPriceFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("");
   const [products, setProducts] = useState([]);
@@ -17,113 +19,71 @@ function ShopHome() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
+  // Removed activeCategory state as we're using categoryFilter now
   const searchInputRef = useRef(null);
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
+  const [categories, setCategories] = useState(["All"]); // To store dynamic categories
 
-  // Dummy products data - replace with API call in production
-  const dummyProducts = [
-    {
-      id: 1,
-      product_name: "Muay Thai Boxing Gloves",
-      description: "Professional grade boxing gloves for training and competition",
-      image_url: new URL("../../assets/images/Glove_black.jpg", import.meta.url).href,
-      price: 1200,
-      category: "Gloves",
-      shop_name: "FightGear Pro",
-      isNew: true
-    },
-    {
-      id: 2,
-      product_name: "Hand Wraps - 180cm",
-      description: "Premium quality hand wraps for maximum wrist support",
-      image_url: new URL("../../assets/images/product-003.webp", import.meta.url).href,
-      price: 350,
-      category: "Accessories",
-      shop_name: "FightGear Pro"
-    },
-    {
-      id: 3,
-      product_name: "Muay Thai Shorts",
-      description: "Traditional Muay Thai shorts with premium satin finish",
-      image_url: new URL("../../assets/images/product-002.webp", import.meta.url).href,
-      price: 850,
-      category: "Apparel",
-      shop_name: "Thai Fight Shop",
-      onSale: true
-    },
-    {
-      id: 4,
-      product_name: "Heavy Duty Shin Guards",
-      description: "Protective shin guards with enhanced padding for sparring",
-      image_url: new URL("../../assets/images/product-002.webp", import.meta.url).href,
-      price: 950,
-      category: "Protection",
-      shop_name: "Elite Fight Gear"
-    },
-    {
-      id: 5,
-      product_name: "Training Pads Set",
-      description: "Set of focus mitts and kick pads for training sessions",
-      image_url: new URL("../../assets/images/product-003.webp", import.meta.url).href,
-      price: 1800,
-      category: "Equipment",
-      shop_name: "Pro Trainer Supply"
-    },
-    {
-      id: 6,
-      product_name: "Ankle Support Braces",
-      description: "Ankle braces for additional support during training",
-      image_url: new URL("../../assets/images/Glove_black.jpg", import.meta.url).href,
-      price: 550,
-      category: "Protection",
-      shop_name: "Health First"
-    },
-    {
-      id: 7,
-      product_name: "Premium Mouth Guard",
-      description: "Custom-fit mouth guard for optimal protection",
-      image_url: new URL("../../assets/images/product-002.webp", import.meta.url).href,
-      price: 450,
-      category: "Protection",
-      shop_name: "SafeGuard Pro"
-    },
-    {
-      id: 8,
-      product_name: "Training Timer",
-      description: "Interval timer specially designed for Muay Thai sessions",
-      image_url: new URL("../../assets/images/product-003.webp", import.meta.url).href,
-      price: 750,
-      category: "Equipment",
-      shop_name: "Tech Fight Gear"
-    },
-    {
-      id: 9,
-      product_name: "Muay Thai Jump Rope",
-      description: "Professional jump rope for cardio training",
-      image_url: new URL("../../assets/images/Glove_black.jpg", import.meta.url).href,
-      price: 290,
-      category: "Accessories",
-      shop_name: "FightGear Pro",
-      isNew: true
-    }
-  ];
-
-  // Categories for quick filtering
-  const categories = ["All", "Gloves", "Protection", "Apparel", "Accessories", "Equipment"];
-
-  // Load products
+  // Fetch products from API
   useEffect(() => {
-    // Simulate API call
     const fetchProducts = async () => {
       setIsLoading(true);
-      // In production, replace with actual API call
-      setTimeout(() => {
+      try {
+        // Fetch products from API
+        const response = await getProducts();
+        
+        // Handle the response
+        const fetchedProducts = response.data;
+        console.log("Fetched products:", fetchedProducts);
+        
+        // Update state with fetched products
+        setProducts(fetchedProducts);
+        setFilteredProducts(fetchedProducts);
+        
+        // Extract unique categories from products
+        if (Array.isArray(fetchedProducts) && fetchedProducts.length > 0) {
+          const uniqueCategories = [...new Set(fetchedProducts.map(product => product.category))];
+          setCategories(["All", ...uniqueCategories.filter(Boolean)]);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        toast.error("Failed to load products. Please try again later.");
+        
+        // Use dummy data as fallback
+        // This could be removed in production, but it's helpful during development
+        const dummyProducts = [
+          {
+            id: 1,
+            product_name: "Muay Thai Boxing Gloves",
+            description: "Professional grade boxing gloves for training and competition",
+            image_url: new URL("../../assets/images/Glove_black.jpg", import.meta.url).href,
+            price: 1200,
+            category: "Gloves",
+            shop_name: "FightGear Pro",
+            isNew: true
+          },
+          {
+            id: 2,
+            product_name: "Hand Wraps - 180cm",
+            description: "Premium quality hand wraps for maximum wrist support",
+            image_url: new URL("../../assets/images/product-003.webp", import.meta.url).href,
+            price: 350,
+            category: "Accessories",
+            shop_name: "FightGear Pro"
+          },
+          // ... other dummy products
+        ];
+        
         setProducts(dummyProducts);
         setFilteredProducts(dummyProducts);
+        
+        // Extract categories from dummy data as well
+        const uniqueCategories = [...new Set(dummyProducts.map(product => product.category))];
+        setCategories(["All", ...uniqueCategories.filter(Boolean)]);
+      } finally {
         setIsLoading(false);
-      }, 800);
+      }
     };
 
     fetchProducts();
@@ -134,8 +94,8 @@ function ShopHome() {
     let filtered = [...products];
 
     // Filter by category
-    if (activeCategory !== "All") {
-      filtered = filtered.filter(product => product.category === activeCategory);
+    if (categoryFilter && categoryFilter !== "All") {
+      filtered = filtered.filter(product => product.category === categoryFilter);
     }
 
     // Filter by search query
@@ -149,7 +109,7 @@ function ShopHome() {
       );
     }
 
-    // Apply price filter
+    // Apply price filter and sort
     if (sortOrder === "low-to-high") {
       filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
     } else if (sortOrder === "high-to-low") {
@@ -157,26 +117,23 @@ function ShopHome() {
     }
 
     setFilteredProducts(filtered);
-  }, [products, activeCategory, searchQuery, sortOrder]);
+  }, [products, categoryFilter, searchQuery, sortOrder]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  const handleCategorySelect = (category) => {
-    setActiveCategory(category);
-  };
+  // Remove handleCategorySelect as we're now using the select dropdown
 
   const toggleFilterModal = () => {
     setIsFilterModalOpen(!isFilterModalOpen);
   };
 
   const handleClearFilters = () => {
-    setCategoryFilter("");
+    setCategoryFilter("All");
     setPriceFilter("");
     setSortOrder("");
     setSearchQuery("");
-    setActiveCategory("All");
     if (searchInputRef.current) {
       searchInputRef.current.value = "";
     }
@@ -278,9 +235,9 @@ function ShopHome() {
           {categories.map((category) => (
             <motion.button
               key={category}
-              onClick={() => handleCategorySelect(category)}
+              onClick={() => setCategoryFilter(category)}
               className={`flex-shrink-0 px-4 py-2 rounded-full font-medium snap-start ${
-                activeCategory === category
+                categoryFilter === category
                   ? "bg-primary text-white shadow-md"
                   : "bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-text"
               } transition-all duration-200`}
@@ -318,6 +275,7 @@ function ShopHome() {
                 setPriceFilter={setPriceFilter}
                 sortOrder={sortOrder}
                 setSortOrder={setSortOrder}
+                categories={categories}
               />
             </div>
           </motion.div>
@@ -332,7 +290,7 @@ function ShopHome() {
                   {isLoading 
                     ? "Finding products..."
                     : filteredProducts.length > 0 
-                      ? `${filteredProducts.length} Products ${activeCategory !== "All" ? `in ${activeCategory}` : "Found"}`
+                      ? `${filteredProducts.length} Products ${categoryFilter !== "All" ? `in ${categoryFilter}` : "Found"}`
                       : "No products matching your criteria"
                   }
                 </h2>
@@ -340,13 +298,13 @@ function ShopHome() {
               
               <div className="flex flex-wrap items-center gap-3">
                 {/* Active filters display */}
-                {(activeCategory !== "All" || searchQuery) && (
+                {(categoryFilter !== "All" || searchQuery) && (
                   <div className="flex flex-wrap items-center gap-2">
-                    {activeCategory !== "All" && (
+                    {categoryFilter !== "All" && (
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
-                        {activeCategory}
+                        {categoryFilter}
                         <button 
-                          onClick={() => setActiveCategory("All")}
+                          onClick={() => setCategoryFilter("All")}
                           className="ml-1 text-purple-600 hover:text-purple-800 dark:text-purple-400"
                         >
                           &times;
@@ -438,7 +396,7 @@ function ShopHome() {
         </div>
 
         {/* Add Product button for shop owners */}
-        {user && user.role && user.role.includes("shop_owner") && (
+        {user && user.role && user.role.includes("shop_owner") ? (
           <motion.div 
             className="fixed bottom-6 right-6 z-30"
             initial={{ scale: 0 }}
@@ -451,6 +409,21 @@ function ShopHome() {
             >
               <PlusCircleIcon className="h-5 w-5" />
               <span>Add New Product</span>
+            </Link>
+          </motion.div>
+        ) : (
+          <motion.div 
+            className="fixed bottom-6 right-6 z-30"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 15 }}
+          >
+            <Link
+              to="/shop/cart"
+              className="flex items-center gap-2 bg-primary hover:bg-secondary text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
+            >
+              <ShoppingCartIcon className="h-5 w-5" />
+              <span>View Cart</span>
             </Link>
           </motion.div>
         )}

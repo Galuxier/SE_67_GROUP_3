@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import ShopService from '../services/shop.service';
+import { Types } from 'mongoose';
 
 // สร้างร้านค้าใหม่
 export const createShopController = async (req: Request, res: Response) => {
@@ -19,7 +20,6 @@ export const createShopController = async (req: Request, res: Response) => {
       }
     }
 
-    // ✅ แปลง JSON string เป็น object ก่อนบันทึกลง Database
     if (req.body.contacts) {
       req.body.contacts = JSON.parse(req.body.contacts);
     }
@@ -37,9 +37,6 @@ export const createShopController = async (req: Request, res: Response) => {
     res.status(400).json({ message: 'Error creating shop', error: err });
   }
 };
-
-
-
 
 // ดึงข้อมูลร้านค้าทั้งหมด
 export const getShopsController = async (req: Request, res: Response) => {
@@ -82,5 +79,88 @@ export const deleteShopController = async (req: Request, res: Response) => {
     res.status(200).json(deletedShop);
   } catch (err) {
     res.status(500).json({ message: 'Error deleting shop', error: err });
+  }
+};
+
+// ดึงข้อมูลร้านค้าทั้งหมดของผู้ใช้ (โดย user_id)
+export const getUserShopsController = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id;
+    
+    // ตรวจสอบว่า ID ถูกต้องหรือไม่
+    if (!Types.ObjectId.isValid(userId)) {
+      res.status(400).json({ message: 'Invalid user ID format' });
+    }
+    
+    const shops = await ShopService.getShopsByOwnerId(userId);
+    
+    // ส่งคืนข้อมูลร้านค้าทั้งหมดของผู้ใช้
+    res.status(200).json({
+      success: true,
+      count: shops.length,
+      data: shops
+    });
+  } catch (err) {
+    console.error('Error fetching user shops:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching user shops', 
+      error: err 
+    });
+  }
+};
+
+export const checkShopNameController = async (req: Request, res: Response) => {
+  try {
+    const { shopName } = req.params;
+    
+    if (!shopName) {
+      res.status(400).json({ 
+        success: false, 
+        message: 'Shop name is required' 
+      });
+    }
+    
+    const exists = await ShopService.checkShopNameExists(shopName);
+    
+    // ส่งผลลัพธ์กลับไป
+    res.status(200).json({
+      success: true,
+      exists: exists,
+      message: exists ? 'Shop name already exists' : 'Shop name is available'
+    });
+  } catch (err) {
+    console.error('Error checking shop name:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error checking shop name', 
+      error: err 
+    });
+  }
+};
+
+export const getShopByNameController = async (req: Request, res: Response) => {
+  try {
+    const { shopName } = req.params;
+    
+    if (!shopName) {
+      res.status(400).json({ message: 'Shop name is required' });
+      return;
+    }
+    
+    const shop = await ShopService.getShopByName(shopName);
+    
+    if (!shop) {
+      res.status(404).json({ message: 'Shop not found' });
+      return;
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: shop
+    });
+  } catch (err) {
+    console.error('Error fetching shop by name:', err);
+    res.status(500).json({ message: 'Error fetching shop', error: err });
   }
 };

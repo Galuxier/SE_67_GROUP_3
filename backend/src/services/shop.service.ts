@@ -1,42 +1,43 @@
+import { Types } from 'mongoose';
 import { Shop, ShopDocument } from '../models/shop.model';
 import { BaseService } from './base.service';
 
 class ShopService extends BaseService<ShopDocument> {
   constructor() {
-    super(Shop); // ส่ง Model ไปยัง BaseService
+    super(Shop); // Pass Model to BaseService
+  }
+  
+  // Get all shops by owner ID
+  async getShopsByOwnerId(ownerId: string): Promise<ShopDocument[]> {
+    try {
+      return await Shop.find({ owner_id: ownerId });
+    } catch (error) {
+      console.error('Error fetching shops by owner ID:', error);
+      throw error;
+    }
   }
 
-  // สร้างร้านค้าใหม่
-  async createShop(shopData: any, filePaths: string[]) {
-    console.log(shopData);
-    console.log(filePaths);
-
+  async checkShopNameExists(shopName: string): Promise<boolean> {
     try {
-      // แปลง JSON string เป็น object (ถ้าจำเป็น)
-      if (typeof shopData.address === 'string') {
-        shopData.address = JSON.parse(shopData.address);
-      }
-
-      if (typeof shopData.contact === 'string') {
-        shopData.contact = JSON.parse(shopData.contact);
-      }
-
-      // สร้างร้านค้าใหม่
-      const shop = new Shop({
-        ...shopData,
-        address: shopData.address, // ใส่ address อย่างชัดเจน
-        logo_url: filePaths[0] || '', // เก็บ path ของไฟล์โลโก้
-        license_url: filePaths[1] || '', // เก็บ path ของไฟล์ใบอนุญาต
-      });
-
-      console.log(shop);
-      await shop.save();
-      return shop;
+      // ใช้ RegExp เพื่อทำ case-insensitive search
+      const regex = new RegExp(`^${shopName}$`, 'i');
+      const shop = await Shop.findOne({ shop_name: regex });
+      return !!shop; // return true ถ้าพบร้านค้า, false ถ้าไม่พบ
     } catch (error) {
-      console.error("Failed to create shop:", error);
-      throw new Error("Failed to create shop");
+      console.error('Error checking shop name existence:', error);
+      throw error;
+    }
+  }
+  async getShopByName(shopName: string): Promise<ShopDocument | null> {
+    try {
+      // ค้นหาร้านค้าด้วย shop_name ใช้ case-insensitive ด้วย RegExp
+      const regex = new RegExp(`^${shopName}$`, 'i');
+      return await Shop.findOne({ shop_name: regex });
+    } catch (error) {
+      console.error('Error fetching shop by name:', error);
+      throw error;
     }
   }
 }
-
+ 
 export default new ShopService();

@@ -1,25 +1,25 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 
-// กำหนด interface สำหรับ address
+// Define interface for address
 interface Address {
   province: string;
   district: string;
   subdistrict: string;
   street: string;
   postal_code: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
   information?: string; // optional field
 }
 
-// กำหนด interface สำหรับ contacts (key-value pairs)
+// Define interface for contacts (key-value pairs)
 interface Contacts {
-  [key: string]: string; // key และ value เป็น string
+  [key: string]: string; // key and value are strings
 }
 
-// กำหนด interface สำหรับ Shop document
+// Define interface for Shop document
 export interface ShopDocument extends Document {
-  owner_id: Schema.Types.ObjectId; // อ้างอิงไปยัง User
+  owner_id: Types.ObjectId; // Reference to User
   shop_name: string;
   license?: string; // optional field
   description: string;
@@ -29,14 +29,14 @@ export interface ShopDocument extends Document {
   create_at: Date;
 }
 
-// สร้าง schema สำหรับ Shop
+// Create schema for Shop
 const ShopSchema = new Schema<ShopDocument>({
-  owner_id: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // อ้างอิงไปยังโมเดล User
+  owner_id: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to User model
   shop_name: { type: String, required: true },
   license: { type: String },
   description: { type: String },
   logo: { type: String },
-  contacts: { type: Schema.Types.Mixed, required: true }, // ใช้ Mixed type สำหรับ key-value pairs
+  contacts: { type: Schema.Types.Mixed, required: true }, // Use Mixed type for key-value pairs
   address: {
     province: { type: String },
     district: { type: String },
@@ -50,5 +50,5 @@ const ShopSchema = new Schema<ShopDocument>({
   create_at: { type: Date, default: Date.now, required: true },
 });
 
-// สร้างโมเดล Shop
+// Create and export Shop model
 export const Shop = model<ShopDocument>('Shop', ShopSchema);

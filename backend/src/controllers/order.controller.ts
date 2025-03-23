@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import OrderService from '../services/order.service';
+import { Types } from 'mongoose';
 
 export const createOrderController = async (req: Request, res: Response) => {
   try {
@@ -47,5 +48,24 @@ export const deleteOrderController = async (req: Request, res: Response) => {
     res.status(200).json(deletedOrder);
   } catch (err) {
     res.status(500).json({ message: 'Error deleting order', error: err });
+  }
+};
+
+// New controller method to get orders by shop ID
+export const getOrdersByShopIdController = async (req: Request, res: Response) => {
+  try {
+    const { shop_id } = req.params;
+    
+    // Validate shop_id
+    if (!shop_id) {
+      res.status(400).json({ message: 'Shop ID is required' });
+    }
+    
+    // Find orders where items contain the specified shop_id
+    const orders = await OrderService.getOrdersByShopId(shop_id);
+    
+    res.status(200).json(orders);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching shop orders', error: err });
   }
 };

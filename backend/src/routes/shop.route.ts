@@ -1,40 +1,49 @@
 import express from 'express';
-import{
+import {
     createShopController,
     getShopsController,
     getShopByIdController,
     updateShopController,
-    deleteShopController
+    deleteShopController,
+    getUserShopsController,
+    checkShopNameController
 } from '../controllers/shop.controller';
-// import { shopLicenseUpload, shopLogoUpload } from '../middlewares/uploads/shop.upload';
 import createMultiFieldUploader from '../middlewares/uploads/shop.upload';
-
+import { getOrdersByShopIdController } from '../controllers/order.controller';
+// Create a router instance
 const router = express.Router();
 
+// Configure the shop image uploader
 const shopUpload = createMultiFieldUploader(
     [
-      { name: 'logo', maxCount: 1 }, // ฟิลด์สำหรับโลโก้
-      { name: 'license', maxCount: 1 }, // ฟิลด์สำหรับใบอนุญาต
+      { name: 'logo', maxCount: 1 },
+      { name: 'license', maxCount: 1 },
     ],
-    'shops', // โฟลเดอร์หลัก
-    ['image/'] // อนุญาตเฉพาะไฟล์รูปภาพ
-  );
+    'shops',
+    ['image/']
+);
 
-// router.post(
-//     '/shops',
-//     shopLogoUpload, // Middleware สำหรับอัปโหลดโลโก้
-//     shopLicenseUpload, 
-//     createShopController // Controller สำหรับสร้างร้านค้า
-//   );
-
+// Route to create a new shop
 router.post('/shops', shopUpload, createShopController);
 
+// Route to get all shops
 router.get('/shops', getShopsController);
 
+// Route to get shops by user ID (must be before /shop/:id)
+router.get('/shops/user/:id', getUserShopsController);
+
+// Route to get shop by ID
 router.get('/shop/:id', getShopByIdController);
 
+// Route to update shop
 router.put('/shop/:id', updateShopController);
 
+// Route to delete shop
 router.delete('/shop/:id', deleteShopController);
 
-export default router;
+router.get('/shop/orders/:shop_id', getOrdersByShopIdController);
+
+router.get('/shop/check-name/:shopName', checkShopNameController);
+
+// Export the router
+export default router;  

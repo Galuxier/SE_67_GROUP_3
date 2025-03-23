@@ -144,7 +144,7 @@ const ContactPage = () => {
               Get In <span className="text-yellow-300">Touch</span>
             </h1>
             <p className="text-lg text-white/90 max-w-2xl mx-auto">
-              Have questions about Muay Thai training or our services? Contact us now. Our team is ready to help you on your journey.
+              SE_67_GROUP_3
             </p>
           </motion.div>
         </div>
@@ -156,15 +156,15 @@ const ContactPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            >
+            > 
             <h2 className="text-3xl font-bold text-text mb-6 relative text-center">
                 Our Development Team
                 <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-primary"></span>
             </h2>
             
-            <p className="text-text/80 text-text     text-center max-w-3xl mx-auto mb-10">
+            {/* <p className="text-text/80 text-text     text-center max-w-3xl mx-auto mb-10">
                 Meet the talented developers and designers who brought this platform to life. Feel free to check out their GitHub profiles for more of their amazing work.
-            </p>
+            </p> */}
             
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 {teamMembers.map((member, index) => (
@@ -187,7 +187,7 @@ const ContactPage = () => {
                     
                     <div className="pt-16 px-4 pb-6">
                     <h3 className="text-lg font-semibold text-text">{member.name}</h3>
-                    <p className="text-text/70 text-sm mb-4">{member.role}</p>
+                    <p className="text-text/70 text-text text-sm mb-4">{member.role}</p>
                     
                     <a
                         href={member.github}
