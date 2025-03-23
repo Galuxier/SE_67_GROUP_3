@@ -5,25 +5,21 @@ import GymService from '../services/gym.service';
 // สร้างโรงยิมใหม่
 export const createGymController = async (req: Request, res: Response) => {
   try {
-    const { owner_id, gym_name, description, contact, address } = req.body;
-
-    // ตรวจสอบและระบุประเภทของ req.files
-    const files = req.files as Express.Multer.File[] | undefined;
-
-    // กำหนด basePath ให้ตรงกับตำแหน่งของโฟลเดอร์ uploads
-    const basePath = path.join(__dirname, '../uploads');
-
-    // ดึง path ของไฟล์ที่อัปโหลดและตัดส่วนที่ไม่จำเป็นออก
-    const filePaths = files?.map((file) => {
-      // ใช้ path.relative() เพื่อตัดส่วนของ path ที่ไม่จำเป็น
-      return path.relative(basePath, file.path);
-    }) || [];
-
-    // สร้าง Gym โดยใช้ GymService
-    const gym = await GymService.createGym(
-      { owner_id, gym_name, description, contact, address },
-      filePaths
-    );
+    // แปลง address และ contact จาก JSON string เป็น object (ถ้าข้อมูลเป็น string)
+    if (typeof req.body.address === 'string') {
+      req.body.address = JSON.parse(req.body.address);
+    }
+    
+    if (typeof req.body.contact === 'string') {
+      req.body.contact = JSON.parse(req.body.contact);
+    }
+    
+    console.log("address after parsing:", req.body.address);
+    console.log("contact after parsing:", req.body.contact);
+    console.log("Full body data:", req.body);
+    
+    // ส่งข้อมูลที่แปลงแล้วไปยัง service
+    const gym = await GymService.add(req.body);
 
     res.status(201).json({ success: true, data: gym });
   } catch (err) {

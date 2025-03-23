@@ -35,7 +35,7 @@ interface Address {
 export interface GymDocument extends Document {
   owner_id: Schema.Types.ObjectId;
   gym_name: string;
-  gym_image_url: string[];
+  gym_image_urls: string[];
   contact?: { [key: string]: any };
   description: string;
   facilities: Facility[];
@@ -47,7 +47,7 @@ export interface GymDocument extends Document {
 const GymSchema = new Schema<GymDocument>({
   owner_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
   gym_name: { type: String, required: true }, 
-  gym_image_url: { type: [String] },
+  gym_image_urls: { type: [String] },
   contact: { type: Schema.Types.Mixed },
   description: { type: String},
   facilities: [{

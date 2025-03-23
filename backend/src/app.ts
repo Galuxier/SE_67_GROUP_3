@@ -28,7 +28,7 @@ bodyParserMiddleware(app);
 app.use('/api', userRoutes);
 app.use('/api', adsPackageRoutes);
 app.use('/api', shopRoutes);
-// app.use('/api', gymRoutes);
+app.use('/api', gymRoutes);
 app.use('/api', fightHistoryRoutes);
 app.use('/api', notificationRoutes);
 app.use('/api', courseRoutes);
