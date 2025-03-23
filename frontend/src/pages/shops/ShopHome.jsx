@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 
 function ShopHome() {
   const navigate = useNavigate();
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
   const [priceFilter, setPriceFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("");
   const [products, setProducts] = useState([]);
@@ -19,16 +19,13 @@ function ShopHome() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
+  // Removed activeCategory state as we're using categoryFilter now
   const searchInputRef = useRef(null);
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
-  const [categories, setCategories] = useState(["All"]);
+  const [categories, setCategories] = useState(["All"]); // To store dynamic categories
 
-  // Categories for quick filtering
-  // const categories = ["All", "Gloves", "Protection", "Apparel", "Accessories", "Equipment"];
-
-  // Load products
+  // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
@@ -78,12 +75,12 @@ function ShopHome() {
           // ... other dummy products
         ];
         
-        // setProducts(dummyProducts);
-        // setFilteredProducts(dummyProducts);
+        setProducts(dummyProducts);
+        setFilteredProducts(dummyProducts);
         
         // Extract categories from dummy data as well
-        // const uniqueCategories = [...new Set(dummyProducts.map(product => product.category))];
-        // setCategories(["All", ...uniqueCategories.filter(Boolean)]);
+        const uniqueCategories = [...new Set(dummyProducts.map(product => product.category))];
+        setCategories(["All", ...uniqueCategories.filter(Boolean)]);
       } finally {
         setIsLoading(false);
       }
@@ -91,13 +88,14 @@ function ShopHome() {
 
     fetchProducts();
   }, []);
+
   // Apply filters when they change
   useEffect(() => {
     let filtered = [...products];
 
     // Filter by category
-    if (activeCategory !== "All") {
-      filtered = filtered.filter(product => product.category === activeCategory);
+    if (categoryFilter && categoryFilter !== "All") {
+      filtered = filtered.filter(product => product.category === categoryFilter);
     }
 
     // Filter by search query
@@ -111,7 +109,7 @@ function ShopHome() {
       );
     }
 
-    // Apply price filter
+    // Apply price filter and sort
     if (sortOrder === "low-to-high") {
       filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
     } else if (sortOrder === "high-to-low") {
@@ -119,26 +117,23 @@ function ShopHome() {
     }
 
     setFilteredProducts(filtered);
-  }, [products, activeCategory, searchQuery, sortOrder]);
+  }, [products, categoryFilter, searchQuery, sortOrder]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  const handleCategorySelect = (category) => {
-    setActiveCategory(category);
-  };
+  // Remove handleCategorySelect as we're now using the select dropdown
 
   const toggleFilterModal = () => {
     setIsFilterModalOpen(!isFilterModalOpen);
   };
 
   const handleClearFilters = () => {
-    setCategoryFilter("");
+    setCategoryFilter("All");
     setPriceFilter("");
     setSortOrder("");
     setSearchQuery("");
-    setActiveCategory("All");
     if (searchInputRef.current) {
       searchInputRef.current.value = "";
     }
@@ -240,9 +235,9 @@ function ShopHome() {
           {categories.map((category) => (
             <motion.button
               key={category}
-              onClick={() => handleCategorySelect(category)}
+              onClick={() => setCategoryFilter(category)}
               className={`flex-shrink-0 px-4 py-2 rounded-full font-medium snap-start ${
-                activeCategory === category
+                categoryFilter === category
                   ? "bg-primary text-white shadow-md"
                   : "bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-text"
               } transition-all duration-200`}
@@ -280,6 +275,7 @@ function ShopHome() {
                 setPriceFilter={setPriceFilter}
                 sortOrder={sortOrder}
                 setSortOrder={setSortOrder}
+                categories={categories}
               />
             </div>
           </motion.div>
@@ -294,7 +290,7 @@ function ShopHome() {
                   {isLoading 
                     ? "Finding products..."
                     : filteredProducts.length > 0 
-                      ? `${filteredProducts.length} Products ${activeCategory !== "All" ? `in ${activeCategory}` : "Found"}`
+                      ? `${filteredProducts.length} Products ${categoryFilter !== "All" ? `in ${categoryFilter}` : "Found"}`
                       : "No products matching your criteria"
                   }
                 </h2>
@@ -302,13 +298,13 @@ function ShopHome() {
               
               <div className="flex flex-wrap items-center gap-3">
                 {/* Active filters display */}
-                {(activeCategory !== "All" || searchQuery) && (
+                {(categoryFilter !== "All" || searchQuery) && (
                   <div className="flex flex-wrap items-center gap-2">
-                    {activeCategory !== "All" && (
+                    {categoryFilter !== "All" && (
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
-                        {activeCategory}
+                        {categoryFilter}
                         <button 
-                          onClick={() => setActiveCategory("All")}
+                          onClick={() => setCategoryFilter("All")}
                           className="ml-1 text-purple-600 hover:text-purple-800 dark:text-purple-400"
                         >
                           &times;
