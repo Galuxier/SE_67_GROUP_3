@@ -5,7 +5,8 @@ import {
     getShopByIdController,
     updateShopController,
     deleteShopController,
-    getUserShopsController
+    getUserShopsController,
+    checkShopNameController
 } from '../controllers/shop.controller';
 import createMultiFieldUploader from '../middlewares/uploads/shop.upload';
 import { getOrdersByShopIdController } from '../controllers/order.controller';
@@ -41,6 +42,8 @@ router.put('/shop/:id', updateShopController);
 router.delete('/shop/:id', deleteShopController);
 
 router.get('/shop/orders/:shop_id', getOrdersByShopIdController);
+
+router.get('/shop/check-name/:shopName', checkShopNameController);
 
 // Export the router
 export default router;  

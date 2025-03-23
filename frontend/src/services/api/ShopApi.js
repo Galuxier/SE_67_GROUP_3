@@ -54,6 +54,7 @@ export async function updateShop(id, shopData) {
 export async function getShopById(id) {
   try {
     const response = await api.get(`/shop/${id}`);
+    console.log("getsssss: ", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching shop:", error);
@@ -142,16 +143,12 @@ export async function updateProductStock(productId, stock) {
   }
 }
 
-// export default {
-//   createProduct,
-//   registerShop,
-//   updateShop,
-//   getShopById,
-//   getUserShops,
-//   getShopProducts,
-//   getShopOrders,
-//   updateOrderStatus,
-//   getShopAnalytics,
-//   deleteProduct,
-//   updateProductStock
-// };
+export async function checkShopNameExists(shopName) {
+  try {
+    const response = await api.get(`/shop/check-name/${encodeURIComponent(shopName)}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error checking shop name:", error);
+    throw error;
+  }
+}

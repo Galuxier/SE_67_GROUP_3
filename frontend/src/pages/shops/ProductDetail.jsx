@@ -22,7 +22,7 @@ import {
 import ImageViewer from "../../components/ImageViewer";
 
 export default function ProductDetail() {
-  const { id } = useParams();
+  const { product_id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -48,7 +48,7 @@ export default function ProductDetail() {
       
       try {
         // Get product details
-        const productResponse = await getProductById(id);
+        const productResponse = await getProductById(product_id);
         
         if (!productResponse) {
           throw new Error("Product not found");
@@ -58,7 +58,7 @@ export default function ProductDetail() {
         setProduct(productData);
         
         // Fetch variants
-        const variantsResponse = await getVariantsByProductId(id);
+        const variantsResponse = await getVariantsByProductId(product_id);
         const variantsList = variantsResponse.data || variantsResponse || [];
         setVariants(variantsList);
         
@@ -107,7 +107,7 @@ export default function ProductDetail() {
     };
     
     fetchProductData();
-  }, [id]);
+  }, [product_id]);
 
   // Helper function to get available attribute values
   const getAttributeValues = (attrName) => {
@@ -587,7 +587,7 @@ export default function ProductDetail() {
         {shopData && (
           <div className="mt-8 border-t border-border/30 pt-6">
             <Link
-              to={`/shop/profile/${shopData._id}`}
+              to={`/shop/${shopData._id}`}
               className="block p-4 border border-border rounded-lg bg-card hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               <div className="flex items-center">

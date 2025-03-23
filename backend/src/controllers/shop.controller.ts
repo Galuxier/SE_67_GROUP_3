@@ -109,3 +109,58 @@ export const getUserShopsController = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const checkShopNameController = async (req: Request, res: Response) => {
+  try {
+    const { shopName } = req.params;
+    
+    if (!shopName) {
+      res.status(400).json({ 
+        success: false, 
+        message: 'Shop name is required' 
+      });
+    }
+    
+    const exists = await ShopService.checkShopNameExists(shopName);
+    
+    // ส่งผลลัพธ์กลับไป
+    res.status(200).json({
+      success: true,
+      exists: exists,
+      message: exists ? 'Shop name already exists' : 'Shop name is available'
+    });
+  } catch (err) {
+    console.error('Error checking shop name:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error checking shop name', 
+      error: err 
+    });
+  }
+};
+
+export const getShopByNameController = async (req: Request, res: Response) => {
+  try {
+    const { shopName } = req.params;
+    
+    if (!shopName) {
+      res.status(400).json({ message: 'Shop name is required' });
+      return;
+    }
+    
+    const shop = await ShopService.getShopByName(shopName);
+    
+    if (!shop) {
+      res.status(404).json({ message: 'Shop not found' });
+      return;
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: shop
+    });
+  } catch (err) {
+    console.error('Error fetching shop by name:', err);
+    res.status(500).json({ message: 'Error fetching shop', error: err });
+  }
+};

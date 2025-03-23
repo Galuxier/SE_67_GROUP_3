@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ShoppingCartIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { getImage } from "../services/api/ImageApi";
 import { useState, useEffect } from "react";
+// Note: We're dynamically importing getShopById in the component to avoid issues with circular dependencies
 
 function ProductCard({ products = [], size = "default" }) {
   const navigate = useNavigate();
@@ -153,7 +154,7 @@ const ProductCardItem = ({ product, size = "default" }) => {
   // Handle quick view
   const handleQuickView = (e) => {
     e.stopPropagation();
-    navigate(`/shop/product/${product._id || product.id}`);
+    navigateToProductDetail();
   };
 
   // Handle add to cart
@@ -163,9 +164,59 @@ const ProductCardItem = ({ product, size = "default" }) => {
     console.log("Adding to cart:", product);
   };
 
+  // Get shop name from API
+  const getShopNameForUrl = async () => {
+    if (!product.shop_id) {
+      console.log("No shop_id available for product:", product);
+      return "shop"; // Default fallback
+    }
+    
+    console.log("Fetching shop_id:", product.shop_id);
+    
+    try {
+      // Import getShopById at the top of the file
+      const { getShopById } = await import("../services/api/ShopApi");
+      const response = await getShopById(product.shop_id);
+      console.log("Shop API response:", response);
+      
+      if (response && response.shop_name) {
+        // Format shop name for URL (convert to lowercase, replace spaces with hyphens)
+        return encodeURIComponent(response.shop_name.replace(/\s+/g, '-').toLowerCase());
+      } else {
+        // Fallback to shop_id if no shop_name is found
+        return product.shop_id;
+      }
+    } catch (error) {
+      console.error("Error fetching shop details:", error);
+      // Fallback to using product.shop_name or shop_id if API call fails
+      if (product.shop_name) {
+        return encodeURIComponent(product.shop_name.replace(/\s+/g, '-').toLowerCase());
+      }
+      return product.shop_id || "shop";
+    }
+  };
+
+  // Navigate to product detail page with shop name from API
+  const navigateToProductDetail = async () => {
+    const productId = product._id || product.id;
+    
+    try {
+      // Show loading state if needed
+      const shopName = await getShopNameForUrl();
+      
+      // Navigate to /shop/:shop_name/:product_id
+      // navigate(`/shop/${shopName}/${productId}`);
+      navigate(`/shop/${product.shop_id}/${productId}`);
+    } catch (error) {
+      console.error("Error navigating to product:", error);
+      // Fallback navigation using just the product ID if there's an error
+      navigate(`/shop/product/${productId}`);
+    }
+  };
+
   // Handle product click
   const handleProductClick = () => {
-    navigate(`/shop/product/${product._id || product.id}`);
+    navigateToProductDetail();
   };
 
   const styles = getCardStyles();

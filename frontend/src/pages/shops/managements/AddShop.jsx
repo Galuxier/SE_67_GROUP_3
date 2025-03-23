@@ -1,8 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { registerShop } from "../../../services/api/ShopApi";
 import { useAuth } from "../../../context/AuthContext";
-import { toast } from "react-toastify";
 import { 
   ArrowLeftIcon,
   PhotoIcon,
@@ -13,13 +11,15 @@ import {
 import AddressForm from "../../../components/forms/AddressForm";
 import ContactForm from "../../../components/forms/ContactForm";
 import CropImageModal from "../../../components/shops/CropImageModal";
+import { registerShop, checkShopNameExists } from "../../../services/api/ShopApi";
+import { toast, ToastContainer } from "react-toastify";
+import { ClipLoader } from "react-spinners";
 
 export default function AddShop() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const fileInputRef = useRef(null);
   const licenseInputRef = useRef(null);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formComplete, setFormComplete] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -128,7 +128,7 @@ export default function AddShop() {
   };
 
   // Handle next step navigation
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     // Validate current step
     const currentErrors = {};
     
@@ -141,6 +141,25 @@ export default function AddShop() {
       }
       if (!shopData.logo) {
         currentErrors.logo = "Shop logo is required";
+      }
+      
+      // ถ้าไม่มี error และมีชื่อร้าน ให้เช็คชื่อซ้ำ
+      if (Object.keys(currentErrors).length === 0 && shopData.shop_name.trim()) {
+        try {
+          setIsSubmitting(true); // ใช้ isSubmitting state ที่มีอยู่แล้ว
+          const response = await checkShopNameExists(shopData.shop_name.trim());
+          
+          if (response.exists) {
+            // ถ้าชื่อซ้ำ
+            currentErrors.shop_name = "This shop name already exists. Please choose another name.";
+            toast.error("Shop name already exists");
+          }
+        } catch (error) {
+          console.error("Error checking shop name:", error);
+          toast.error("Error checking shop name availability");
+        } finally {
+          setIsSubmitting(false);
+        }
       }
     }
     else if (currentStep === 2) {
@@ -523,16 +542,30 @@ export default function AddShop() {
           {/* Action buttons */}
           {!formComplete && (
             <div className="bg-card border-t border-border/20 dark:border-border/10 p-6 flex justify-between">
-              {currentStep > 1 ? (
-                <button
-                  type="button"
-                  onClick={handlePrevStep}
-                  className="px-4 py-2 border border-border dark:border-border/50 rounded-lg text-text hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                >
-                  Previous
-                </button>
-              ) : (
-                <div></div>
+              {currentStep === 1 && (
+                <div className="flex gap-4 justify-center mt-6">
+                  <button
+                    onClick={handlePrevStep}
+                    className="px-6 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    Back
+                  </button>
+                  
+                  <button
+                    onClick={handleNextStep}
+                    disabled={isSubmitting}
+                    className="px-6 py-2 bg-primary hover:bg-secondary text-white rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center">
+                        <ClipLoader size={16} color="#ffffff" />
+                        <span className="ml-2">Checking...</span>
+                      </div>
+                    ) : (
+                      "Continue"
+                    )}
+                  </button>
+                </div>
               )}
               
               {currentStep < 3 ? (
