@@ -11,6 +11,7 @@ import GymManageDashboard from "../pages/gyms/managements/GymManageDashboard";
 import GymList from "../pages/gyms/managements/GymList";
 import AddGym from "../pages/gyms/managements/AddGym";
 
+import CreateCourse from "../pages/courses/CreateCourse";
 function GymRoutes() {
   return (
       <Routes>
@@ -32,9 +33,11 @@ function GymRoutes() {
           <Route index element={<GymManageDashboard />} />
           <Route path="/management/gymlist" element={<GymList />} />
           <Route path="/management/create" element={<AddGym />} />
+          
         </Route>
 
       {/* ไม่มี Layout(Navbar) */}
+      <Route path="/manage/courses/create" element ={<CreateCourse />}/>
       <Route path="/forrent" element={<GymForRent />} />
     </Routes>
   );

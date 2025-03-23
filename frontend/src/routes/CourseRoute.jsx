@@ -25,7 +25,7 @@ function CourseRoutes() {
         <Route path ="/editCourseFrom" element={<EditCourseFrom />} />
         <Route path ="/editCourse" element={<EditCourse />} />
         <Route path ="/courseFrom" element={<CourseFrom />} />
-        <Route path ="/createCourse" element={<CreateCourse />} />
+        <Route path ="/create" element={<CreateCourse />} />
       </Routes>
   );
 }

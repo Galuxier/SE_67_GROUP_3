@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import propTypes from "prop-types";
+import { PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 const InputField = ({ label, name, type, min, value, onChange }) => (
   <div className="mb-4">
@@ -93,8 +94,11 @@ const TextArea = ({ label, name, value, onChange }) => (
 export default function CreateCourse() {
   const navigate = useNavigate();
   const location = useLocation();
-
-  // ล้างข้อมูลถ้ามาจาก Home
+  const fileInputRef = useRef(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  
+  // Clear data if coming from Home
   useEffect(() => {
     if (location.state?.fromHome) {
       localStorage.removeItem("courseData");
@@ -120,7 +124,7 @@ export default function CreateCourse() {
 
   const [errors, setErrors] = useState({});
 
-  // บันทึกข้อมูลเมื่อมีการเปลี่ยนแปลง
+  // Save data when it changes
   useEffect(() => {
     localStorage.setItem("courseData", JSON.stringify(formData));
   }, [formData]);
@@ -146,19 +150,54 @@ export default function CreateCourse() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
     if (validateForm()) {
-      // บันทึกข้อมูลและส่งต่อไปยังหน้า CourseFrom
+      // Create FormData object for file upload
+      const imageCourse = new FormData();
+      
+      // Append file if selected
+      if (selectedFile) {
+        imageCourse.append('course_image', selectedFile);
+      }
+      
+      // Save form data to localStorage
       localStorage.setItem("courseData", JSON.stringify(formData));
 
-      // ล้างข้อมูลกิจกรรมเดิม (ถ้าสร้างคอร์สใหม่)
+      // Clear activities if coming from home
       if (location.state?.fromHome) {
         localStorage.removeItem("activities");
       }
-      console.log("dsadsadasd",formData);
-      navigate("/course/courseFrom", { state: { formData } });
+      
+      console.log("Form submitted:", formData);
+      console.log("Image data:", selectedFile ? selectedFile.name : "No image");
+      
+      // Navigate to the next page with both form data and image data
+      navigate("/course/courseFrom", { 
+        state: { 
+          formData: formData,
+          imageCourse: selectedFile
+        } 
+      });
     }
   };
-
+  
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setSelectedFile(null);
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+  
+  const handleFileChange = (e) => {
+    if (e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+  
   const handleBack = () => {
     localStorage.removeItem("courseData");
     localStorage.removeItem("activities");
@@ -172,8 +211,55 @@ export default function CreateCourse() {
           Create a Course
         </h2>
         <form className="mt-4" onSubmit={handleSubmit}>
+
+          {/* Single Photo Upload */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2 text-gray-700">Course Photo</label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 justify-center text-center bg-gray-50">
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileChange}
+                id="fileInput"
+                accept="image/*"
+              />
+              
+              {imagePreview ? (
+                <div className="relative">
+                  <img
+                    src={imagePreview}
+                    alt="Course preview"
+                    className="w-full h-48 object-cover rounded-lg border border-gray-300"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute top-2 right-2 p-1 bg-rose-500 rounded-full hover:bg-rose-600 transition-colors"
+                  >
+                    <XMarkIcon className="h-5 w-5 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current.click()}
+                  className="flex flex-col items-center justify-center w-full py-6 hover:bg-gray-100 transition-colors"
+                >
+                  <PhotoIcon className="h-12 w-12 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-500">
+                    Click to upload course photo
+                  </p>
+                  <p className="mt-1 text-xs text-gray-400">
+                    PNG, JPG (recommended size: 800x600px)
+                  </p>
+                </button>
+              )}
+            </div>
+          </div>
+
           <InputField
-            label="CourseName"
+            label="Course Name"
             name="course_name"
             value={formData.course_name}
             onChange={handleChange}
@@ -198,7 +284,7 @@ export default function CreateCourse() {
             name="startDate"
             value={formData.startDate}
             onChange={handleChange}
-            min={new Date().toISOString().split("T")[0]}
+           // min={new Date().toISOString().split("T")[0]}
           />
           {errors.startDate && (
             <p className="text-red-500 text-sm">{errors.startDate}</p>
@@ -228,7 +314,7 @@ export default function CreateCourse() {
           )}
 
           <TextArea
-            label="description"
+            label="Description"
             name="description"
             value={formData.description}
             onChange={handleChange}
