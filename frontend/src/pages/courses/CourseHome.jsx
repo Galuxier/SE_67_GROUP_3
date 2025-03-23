@@ -31,84 +31,84 @@ function CourseHome() {
   useEffect(() => {
     // Mock data for development
     const mockCourses = [
-      {
-        id: 1,
-        course_name: "Fundamentals of Muay Thai",
-        image_url: new URL("../../assets/images/muaythai-001.jpg", import.meta.url).href,
-        level: "Beginner",
-        price: 2000,
-        location: { province: "Bangkok", district: "Pathumwan" },
-        description: "Master the basics of Muay Thai with expert trainers in a welcoming environment",
-        featured: true,
-        start_date: "2025-04-15",
-        end_date: "2025-05-30",
-        spots_left: 8
-      },
-      {
-        id: 2,
-        course_name: "Advanced Clinch Techniques",
-        image_url: new URL("../../assets/images/muaythai-002.jpg", import.meta.url).href,
-        level: "Advanced",
-        price: 3500,
-        location: { province: "Phuket", district: "Kathu" },
-        description: "Deep dive into professional clinch techniques used in championship fights",
-        featured: true,
-        start_date: "2025-04-20",
-        end_date: "2025-06-10",
-        spots_left: 4
-      },
-      {
-        id: 3,
-        course_name: "Kids Muay Thai (Ages 7-12)",
-        image_url: new URL("../../assets/images/muaythai-003.png", import.meta.url).href,
-        level: "For Kids",
-        price: 1800,
-        location: { province: "Chiang Mai", district: "Mueang" },
-        description: "Fun, safe introduction to Muay Thai basics for children",
-        featured: false,
-        start_date: "2025-05-01",
-        end_date: "2025-06-30",
-        spots_left: 10
-      },
-      {
-        id: 4,
-        course_name: "Competition Preparation",
-        image_url: new URL("../../assets/images/muaythai-001.jpg", import.meta.url).href,
-        level: "Advanced",
-        price: 4500,
-        location: { province: "Bangkok", district: "Watthana" },
-        description: "Intensive training program for fighters preparing for competition",
-        featured: false,
-        start_date: "2025-05-10",
-        end_date: "2025-07-10",
-        spots_left: 6
-      },
-      {
-        id: 5,
-        course_name: "One-on-One Training",
-        image_url: new URL("../../assets/images/muaythai-002.jpg", import.meta.url).href,
-        level: "Private",
-        price: 5000,
-        location: { province: "Phuket", district: "Kathu" },
-        description: "Personalized training sessions with championship fighters",
-        featured: true,
-        start_date: "Flexible",
-        end_date: "Flexible",
-        spots_left: 3
-      },
-      {
-        id: 6,
-        course_name: "Intermediate Techniques",
-        image_url: new URL("../../assets/images/muaythai-003.png", import.meta.url).href,
-        level: "Intermediate",
-        price: 2800,
-        location: { province: "Bangkok", district: "Bang Kapi" },
-        description: "Progress your skills with advanced combinations and defense tactics",
-        featured: false,
-        start_date: "2025-04-25",
-        end_date: "2025-06-15",
-        spots_left: 7
-      }
+      // {
+      //   id: 1,
+      //   course_name: "Fundamentals of Muay Thai",
+      //   image_url: new URL("../../assets/images/muaythai-001.jpg", import.meta.url).href,
+      //   level: "Beginner",
+      //   price: 2000,
+      //   location: { province: "Bangkok", district: "Pathumwan" },
+      //   description: "Master the basics of Muay Thai with expert trainers in a welcoming environment",
+      //   featured: true,
+      //   start_date: "2025-04-15",
+      //   end_date: "2025-05-30",
+      //   spots_left: 8
+      // },
+      // {
+      //   id: 2,
+      //   course_name: "Advanced Clinch Techniques",
+      //   image_url: new URL("../../assets/images/muaythai-002.jpg", import.meta.url).href,
+      //   level: "Advanced",
+      //   price: 3500,
+      //   location: { province: "Phuket", district: "Kathu" },
+      //   description: "Deep dive into professional clinch techniques used in championship fights",
+      //   featured: true,
+      //   start_date: "2025-04-20",
+      //   end_date: "2025-06-10",
+      //   spots_left: 4
+      // },
+      // {
+      //   id: 3,
+      //   course_name: "Kids Muay Thai (Ages 7-12)",
+      //   image_url: new URL("../../assets/images/muaythai-003.png", import.meta.url).href,
+      //   level: "For Kids",
+      //   price: 1800,
+      //   location: { province: "Chiang Mai", district: "Mueang" },
+      //   description: "Fun, safe introduction to Muay Thai basics for children",
+      //   featured: false,
+      //   start_date: "2025-05-01",
+      //   end_date: "2025-06-30",
+      //   spots_left: 10
+      // },
+      // {
+      //   id: 4,
+      //   course_name: "Competition Preparation",
+      //   image_url: new URL("../../assets/images/muaythai-001.jpg", import.meta.url).href,
+      //   level: "Advanced",
+      //   price: 4500,
+      //   location: { province: "Bangkok", district: "Watthana" },
+      //   description: "Intensive training program for fighters preparing for competition",
+      //   featured: false,
+      //   start_date: "2025-05-10",
+      //   end_date: "2025-07-10",
+      //   spots_left: 6
+      // },
+      // {
+      //   id: 5,
+      //   course_name: "One-on-One Training",
+      //   image_url: new URL("../../assets/images/muaythai-002.jpg", import.meta.url).href,
+      //   level: "Private",
+      //   price: 5000,
+      //   location: { province: "Phuket", district: "Kathu" },
+      //   description: "Personalized training sessions with championship fighters",
+      //   featured: true,
+      //   start_date: "Flexible",
+      //   end_date: "Flexible",
+      //   spots_left: 3
+      // },
+      // {
+      //   id: 6,
+      //   course_name: "Intermediate Techniques",
+      //   image_url: new URL("../../assets/images/muaythai-003.png", import.meta.url).href,
+      //   level: "Intermediate",
+      //   price: 2800,
+      //   location: { province: "Bangkok", district: "Bang Kapi" },
+      //   description: "Progress your skills with advanced combinations and defense tactics",
+      //   featured: false,
+      //   start_date: "2025-04-25",
+      //   end_date: "2025-06-15",
+      //   spots_left: 7
+      // }
     ];
 
     // Simulate API call

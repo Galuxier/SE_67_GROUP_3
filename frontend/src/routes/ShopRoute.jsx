@@ -20,9 +20,9 @@ function ShopRoutes() {
       {/* Main Shop Routes with Navbar */}
       <Route path="/" element={<MainLayout />}>
         <Route index element={<ShopHome />} />
-        <Route path="product/:id" element={<ProductDetail />} />
+        <Route path="/:shop_id/:product_id" element={<ProductDetail />} />
         <Route path="cart" element={<Cart />} />
-        <Route path="profile/:id" element={<ShopProfile />} />
+        <Route path="/:shop_id" element={<ShopProfile />} />
       </Route>
 
       {/* Shop Management Routes */}

@@ -5,7 +5,7 @@ import { ShoppingCartIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { getImage } from "../services/api/ImageApi";
 import { useState, useEffect } from "react";
 
-function ProductCard({ products = [] }) {
+function ProductCard({ products = [], size = "default" }) {
   const navigate = useNavigate();
 
   // Handle empty products array
@@ -17,18 +17,72 @@ function ProductCard({ products = [] }) {
     );
   }
 
+  // Determine grid classes based on size
+  const getGridClasses = () => {
+    switch (size) {
+      case "small":
+        return "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4";
+      case "medium":
+        return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5";
+      case "default":
+      default:
+        return "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6";
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className={getGridClasses()}>
       {products.map((product) => (
-        <ProductCardItem key={product._id || product.id} product={product} />
+        <ProductCardItem 
+          key={product._id || product.id} 
+          product={product} 
+          size={size}
+        />
       ))}
     </div>
   );
 }
 
-const ProductCardItem = ({ product }) => {
+const ProductCardItem = ({ product, size = "default" }) => {
   const navigate = useNavigate();
   const [productImage, setProductImage] = useState("");
+  
+  // Set animation variants and styles based on size
+  const getCardStyles = () => {
+    switch (size) {
+      case "small":
+        return {
+          imageClasses: "aspect-square",
+          titleClasses: "text-sm font-medium line-clamp-1",
+          descriptionClasses: "text-xs line-clamp-1",
+          priceClasses: "text-sm font-semibold",
+          padding: "p-3",
+          showDescription: false,
+          showActions: false
+        };
+      case "medium":
+        return {
+          imageClasses: "aspect-[4/3]",
+          titleClasses: "text-base font-medium line-clamp-1",
+          descriptionClasses: "text-sm line-clamp-2",
+          priceClasses: "text-base font-semibold",
+          padding: "p-4",
+          showDescription: true,
+          showActions: true
+        };
+      case "default":
+      default:
+        return {
+          imageClasses: "aspect-[4/3]",
+          titleClasses: "font-medium text-lg mb-1 text-text line-clamp-1",
+          descriptionClasses: "text-sm text-text/70 mb-3 line-clamp-2",
+          priceClasses: "text-text font-semibold",
+          padding: "p-4",
+          showDescription: true,
+          showActions: true
+        };
+    }
+  };
   
   // Animation variants
   const cardVariants = {
@@ -47,25 +101,29 @@ const ProductCardItem = ({ product }) => {
   useEffect(() => {
     const fetchProductImage = async () => {
       try {
-        console.log(product.product_image_urls[0]);
+        const fallbackImage = new URL("../assets/images/product-001.webp", import.meta.url).href;
         
         // If product has image URLs
         if (product.product_image_urls && product.product_image_urls.length > 0) {
           // Try to get image from API
           try {
             const imageUrl = await getImage(product.product_image_urls[0]);
-            setProductImage(imageUrl);
+            setProductImage(imageUrl || fallbackImage);
           } catch (error) {
             console.error("Error fetching product image:", error);
-            // Use fallback image
-            setProductImage(new URL("../assets/images/product-001.webp", import.meta.url).href);
+            setProductImage(fallbackImage);
           }
-        } else {
-          // Use fallback image if no product images
-          setProductImage(new URL("../assets/images/product-001.webp", import.meta.url).href);
+        } 
+        // Handle direct image_url property
+        else if (product.image_url) {
+          setProductImage(product.image_url);
+        }
+        // Use fallback image if no product images
+        else {
+          setProductImage(fallbackImage);
         }
       } catch (error) {
-        console.error("Error setting product image:", error);
+        console.error("Error in image handling:", error);
         // Use fallback image on any error
         setProductImage(new URL("../assets/images/product-001.webp", import.meta.url).href);
       }
@@ -110,6 +168,8 @@ const ProductCardItem = ({ product }) => {
     navigate(`/shop/product/${product._id || product.id}`);
   };
 
+  const styles = getCardStyles();
+
   return (
     <motion.div
       className="bg-card rounded-xl overflow-hidden shadow-md border border-border/30 hover:shadow-xl transition-all relative group"
@@ -121,56 +181,58 @@ const ProductCardItem = ({ product }) => {
       whileTap="tap"
     >
       {/* Product image with overlay */}
-      <div className="relative overflow-hidden aspect-[4/3]">
+      <div className={`relative overflow-hidden ${styles.imageClasses}`}>
         <img
-          src={productImage}
+          src={productImage || null}
           alt={product.product_name || "Product"}
           className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"></div>
         
         {/* Quick action buttons */}
-        <motion.div 
-          className="absolute bottom-4 inset-x-0 flex justify-center space-x-2"
-          initial="initial"
-          variants={buttonVariants}
-        >
-          <button
-            onClick={handleQuickView}
-            className="p-2 rounded-full bg-white hover:bg-gray-100 text-gray-800 shadow-md transition-colors"
-            title="Quick view"
+        {styles.showActions && (
+          <motion.div 
+            className="absolute bottom-4 inset-x-0 flex justify-center space-x-2"
+            initial="initial"
+            variants={buttonVariants}
           >
-            <EyeIcon className="h-5 w-5" />
-          </button>
-          <button
-            onClick={handleAddToCart}
-            className="p-2 rounded-full bg-primary hover:bg-secondary text-white shadow-md transition-colors"
-            title="Add to cart"
-          >
-            <ShoppingCartIcon className="h-5 w-5" />
-          </button>
-        </motion.div>
+            <button
+              onClick={handleQuickView}
+              className="p-2 rounded-full bg-white hover:bg-gray-100 text-gray-800 shadow-md transition-colors"
+              title="Quick view"
+            >
+              <EyeIcon className="h-5 w-5" />
+            </button>
+            <button
+              onClick={handleAddToCart}
+              className="p-2 rounded-full bg-primary hover:bg-secondary text-white shadow-md transition-colors"
+              title="Add to cart"
+            >
+              <ShoppingCartIcon className="h-5 w-5" />
+            </button>
+          </motion.div>
+        )}
       </div>
 
       {/* Product info */}
-      <div className="p-4">
-        <h3 className="font-medium text-lg mb-1 text-text line-clamp-1">{product.product_name || "Product"}</h3>
+      <div className={styles.padding}>
+        <h3 className={styles.titleClasses}>{product.product_name || "Product"}</h3>
         
         {/* Shop name if available */}
-        {product.shop_name && (
+        {product.shop_name && size !== "small" && (
           <p className="text-sm text-text/70 mb-2">{product.shop_name}</p>
         )}
         
         {/* Description if available */}
-        {product.description && (
-          <p className="text-sm text-text/70 mb-3 line-clamp-2">{product.description}</p>
+        {styles.showDescription && product.description && (
+          <p className={styles.descriptionClasses}>{product.description}</p>
         )}
         
         {/* Price */}
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center">
             <span className="text-text/90 text-sm mr-1">฿</span>
-            <span className="text-text font-semibold">{getDisplayPrice()}</span>
+            <span className={styles.priceClasses}>{getDisplayPrice()}</span>
             
             {/* Show price range indicator if product has variants */}
             {product.variants?.length > 1 && (
@@ -178,9 +240,11 @@ const ProductCardItem = ({ product }) => {
             )}
           </div>
           
-          <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-text/70">
-            {product.category || "Uncategorized"}
-          </span>
+          {size !== "small" && (
+            <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-text/70">
+              {product.category || "Uncategorized"}
+            </span>
+          )}
         </div>
       </div>
       
@@ -190,13 +254,6 @@ const ProductCardItem = ({ product }) => {
           New
         </div>
       )}
-      
-      {/* Sale badge if needed */}
-      {/* {product.onSale && (
-        <div className="absolute top-3 right-3 bg-red-500 text-white text-xs uppercase font-bold rounded-full px-2 py-1 z-10">
-          Sale
-        </div>
-      )} */}
     </motion.div>
   );
 };
