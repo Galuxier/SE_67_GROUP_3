@@ -53,7 +53,7 @@ const ProductCardItem = ({ product }) => {
   // Handle quick view
   const handleQuickView = (e) => {
     e.stopPropagation();
-    navigate(`/shop/product/${product.id}`);
+    navigate(`/shop/product/${product._id}`);
   };
 
   // Handle add to cart
@@ -65,7 +65,7 @@ const ProductCardItem = ({ product }) => {
 
   // Handle product click
   const handleProductClick = () => {
-    navigate(`/shop/product/${product.id}`);
+    navigate(`/shop/product/${product._id}`);
   };
 
   return (
