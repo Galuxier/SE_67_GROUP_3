@@ -6,7 +6,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 export default function CourseFrom() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  
+  const location = useLocation();
+  const { imageCourse } = location.state || {};
   // รับค่าข้อมูลคอร์สจาก state หรือ localStorage
   const courseData = state?.formDataEdit || JSON.parse(localStorage.getItem("courseData"));
   
@@ -35,42 +36,47 @@ export default function CourseFrom() {
           const [day, month] = dateStr.split('/');
           const currentYear = new Date().getFullYear();
           return new Date(currentYear, parseInt(month) - 1, parseInt(day));
-        } 
+        }
         // รูปแบบอื่นๆ
         return new Date(dateStr);
       };
-      
+  
       const startDate = parseDateString(courseData.startDate);
       const endDate = parseDateString(courseData.endDate);
-      
+  
       // คำนวณความต่างของวันและบวก 1 (เพื่อรวมวันเริ่มต้น)
       const diffTime = Math.abs(endDate - startDate);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  
+      // ตรวจสอบการอัปเดต totalDays
+      if (totalDays !== diffDays) {
+        setTotalDays(diffDays);  // อัปเดตเฉพาะเมื่อ totalDays เปลี่ยนแปลง
+      }
       
-      setTotalDays(diffDays);
-      
-      // สร้างรายการวันที่ในรูปแบบ DD/MM และ YYYY-MM-DD (เหมือน EditCourseFrom)
+      // สร้างรายการวันที่ในรูปแบบ DD/MM และ YYYY-MM-DD
       const dates = [];
       const isoDateFormat = [];
       for (let i = 0; i < diffDays; i++) {
         const date = new Date(startDate);
         date.setDate(startDate.getDate() + i);
-        
+  
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
-        
+  
         dates.push(`${day}/${month}`);
         isoDateFormat.push(`${year}-${month}-${day}`);
       }
-      
-      // ตั้งค่ารายการวันที่เป็น object เหมือนใน EditCourseFrom
+  
+      // ตั้งค่ารายการวันที่เป็น object
       setCourseDates({
         display: dates,
         iso: isoDateFormat
       });
     }
-  }, [courseData]);
+  }, [courseData, totalDays]); // รวมทั้ง courseData และ totalDays ใน dependency array
+  
+  
   
   // โหลดกิจกรรมที่บันทึกไว้
   useEffect(() => {
@@ -118,42 +124,94 @@ export default function CourseFrom() {
     }
   };
   
-  const handleCreateCourse = () => {
-    // เตรียมข้อมูลสำหรับสร้างคอร์สเรียน (ปรับรูปแบบเหมือน EditCourseFrom)
-    const formattedActivities = activities.map((activity) => ({
-      description: activity.description,
-      date: activity.date || (courseDates.iso ? courseDates.iso[0] : "2025-01-01"),
-      startTime: activity.startTime,
-      endTime: activity.endTime,
-      trainer: activity.coachDetails
-        ? activity.coachDetails.map((coach) => coach.name)
-        : activity.trainer || [],
-    }));
+  const handleCourseSubmit = async (e) => {
+    e.preventDefault();
+  
+    // Formatting activities data
+    const form = new FormData();
+
+  // เพิ่มข้อมูลพื้นฐานของคอร์ส
+  form.append('image_url', courseData?.image_url || "");
+  form.append('gym', courseData?.gym || "");
+  form.append('course_name', courseData?.course_name || "");
+  form.append('level', courseData?.level || "");
+  form.append('startDate', courseData?.startDate || "");
+  form.append('endDate', courseData?.endDate || "");
+  form.append('price', courseData?.price || "");
+  form.append('description', courseData?.description || "");
+  form.append('imageCourse',imageCourse);
+
+
+  // จัดการข้อมูลกิจกรรม
+  // เพิ่มจำนวนกิจกรรมทั้งหมด
+  form.append('total_activities', activities.length);
+  
+  // วนลูปเพิ่มข้อมูลกิจกรรมทีละรายการ
+  activities.forEach((activity, index) => {
+    // ข้อมูลพื้นฐานของกิจกรรม
+    form.append(`activity_${index}_id`, activity.id || `new_activity_${index}`);
+    form.append(`activity_${index}_description`, activity.description || "");
     
-    const finalCourseData = {
-      image_url: courseData?.image_url || "",
-      gym: courseData?.gym || "",
-      course_name: courseData?.course_name || "",
-      level: courseData?.level || "",
-      startDate: courseData?.startDate || "",
-      endDate: courseData?.endDate || "",
-      price: courseData?.price || "",
-      description: courseData?.description || "",
-      activities: formattedActivities
-    };
+    // จัดการวันที่ของกิจกรรม - ใช้วันที่จากกิจกรรม หรือวันแรกของคอร์ส หรือค่าเริ่มต้น
+    const activityDate = activity.date || 
+                         (courseDates.iso && courseDates.iso.length > 0 ? 
+                          courseDates.iso[0] : "2025-01-01");
+    form.append(`activity_${index}_date`, activityDate);
     
-    // บันทึกข้อมูลคอร์สที่สมบูรณ์
-    localStorage.setItem("completeCourse", JSON.stringify(finalCourseData));
-    console.log("Final course data:", finalCourseData);
-    
-    // นำทางไปยังหน้าแสดงรายการคอร์ส
-    
-    
-    // ล้างข้อมูลชั่วคราว
-    localStorage.removeItem("courseData");
-    localStorage.removeItem("activities");
-    navigate("/course");
+    // เวลาเริ่มและสิ้นสุดกิจกรรม
+    form.append(`activity_${index}_startTime`, activity.startTime || "");
+    form.append(`activity_${index}_endTime`, activity.endTime || "");
+
+    // จัดการข้อมูลเทรนเนอร์/โค้ช
+    if (activity.coachDetails && activity.coachDetails.length > 0) {
+      // กรณีมีข้อมูลโค้ชแบบละเอียด
+      form.append(`activity_${index}_total_trainer`, activity.coachDetails.length);
+      
+      activity.coachDetails.forEach((coach, coachIndex) => {
+        form.append(`activity_${index}_trainer_${coachIndex}_id`, coach.id || "");
+        form.append(`activity_${index}_trainer_${coachIndex}_name`, coach.name || "");
+        // if (coach.email) form.append(`activity_${index}_coach_${coachIndex}_email`, coach.email);
+        // if (coach.phone) form.append(`activity_${index}_coach_${coachIndex}_phone`, coach.phone);
+      });
+    } else if (activity.trainer) {
+      // กรณีมีข้อมูลเทรนเนอร์แบบอาร์เรย์
+      const trainers = Array.isArray(activity.trainer) ? activity.trainer : [activity.trainer];
+      
+      form.append(`activity_${index}_total_trainers`, trainers.length);
+      
+      trainers.forEach((trainer, trainerIndex) => {
+        form.append(`activity_${index}_trainer_${trainerIndex}`, trainer || "");
+      });
+    } else {
+      // กรณีไม่มีข้อมูลเทรนเนอร์
+      form.append(`activity_${index}_total_trainers`, 0);
+    }
+  });
+  
+  form.forEach((value, key) => {
+    if (key === "imageCourse") {
+      console.log(`File name: ${value.name}`); // Prints file name
+    } else {
+      console.log(`${key}: ${value}`);
+    }
+  });
+    try {
+      // Make API call or handle form submission to save
+      // const response = await apiCall(formData);
+  
+      // Logging for debugging
+      //console.log("Final course data:", form);
+  
+      // Clearing temporary data
+      localStorage.removeItem("courseData");
+      localStorage.removeItem("activities");
+      // Redirect to course list page
+      navigate("/course");
+    } catch (error) {
+      console.error("Error submitting course data:", error);
+    }
   };
+
 
   // กรองกิจกรรมตามวันที่แสดง (ใช้ date แทน day เหมือน EditCourseFrom)
   const filteredActivities = activities.filter((activity) => {
@@ -274,7 +332,7 @@ export default function CourseFrom() {
             </button>
 
             <button 
-              onClick={handleCreateCourse}
+              onClick={handleCourseSubmit}
               className="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 text-sm"
             >
               สร้าง Course

@@ -13,6 +13,7 @@ import AddGym from "../pages/gyms/managements/AddGym";
 import AddBoxer from "../pages/gyms/managements/AddBoxer";
 import AddTrainer from "../pages/gyms/managements/AddTrainer";
 
+import CreateCourse from "../pages/courses/CreateCourse";
 function GymRoutes() {
   return (
       <Routes>
@@ -39,6 +40,7 @@ function GymRoutes() {
         </Route>
 
       {/* ไม่มี Layout(Navbar) */}
+      <Route path="/manage/courses/create" element ={<CreateCourse />}/>
       <Route path="/forrent" element={<GymForRent />} />
     </Routes>
   );
