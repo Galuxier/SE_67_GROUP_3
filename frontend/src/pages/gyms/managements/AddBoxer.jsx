@@ -72,7 +72,6 @@ function AddBoxer() {
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
-
     try{
       const response = await createTempUser(formData);
       console.log(response);
@@ -80,7 +79,6 @@ function AddBoxer() {
       console.error(error);
       throw new error;
     }
-
 
   };
 
@@ -106,7 +104,7 @@ function AddBoxer() {
                   />
                 ) : (
                   <span className="text-gray-500 text-sm text-center">
-                    Click to upload logo
+                    Click to upload Profile
                   </span>
                 )}
               </label>

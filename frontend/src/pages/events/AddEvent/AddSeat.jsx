@@ -1,25 +1,30 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef} from "react";
 import { Trash2, Pencil, Plus } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../../../components/ui/Button";
 import Modal from "../../../components/ui/Modal";
+import {PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 export default function FormAddSeat() {
   const { state } = useLocation();
   const navigate = useNavigate();
 
   // รับค่าข้อมูลอีเวนต์จาก state หรือ localStorage
-  const eventData = state?.formData || JSON.parse(localStorage.getItem("eventData"));
+  const eventData = state?.formDataW || JSON.parse(localStorage.getItem("eventData"));
 
-  const [seats, setSeats] = useState([]);
+  // console.log("poster",poster);
+  
+  const [seatZone, setSeats] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [image, setImage] = useState(null);
   const [imageError, setImageError] = useState("");
+  const fileInputRef = useRef(null);
+  const [filePreviews, setFilePreviews] = useState([]);
 
   // State สำหรับเก็บค่าจากฟอร์ม
-  const [seatNumber, setSeatNumber] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [price, setPrice] = useState(0);
+  const [zone_name, setSeatNumber] = useState("");
+  const [number_of_seat, setQuantity] = useState(null);
+  const [price, setPrice] = useState(null);
 
   // State สำหรับเก็บข้อมูล seat ที่กำลังแก้ไข
   const [editingSeat, setEditingSeat] = useState(null);
@@ -33,15 +38,19 @@ export default function FormAddSeat() {
 
   // โหลดข้อมูล seats จาก localStorage
   useEffect(() => {
-    const savedSeats = JSON.parse(localStorage.getItem("seats")) || [];
+    const savedSeats = JSON.parse(localStorage.getItem("seatZone")) || [];
     setSeats(savedSeats);
+    const storedImage = localStorage.getItem("seatZone_url");
+      if (storedImage) {
+        setFilePreviews([storedImage]); // ตั้งค่ารูปที่แสดงผล
+      }
   }, []);
 
   const handleDeleteSeat = () => {
     if (seatToDelete) {
-      const updatedSeats = seats.filter((seat) => seat.id !== seatToDelete.id);
+      const updatedSeats = seatZone.filter((seat) => seat.seat_zone_id !== seatToDelete.seat_zone_id);
       setSeats(updatedSeats);
-      localStorage.setItem("seats", JSON.stringify(updatedSeats));
+      localStorage.setItem("seatZone", JSON.stringify(updatedSeats));
       setIsDeleteModalOpen(false); // ปิด Modal ยืนยันการลบ
       setSeatToDelete(null); // รีเซ็ต seatToDelete
     }
@@ -55,75 +64,102 @@ export default function FormAddSeat() {
 
     const finalEventData = {
       ...eventData,
-      seats: seats,
-      image: URL.createObjectURL(image), // เพิ่มรูปภาพในข้อมูล
+      seat_zones: seatZone.map((s)=> ({
+        zone_name: s.zone_name,
+        price: s.price,
+        seats: s.seats,
+        number_of_seat: s.number_of_seat,
+      }))
     };
-    localStorage.setItem("completeEvent", JSON.stringify(finalEventData));
-    navigate("/event/addFighter");
+    console.log("final",finalEventData);
+    
+    localStorage.setItem("eventData", JSON.stringify(finalEventData));
+    
+    const reader = new FileReader();
+    reader.readAsDataURL(image); // แปลงเป็น Base64
+    reader.onloadend = () => {
+      localStorage.setItem("seatZone_url", reader.result); // เก็บ Base64 ไว้
+    };
+    console.log(finalEventData);
+    
+    navigate("/event/management/create/match");
   };
-  // ฟังก์ชันสำหรับการอัพโหลดรูปภาพ
-  const handleImageUpload = (event) => {
+  
+  const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setImageError("File size should be less than 5MB.");
-        setImage(null);
-      } else if (!file.type.startsWith("image/")) {
-        setImageError("Please upload an image file.");
-        setImage(null);
-      } else {
-        setImageError("");
-        setImage(file);
-      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFilePreviews([e.target.result]); // แสดงรูปที่อัปโหลด
+        localStorage.setItem("seatZone_url", e.target.result); // เก็บรูปใน localStorage
+      };
+      reader.readAsDataURL(file);
+      setImage(file);
     }
   };
+
+  
+  const handleRemoveImage = (index) => {
+    setFilePreviews([]); // ลบรูปภาพทั้งหมด
+    setImage(null); // ลบ posterURL
+  };
+
+
 
   // ฟังก์ชันสำหรับเพิ่มหรือแก้ไข seat
   const handleAddSeat = () => {
     const newErrors = {};
-    if (!seatNumber) newErrors.seatNumber = "Please enter seat number.";
-    if (!quantity || quantity <= 0) newErrors.quantity = "Please enter a valid quantity.";
+    if (!zone_name) newErrors.seatNumber = "Please enter seat number.";
+    if (!number_of_seat || number_of_seat <= 0) newErrors.quantity = "Please enter a valid quantity.";
     if (!price || price <= 0) newErrors.price = "Please enter a valid price.";
-
+  
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
+  
+    // สร้าง seats ตามจำนวน number_of_seat
+    const generatedSeats = Array.from({ length: number_of_seat }, (_, index) => ({
+      seat_number: `${zone_name}-${index + 1}`, // สร้าง seat_number โดยใช้ zone_name และลำดับ
+    }));
+  
     if (editingSeat) {
-      // แก้ไข seat ที่มีอยู่
-      const updatedSeats = seats.map((seat) =>
-        seat.id === editingSeat.id
-          ? { ...seat, seatNumber, quantity, price }
+      // แก้ไข seat zone ที่มีอยู่
+      const updatedSeats = seatZone.map((seat) =>
+        seat.seat_zone_id === editingSeat.seat_zone_id
+          ? { ...seat, zone_name, number_of_seat, price, seats: generatedSeats }
           : seat
       );
       setSeats(updatedSeats);
       localStorage.setItem("seats", JSON.stringify(updatedSeats));
     } else {
-      // เพิ่ม seat ใหม่
-      const newSeat = {
-        id: Date.now(),
-        seatNumber,
-        quantity,
+      // เพิ่ม seat zone ใหม่
+      const newSeatZone = {
+        seat_zone_id: null,
+        zone_name,
+        number_of_seat,
         price,
+        seats: generatedSeats,
       };
-      setSeats([...seats, newSeat]);
-      localStorage.setItem("seats", JSON.stringify([...seats, newSeat]));
+      setSeats([...seatZone, newSeatZone]);
+      localStorage.setItem("seatZone", JSON.stringify([...seatZone, newSeatZone]));
+      // console.log(newSeatZone);
+      
     }
-
+  
     setIsModalOpen(false); // ปิด Modal
     setEditingSeat(null); // รีเซ็ต editingSeat
     setSeatNumber(""); // รีเซ็ต seatNumber
-    setQuantity(0); // รีเซ็ต quantity
-    setPrice(0); // รีเซ็ต price
+    setQuantity(null); // รีเซ็ต quantity
+    setPrice(null); // รีเซ็ต price
     setErrors({}); // รีเซ็ต errors
   };
 
   // ฟังก์ชันสำหรับเปิด Modal แก้ไข
   const handleEditSeat = (seat) => {
     setEditingSeat(seat); // ตั้งค่าข้อมูล seat ที่จะแก้ไข
-    setSeatNumber(seat.seatNumber); // ตั้งค่า seatNumber จาก seat ที่เลือก
-    setQuantity(seat.quantity); // ตั้งค่า quantity จาก seat ที่เลือก
+    setSeatNumber(seat.zone_name); // ตั้งค่า seatNumber จาก seat ที่เลือก
+    setQuantity(seat.number_of_seat); // ตั้งค่า quantity จาก seat ที่เลือก
     setPrice(seat.price); // ตั้งค่า price จาก seat ที่เลือก
     setIsModalOpen(true); // เปิด Modal
   };
@@ -141,17 +177,17 @@ export default function FormAddSeat() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-white">
-      <div className="w-[1000px] p-10 shadow-lg bg-white rounded-lg relative">
+    <div className="flex justify-center items-center min-h-screen ">
+      <div className="w-4/5 p-10 shadow-lg  rounded-lg relative bg-white">
         <div className="flex flex-col items-center mb-6">
           <label className="block text-lg font-semibold text-gray-700">
-            Event : {eventData?.eventName || "ไม่พบชื่ออีเวนต์"}
+            Event : {eventData?.event_name || "ไม่พบชื่ออีเวนต์"}
           </label>
           <label className="block text-sm text-gray-600">
-            Date : {eventData?.startDate} - {eventData?.endDate}
+            Date : {eventData?.start_date} - {eventData?.end_date}
           </label>
           <label className="block text-sm text-gray-600">
-            Location : {eventData?.location}
+            Location : {eventData?.location_id}
           </label>
         </div>
         <br></br>
@@ -161,7 +197,7 @@ export default function FormAddSeat() {
               <h3 className="text-base font-medium">Seat</h3>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="p-1 rounded-full bg-gray-200 hover:bg-gray-300"
+                className="p-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white"
               >
                 <Plus size={20} />
               </button>
@@ -171,17 +207,17 @@ export default function FormAddSeat() {
           <table className="w-full border-collapse border rounded-lg text-sm">
             <thead>
               <tr className="bg-gray-200">
-                <th className="p-2 border">Seat Number</th>
+                <th className="p-2 border">Zone</th>
                 <th className="p-2 border">Quantity</th>
                 <th className="p-2 border">Price</th>
                 <th className="p-2 border">Edit</th>
               </tr>
             </thead>
             <tbody>
-              {seats.map((seat) => (
-                <tr key={seat.id} className="text-center">
-                  <td className="p-2 border">{seat.seatNumber}</td>
-                  <td className="p-2 border">{seat.quantity}</td>
+              {seatZone.map((seat) => (
+                <tr key={seat.seat_zone_id} className="text-center">
+                  <td className="p-2 border">{seat.zone_name}</td>
+                  <td className="p-2 border">{seat.number_of_seat}</td>
                   <td className="p-2 border">{seat.price}</td>
                   <td className="p-2 border">
                     <button
@@ -202,25 +238,45 @@ export default function FormAddSeat() {
             </tbody>
           </table>
 
-          {/* ปุ่มอัพโหลดรูปภาพ */}
-          <div className="mt-4">
-            <label htmlFor="image-upload" className="block text-sm font-medium text-gray-700 mb-2">
-              Please upload an image
-            </label>
+          <div>
+          <label className="block mb-1">Seat Zone</label>
             <input
-              id="image-upload"
               type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="mb-2"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              accept="image/png, image/jpeg"
             />
-            {imageError && <p className="text-red-500 text-sm">{imageError}</p>}
-            {image && (
-              <div className="mt-2">
-                <img src={URL.createObjectURL(image)} alt="Uploaded" className="max-w-full h-auto rounded-lg" />
-              </div>
-            )}
+            <div className="mt-4 flex justify-center">
+              {filePreviews.length > 0 ? (
+                <div className="relative">
+                  <img
+                    src={filePreviews[0]}
+                    alt="Preview"
+                    className="w-full h-80 object-cover rounded-lg border border-border/50 mx-auto"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(0)}
+                    className="absolute top-1 right-1 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+                  >
+                    <XMarkIcon className="h-3 w-3 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current.click()}
+                  className="flex flex-col items-center justify-center w-4/5 h-80 border-2 border-dashed border-border/50 rounded-lg hover:border-primary/50 transition-colors mx-auto"
+                >
+                  <PhotoIcon className="h-8 w-8 text-text/40" />
+                  <p className="mt-2 text-sm text-text/60">Click to upload a photo</p>
+                </button>
+              )}
+            </div>
+            {imageError && <p className="text-red-500 text-sm text-center mt-2">{imageError}</p>}
           </div>
+         
 
           <div className="flex justify-end mt-4">
             <Button onClick={() => navigate(-1)} variant="secondary">
@@ -244,11 +300,11 @@ export default function FormAddSeat() {
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Seat Number</label>
+              <label className="block text-sm font-medium text-gray-700">Zone</label>
               <input
                 type="text"
-                placeholder="Seat Number"
-                value={seatNumber}
+                placeholder="Zone"
+                value={zone_name}
                 onChange={(e) => setSeatNumber(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -261,7 +317,7 @@ export default function FormAddSeat() {
               <input
                 type="number"
                 placeholder="Quantity"
-                value={quantity}
+                value={number_of_seat}
                 onChange={(e) => setQuantity(parseInt(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -302,7 +358,7 @@ export default function FormAddSeat() {
             <p className="text-gray-700">Are you sure you want to delete this seat?</p>
             <div className="flex justify-end mt-4">
               <Button onClick={handleCancelDelete} variant="secondary">Cancel</Button>
-              <Button className="ml-2" onClick={handleDeleteSeat} variant="danger">
+              <Button className="ml-2" onClick={handleDeleteSeat} variant="primary">
                 Delete
               </Button>
             </div>

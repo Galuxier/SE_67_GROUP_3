@@ -1,8 +1,16 @@
+import app from '../../app';
 import createUploader from './base.upload';
 
-export const eventPosterUpload = createUploader(1, true, 'events/posters');
-
-export const eventSeatZoneUpload = createUploader(2, false, 'events/seat-zones', [
-    'image/',
-    'application/pdf', // รองรับ PDF
-  ]);
+export const eventImageUpload = createUploader([
+  {
+    subfolder: 'event/poster',
+    allowedMimeTypes: ['image/'],
+    name: 'poster_url',
+    maxCount: 1,
+  },{
+    subfolder: 'event/seatZone',
+    allowedMimeTypes: ['image/'],
+    name: 'seatZone_url',
+    maxCount: 1,
+  }
+]);

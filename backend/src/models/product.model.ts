@@ -27,6 +27,7 @@ const categories = [
   'stopwatch',
   'dumbbell',
   'barbell',
+  'other',
 ] as const;
 
 type Category = (typeof categories)[number];

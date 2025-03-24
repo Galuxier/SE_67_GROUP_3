@@ -3,6 +3,7 @@ import { Trash2, Pencil, Plus } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../../../components/ui/Button";
 import Modal from "../../../components/ui/Modal";
+import { createEvent } from "../../../services/api/EventApi";
 
 export default function FormAddWeightClass() {
   const { state } = useLocation();
@@ -13,8 +14,6 @@ export default function FormAddWeightClass() {
 
   const [weightClasses, setWeightClasses] = useState([]); 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [eventDates] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(eventDates[0] || ""); // เลือกวันที่เริ่มต้น
 
   // State สำหรับเก็บค่าจากฟอร์ม
   const [weight_name, setWeightName] = useState(""); // ชื่อ Weight Class
@@ -48,19 +47,60 @@ export default function FormAddWeightClass() {
     }
   };
 
-  const handleSaveWeightClasses = () => {
-    const eventDataWithWeightClasses = {
-      ...eventData,
-      weightClasses: weightClasses,
-    };
-    localStorage.setItem("eventData", JSON.stringify(eventDataWithWeightClasses));
+  const createFileFromBase64 = (base64String, fileName) => {
+    try {
+      if (!base64String.includes(",")) {
+        throw new Error("Invalid Base64 format");
+      }
 
-    // ตรวจสอบค่า type เพื่อตัดสินใจนำทาง
-    if (eventData.type === "Open for Registration") {
-      navigate("/event"); // ไปที่หน้า /event
-    } else {
-      navigate("/event/addFighter"); // ไปที่หน้า /event/addFighter
+      // แปลง Base64 เป็น Blob
+      const byteCharacters = atob(base64String.split(",")[1]); // ตัด "data:image/png;base64," ออก
+      const byteNumbers = new Array(byteCharacters.length);
+
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: "image/png" });
+
+      // สร้าง File จาก Blob
+      return new File([blob], fileName, { type: "image/png" });
+    } catch (error) {
+      console.error("Error converting Base64 to File:", error);
+      return null;
     }
+  };
+
+  const handleSaveWeightClasses = async () => {
+    const poster64 = localStorage.getItem("poster_url");
+    const eventDataWithWeightClasses = {
+      organizer_id: eventData.organizer_id,
+      location_id: eventData.location_id, // ใส่ ObjectId จริง
+      event_name: eventData.event_name,
+      level: eventData.level.toLowerCase(), // ✅ ใช้พิมพ์เล็ก
+      start_date: eventData.start_date,
+      end_date: eventData.end_date,
+      description: eventData.description,
+      poster_url: createFileFromBase64(poster64, "poster_url.png"), // ✅ ถ้ามีการอัปโหลด ต้องใช้ FormData
+      seatZone_url:"",
+      status: eventData.status || "preparing", // ✅ ค่าเริ่มต้น
+      weight_classes: weightClasses.map((wc) => ({
+        type: eventData.weight_classes.type, // ใช้ type จาก eventData หรือค่าเริ่มต้น
+        weigh_name: wc.weight_name, // ใช้ weigh_name จาก weightClasses
+        min_weight: wc.min_weight,
+        max_weight: wc.max_weight,
+        max_enrollment: wc.max_enrollment,
+      })),
+    };
+
+    const res = await createEvent(eventDataWithWeightClasses);
+        console.log("res", res);
+    localStorage.removeItem("eventData");
+    localStorage.removeItem("weightClasses");
+    localStorage.removeItem("poster_url");
+    navigate("/event/management/eventList"); // ไปที่หน้า /event
+
   };
 
   // ฟังก์ชันสำหรับเพิ่มหรือแก้ไข Weight Class
@@ -70,17 +110,17 @@ export default function FormAddWeightClass() {
     if (!min_weight) newErrors.min_weight = "Please enter min weight.";
     if (!max_weight) newErrors.max_weight = "Please enter max weight.";
     if (!max_enrollment) newErrors.max_enrollment = "Please enter max enrollment.";
-
+  
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
+  
     if (editingWeight) {
       // แก้ไข Weight Class ที่มีอยู่
       const updatedWeightClasses = weightClasses.map((wc) =>
         wc.id === editingWeight.id
-          ? { ...wc, weight_name, min_weight, max_weight, max_enrollment, date: selectedDate }
+          ? { ...wc, weight_name, min_weight, max_weight, max_enrollment } 
           : wc
       );
       setWeightClasses(updatedWeightClasses);
@@ -93,12 +133,11 @@ export default function FormAddWeightClass() {
         min_weight,
         max_weight,
         max_enrollment,
-        date: selectedDate,
       };
       setWeightClasses([...weightClasses, newWeightClass]);
       localStorage.setItem("weightClasses", JSON.stringify([...weightClasses, newWeightClass]));
     }
-
+  
     setIsModalOpen(false); // ปิด Modal
     setEditingWeight(null); // รีเซ็ต editingWeight
     setWeightName(""); // รีเซ็ต weight_name
@@ -115,7 +154,6 @@ export default function FormAddWeightClass() {
     setMinWeight(weightClass.min_weight); // ตั้งค่า min_weight จาก Weight Class ที่เลือก
     setMaxWeight(weightClass.max_weight); // ตั้งค่า max_weight จาก Weight Class ที่เลือก
     setMaxEnrollment(weightClass.max_enrollment); // ตั้งค่า max_enrollment จาก Weight Class ที่เลือก
-    setSelectedDate(weightClass.date); // ตั้งค่าวันที่จาก Weight Class ที่เลือก
     setIsModalOpen(true); // เปิด Modal
   };
 
@@ -131,21 +169,18 @@ export default function FormAddWeightClass() {
     setWeightClassToDelete(null); // รีเซ็ต weightClassToDelete
   };
 
-  // ฟิลเตอร์ Weight Classes ตามวันที่ที่เลือก
-  const filteredWeightClasses = weightClasses.filter((wc) => wc.date === selectedDate);
-
   return (
-    <div className="flex justify-center items-center min-h-screen bg-white">
-      <div className="w-[1000px] p-10 shadow-lg bg-white rounded-lg relative">
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="w-4/5 p-10 shadow-lg bg-white rounded-lg relative">
         <div className="flex flex-col items-center mb-6">
           <label className="block text-lg font-semibold text-gray-700">
-            Event : {eventData?.eventName || "ไม่พบชื่ออีเวนต์"}
+            Event : {eventData?.event_name || "ไม่พบชื่ออีเวนต์"}
           </label>
           <label className="block text-sm text-gray-600">
-            Date : {eventData?.startDate} - {eventData?.endDate}
+            Date : {eventData?.start_date} - {eventData?.end_date}
           </label>
           <label className="block text-sm text-gray-600">
-            Location : {eventData?.location}
+            Location : {eventData?.location_id}
           </label>
         </div>
         <br></br>
@@ -171,7 +206,7 @@ export default function FormAddWeightClass() {
               </tr>
             </thead>
             <tbody>
-              {filteredWeightClasses.map((weightClass) => (
+              {weightClasses.map((weightClass) => ( // ใช้ weightClasses แทน filteredWeightClasses
                 <tr key={weightClass.id} className="text-center">
                   <td className="p-2 border">{weightClass.weight_name}</td>
                   <td className="p-2 border">{weightClass.min_weight}</td>

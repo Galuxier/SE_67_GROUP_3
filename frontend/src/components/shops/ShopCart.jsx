@@ -3,9 +3,9 @@ import CartItem from "./CartItem";
 export default function ShopCart({ shop, onRemoveItem, onUpdateQuantity, onSelectItem, selectedItems }) {
   return (
     <div className="bg-white p-4 shadow rounded mb-4">
-      <h2 className="text-lg font-bold mb-4">{shop.shop_name}</h2>
+      <h2 className="text-lg font-bold mb-4">{shop.shop_name || "Unknown Shop"}</h2>
       <table className="w-full">
-        <thead>                                       
+        <thead>
           <tr className="border-b">
             <th className="py-2 w-10 text-center">Select</th>
             <th className="text-left py-2">Product</th>
