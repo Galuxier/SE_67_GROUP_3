@@ -4,7 +4,7 @@ import Button from "../../../components/ui/Button";
 import Modal from "../../../components/ui/Modal";
 import { useAuth } from "../../../context/AuthContext";
 import { PlusCircleIcon, PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import MockUsers from "./mockBoxer";
+import MockUsers from "./MockBoxer";
 
 const InputField = ({ label, name, type, min, value, onChange }) => (
   <div className="mb-4">

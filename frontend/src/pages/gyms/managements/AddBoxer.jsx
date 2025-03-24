@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import CropImageModal from "../../../components/shops/CropImageModal";
 import { createTempUser } from "../../../services/api/UserApi";
-import { createTempUser } from "../../../services/api/UserApi";
 
 function AddBoxer() {
   const [boxerData, setBoxerData] = useState({
