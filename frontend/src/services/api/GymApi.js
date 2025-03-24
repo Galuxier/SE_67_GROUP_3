@@ -4,7 +4,7 @@ export async function CreateGym(gymData) {
     try {
       const response = await api.post("/gyms", gymData, {
         headers: {
-          "Content-Type": "multipart/form-data", // กำหนด headers สำหรับ FormData
+          "Content-Type": "multipart/form-data",
         },
       });
       return response.data;

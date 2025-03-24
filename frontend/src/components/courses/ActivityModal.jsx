@@ -62,6 +62,7 @@ export default function ActivityModal({
       const coachInfo = {
         id: trainerItem.id,
         name: trainerItem.Nickname,
+        Nickname: trainerItem.Nickname, // Add this line to keep the Nickname property
         gym: trainerItem.gym
       };
       
@@ -154,9 +155,12 @@ export default function ActivityModal({
       startTime: newActivity.startTime,
       endTime: newActivity.endTime,
       description: newActivity.description,
-      date: currentDate, // Use date instead of day
-      trainer: newActivity.trainer.map(coach => coach.name),
-      coachDetails: newActivity.trainer // Store full coach details
+      date: currentDate,
+      // Use full objects to prevent data loss
+      trainer: newActivity.trainer.map(coach => ({
+        ...coach,
+        Nickname: coach.Nickname || coach.name // Ensure Nickname exists
+      }))
     };
 
     setActivities((prevActivities) => {

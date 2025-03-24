@@ -79,7 +79,7 @@ function Navbar() {
                 </button>
 
                 {/* Desktop: แสดงช่องค้นหาเต็มรูปแบบ */}
-                <form className="hidden md:block relative">
+                {/* <form className="hidden md:block relative">
                   <div className="flex relative">
                     <input
                       type="search"
@@ -90,7 +90,7 @@ function Navbar() {
                       <BsSearch className="size-4" />
                     </button>
                   </div>
-                </form>
+                </form> */}
               </div>
 
               {/* Dark Mode Toggle with Icons */}
