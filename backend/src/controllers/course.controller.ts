@@ -4,8 +4,16 @@ import CourseService from '../services/course.service';
 // สร้างคอร์สใหม่
 export const createCourseController = async (req: Request, res: Response) => {
   try {
+    if (req.body.activities) {
+      req.body.activities = JSON.parse(req.body.activities);
+    }
     const newCourse = await CourseService.add(req.body);
-    res.status(201).json(newCourse);
+
+    res.status(201).json({
+      success: true,
+      message: "Create Course Successfull",
+      data: newCourse
+    });
   } catch (err) {
     res.status(400).json({ message: 'Error creating course', error: err });
   }

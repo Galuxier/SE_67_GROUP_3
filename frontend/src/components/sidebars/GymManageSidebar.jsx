@@ -211,7 +211,7 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                     Completed Courses
                   </Link>
                   <Link
-                    to={`/gym/management/${gymData._id}/courses/create`}
+                    to={gymData ? `/gym/management/${gymData._id}/courses/create` : "/gym/management/create"}
                     className={`block p-2 rounded-md hover:bg-primary/10 ${
                       location.pathname === "/gym/management/courses/create"
                         ? "text-primary"
@@ -220,7 +220,7 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                   >
                     <div className="flex items-center">
                       <PlusCircleIcon className="h-4 w-4 mr-2" />
-                      Create Course
+                      {gymData ? "Create Course" : "Create Gym First"}
                     </div>
                   </Link>
                 </div>
@@ -250,7 +250,7 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
               {expandedMenus.boxers && (
                 <div className="pl-10 space-y-1">
                   <Link
-                    to="/gym/management/boxers"
+                    to={gymData? `/gym/management/${gymData._id}/boxers/list` : `gym/management/create`}
                     className={`block p-2 rounded-md hover:bg-primary/10 ${
                       location.pathname === "/gym/management/boxers"
                         ? "text-primary"
@@ -260,9 +260,9 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                     All Boxers
                   </Link>
                   <Link
-                    to="/gym/management/addboxer"
+                    to={gymData? `/gym/management/${gymData._id}/boxers/create` : `gym/management/create`}
                     className={`block p-2 rounded-md hover:bg-primary/10 ${
-                      location.pathname === "/gym/management/addboxer"
+                      location.pathname === "/gym/management/boxer/create"
                         ? "text-primary"
                         : "text-text"
                     } text-sm transition-colors`}
@@ -299,7 +299,7 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
               {expandedMenus.trainers && (
                 <div className="pl-10 space-y-1">
                   <Link
-                    to="/gym/management/trainers"
+                    to={gymData? `/gym/management/${gymData._id}/trainers/list` : `gym/management/create`}
                     className={`block p-2 rounded-md hover:bg-primary/10 ${
                       location.pathname === "/gym/management/trainers"
                         ? "text-primary"
@@ -309,9 +309,9 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                     All Trainers
                   </Link>
                   <Link
-                    to="/gym/management/addtrainer"
+                    to={gymData? `/gym/management/${gymData._id}/trainers/create` : `gym/management/create`}
                     className={`block p-2 rounded-md hover:bg-primary/10 ${
-                      location.pathname === "/gym/management/addtrainer"
+                      location.pathname === "/gym/management/trainers/create"
                         ? "text-primary"
                         : "text-text"
                     } text-sm transition-colors`}

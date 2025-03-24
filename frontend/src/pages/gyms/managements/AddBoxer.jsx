@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import CropImageModal from "../../../components/shops/CropImageModal";
+import { createTempUser } from "../../../services/api/UserApi";
 
 function AddBoxer() {
   const [boxerData, setBoxerData] = useState({
@@ -60,6 +61,7 @@ function AddBoxer() {
     formData.append("last_name", boxerData.last_name);
     formData.append("nickname", boxerData.nickname);
     formData.append("role", boxerData.role);
+    formData.append("status", "inActive");
 
     // Append cropped profile picture ถ้ามี
     if (profile) {
@@ -70,6 +72,16 @@ function AddBoxer() {
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
+
+    try{
+      const response = await createTempUser(formData);
+      console.log(response);
+    }catch(error){
+      console.error(error);
+      throw new error;
+    }
+
+
   };
 
   return (

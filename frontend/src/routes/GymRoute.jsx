@@ -17,6 +17,8 @@ import EditCourseFrom from "../pages/courses/EditCourseFrom";
 import CreateCourse from "../pages/courses/CreateCourse";
 import CourseFrom from "../pages/courses/CourseFrom";
 import CreateCourseForm from "../pages/courses/managements/CreateCourseForm";
+import TrainerList from "../pages/gyms/managements/TrainerList";
+import BoxerList from "../pages/gyms/managements/BoxerList";
 
 function GymRoutes() {
   return (
@@ -40,9 +42,13 @@ function GymRoutes() {
           <Route path="/management/:gym_id" element={<GymManageDashboard />} />
           <Route path="/management/gymlist" element={<GymList />} />
           <Route path="/management/create" element={<AddGym />} />
-          <Route path="/management/addboxer" element={<AddBoxer />}/>
-          <Route path="/management/addtrainer" element={<AddTrainer />}/>
+          <Route path="/management/:gym_id/boxers/create" element={<AddBoxer />}/>
+          <Route path="/management/:gym_id/trainers/create" element={<AddTrainer />}/>
           <Route path="/management/:gym_id/courses/create" element={<CreateCourseForm />}/>
+
+          <Route path="/management/:gym_id/boxers/list" element={<BoxerList />}/>
+          <Route path="/management/:gym_id/trainers/list" element={<TrainerList />}/>
+
         </Route>
 
         <Route path ="/editCourseFrom" element={<EditCourseFrom />} />

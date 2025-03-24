@@ -25,9 +25,9 @@ export interface UserDocument extends Document {
 }
 
 const UserSchema = new Schema<UserDocument>({
-  username: { type: String, required: true },
-  password: { type: String, required: true },
-  email: { type: String, required: true },
+  username: { type: String },
+  password: { type: String },
+  email: { type: String, },
   phone: { type: String },
   profile_picture_url: { type: String },
   first_name: { type: String, required: true },
