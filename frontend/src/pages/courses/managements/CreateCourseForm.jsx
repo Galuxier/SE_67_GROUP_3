@@ -469,14 +469,18 @@ const CreateCourseForm = () => {
                         </div>
                         <div>
                           <div className="flex -space-x-2">
-                            {activity.trainer.map((trainer, trainerIndex) => (
-                              <div
-                                key={trainerIndex}
-                                className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
-                                title={trainer.name}
-                              >
-                                {trainer.name.charAt(0)}
-                              </div>
+                          {activity.trainer && activity.trainer.map((trainer, trainerIndex) => (
+                            <div 
+                                key={trainerIndex} 
+                                className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white text-sm -ml-2 border-2 border-white"
+                            >
+                                {/* Safely access trainer properties with nullish checks */}
+                                {trainer && typeof trainer === 'object' 
+                                ? (trainer.Nickname || trainer.name || '?').charAt(0)
+                                : typeof trainer === 'string' 
+                                    ? trainer.charAt(0) 
+                                    : '?'}
+                            </div>
                             ))}
                           </div>
                         </div>
