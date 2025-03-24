@@ -93,7 +93,7 @@ function AddTrainer() {
                   />
                 ) : (
                   <span className="text-gray-500 text-sm text-center">
-                    Click to upload logo
+                    Click to upload Profile
                   </span>
                 )}
               </label>
