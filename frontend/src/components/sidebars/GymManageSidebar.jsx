@@ -25,7 +25,7 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
     boxers: false,
     trainers: false,
   });
-  
+
   // Local state for gym switcher modal
   const [showGymSwitcher, setShowGymSwitcher] = useState(false);
 
@@ -36,9 +36,9 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
 
   // Toggle menu expansion
   const toggleMenu = (menu) => {
-    setExpandedMenus(prev => ({
+    setExpandedMenus((prev) => ({
       ...prev,
-      [menu]: !prev[menu]
+      [menu]: !prev[menu],
     }));
   };
 
@@ -65,8 +65,8 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
               <>
                 <div className="flex items-center gap-2 overflow-hidden">
                   {gymData.gym_image_url && gymData.gym_image_url.length > 0 ? (
-                    <img 
-                      src={gymData.gym_image_url[0]} 
+                    <img
+                      src={gymData.gym_image_url[0]}
                       alt={gymData.gym_name}
                       className="h-8 w-8 rounded-full object-cover border border-border/50"
                     />
@@ -76,12 +76,14 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                     </div>
                   )}
                   <div className="truncate">
-                    <h2 className="text-sm font-bold text-text truncate">{gymData.gym_name || "Gym Manager"}</h2>
+                    <h2 className="text-sm font-bold text-text truncate">
+                      {gymData.gym_name || "Gym Manager"}
+                    </h2>
                   </div>
                 </div>
-                
+
                 {userGyms.length > 1 && (
-                  <button 
+                  <button
                     onClick={() => setShowGymSwitcher(true)}
                     className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-text/70 hover:text-primary transition-colors"
                     title="Switch Gym"
@@ -211,7 +213,11 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                     Completed Courses
                   </Link>
                   <Link
-                    to={`/gym/management/${gymData._id}/courses/create`}
+                    to={
+                      gymData
+                        ? `/gym/management/${gymData._id}/courses/create`
+                        : "/gym/management/create"
+                    }
                     className={`block p-2 rounded-md hover:bg-primary/10 ${
                       location.pathname === "/gym/management/courses/create"
                         ? "text-primary"
@@ -220,7 +226,7 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                   >
                     <div className="flex items-center">
                       <PlusCircleIcon className="h-4 w-4 mr-2" />
-                      Create Course
+                      {gymData ? "Create Course" : "Create Gym First"}
                     </div>
                   </Link>
                 </div>
@@ -250,9 +256,12 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
               {expandedMenus.boxers && (
                 <div className="pl-10 space-y-1">
                   <Link
-                    to="/gym/management/boxers"
+                    to={ gymData
+                      ? `/gym/management/${gymData._id}/boxers/list`
+                      : `gym/management/create`
+                    }
                     className={`block p-2 rounded-md hover:bg-primary/10 ${
-                      location.pathname === "/gym/management/boxers"
+                      location.pathname === "/gym/management/boxers/list"
                         ? "text-primary"
                         : "text-text"
                     } text-sm transition-colors`}
@@ -260,9 +269,13 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                     All Boxers
                   </Link>
                   <Link
-                    to="/gym/management/addboxer"
+                    to={
+                      gymData
+                        ? `/gym/management/${gymData._id}/boxers/create`
+                        : `gym/management/create`
+                    }
                     className={`block p-2 rounded-md hover:bg-primary/10 ${
-                      location.pathname === "/gym/management/addboxer"
+                      location.pathname === "/gym/management/boxer/create"
                         ? "text-primary"
                         : "text-text"
                     } text-sm transition-colors`}
@@ -276,7 +289,7 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
               )}
             </div>
 
-           {/* Trainers */}
+            {/* Trainers */}
             <div className="space-y-1">
               <button
                 onClick={() => toggleMenu("trainers")}
@@ -299,9 +312,13 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
               {expandedMenus.trainers && (
                 <div className="pl-10 space-y-1">
                   <Link
-                    to="/gym/management/trainers"
+                    to={
+                      gymData
+                        ? `/gym/management/${gymData._id}/trainers/list`
+                        : `gym/management/create`
+                    }
                     className={`block p-2 rounded-md hover:bg-primary/10 ${
-                      location.pathname === "/gym/management/trainers"
+                      location.pathname === "/gym/management/trainers/list"
                         ? "text-primary"
                         : "text-text"
                     } text-sm transition-colors`}
@@ -309,9 +326,13 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                     All Trainers
                   </Link>
                   <Link
-                    to="/gym/management/addtrainer"
+                    to={
+                      gymData
+                        ? `/gym/management/${gymData._id}/trainers/create`
+                        : `gym/management/create`
+                    }
                     className={`block p-2 rounded-md hover:bg-primary/10 ${
-                      location.pathname === "/gym/management/addtrainer"
+                      location.pathname === "/gym/management/trainers/create"
                         ? "text-primary"
                         : "text-text"
                     } text-sm transition-colors`}
@@ -350,12 +371,14 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
               <ClipboardDocumentListIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
               Reports
             </Link>
-            
+
             {/* All My Gyms Section */}
             {showMultipleGyms && (
               <div className="mt-5 pt-5 border-t border-border/50">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs font-medium text-text/60 uppercase">My Gyms</h3>
+                  <h3 className="text-xs font-medium text-text/60 uppercase">
+                    My Gyms
+                  </h3>
                   <Link
                     to="/gym/management/create"
                     className="text-primary hover:text-secondary text-xs"
@@ -364,21 +387,21 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                     New
                   </Link>
                 </div>
-                
+
                 <div className="space-y-1 max-h-40 overflow-y-auto">
-                  {userGyms.map(gym => (
+                  {userGyms.map((gym) => (
                     <button
                       key={gym._id}
                       onClick={() => handleGymChange(gym._id)}
                       className={`w-full p-2 rounded-lg text-left text-xs flex items-center ${
-                        gymData?._id === gym._id 
+                        gymData?._id === gym._id
                           ? "bg-primary/10 text-primary font-medium"
                           : "text-text hover:bg-gray-100 dark:hover:bg-gray-700"
                       }`}
                     >
                       {gym.gym_image_url && gym.gym_image_url.length > 0 ? (
-                        <img 
-                          src={gym.gym_image_url[0]} 
+                        <img
+                          src={gym.gym_image_url[0]}
                           alt={gym.gym_name}
                           className="h-6 w-6 rounded-full object-cover mr-2 border border-border/50"
                         />
@@ -409,26 +432,36 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
           </div>
         </div>
       </div>
-      
+
       {/* Gym Switcher Modal */}
       {showGymSwitcher && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden border border-border/30">
             <div className="p-4 border-b border-border/30 flex justify-between items-center">
               <h3 className="font-semibold text-text">Switch Gym</h3>
-              <button 
+              <button
                 onClick={() => setShowGymSwitcher(false)}
                 className="text-text/70 hover:text-text"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
-            
+
             <div className="p-4 max-h-96 overflow-y-auto">
               <div className="space-y-2">
-                {userGyms.map(gym => (
+                {userGyms.map((gym) => (
                   <button
                     key={gym._id}
                     onClick={() => handleGymChange(gym._id)}
@@ -439,8 +472,8 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                     }`}
                   >
                     {gym.gym_image_url && gym.gym_image_url.length > 0 ? (
-                      <img 
-                        src={gym.gym_image_url[0]} 
+                      <img
+                        src={gym.gym_image_url[0]}
                         alt={gym.gym_name}
                         className="h-12 w-12 rounded-full object-cover mr-3 border border-border/50"
                       />
@@ -450,16 +483,28 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                       </div>
                     )}
                     <div className="flex-1">
-                      <h4 className={`font-medium ${gymData?._id === gym._id ? "text-primary" : "text-text"}`}>{gym.gym_name}</h4>
-                      <p className="text-sm text-text/70 truncate">{gym.description || "No description"}</p>
+                      <h4
+                        className={`font-medium ${
+                          gymData?._id === gym._id
+                            ? "text-primary"
+                            : "text-text"
+                        }`}
+                      >
+                        {gym.gym_name}
+                      </h4>
+                      <p className="text-sm text-text/70 truncate">
+                        {gym.description || "No description"}
+                      </p>
                     </div>
                     {gymData?._id === gym._id && (
-                      <div className="text-primary bg-primary/10 px-2 py-1 rounded text-xs font-medium">Current</div>
+                      <div className="text-primary bg-primary/10 px-2 py-1 rounded text-xs font-medium">
+                        Current
+                      </div>
                     )}
                   </button>
                 ))}
               </div>
-              
+
               <div className="mt-4 pt-4 border-t border-border/30">
                 <Link
                   to="/gym/management/create"

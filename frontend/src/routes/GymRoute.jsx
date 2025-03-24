@@ -14,42 +14,57 @@ import AddBoxer from "../pages/gyms/managements/AddBoxer";
 import AddTrainer from "../pages/gyms/managements/AddTrainer";
 import EditCourse from "../pages/courses/EditCourse";
 import EditCourseFrom from "../pages/courses/EditCourseFrom";
-import CreateCourse from "../pages/courses/CreateCourse";
+//import CreateCourse from "../pages/courses/CreateCourse";
 import CourseFrom from "../pages/courses/CourseFrom";
 import CreateCourseForm from "../pages/courses/managements/CreateCourseForm";
 
 import CreateCourse from "../pages/courses/CreateCourse";
+import BoxerList from "../pages/gyms/managements/BoxerList";
+import TrainerList from "../pages/gyms/managements/TrainerList";
 function GymRoutes() {
   return (
-      <Routes>
-        {/* มี Layout(Navbar) */}
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<GymHome />} />
-          <Route path="/:id" element={<GymDetail />} />
-          
-        </Route>
+    <Routes>
+      {/* มี Layout(Navbar) */}
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<GymHome />} />
+        <Route path="/:id" element={<GymDetail />} />
+      </Route>
 
+      <Route
+        path="/management"
+        element={
+          <GymManagementRouteGuard>
+            <GymManageLayout />
+          </GymManagementRouteGuard>
+        }
+      >
+        <Route index element={<GymManageDashboard />} />
+        <Route path="/management/:gym_id" element={<GymManageDashboard />} />
+        <Route path="/management/gymlist" element={<GymList />} />
+        <Route path="/management/create" element={<AddGym />} />
         <Route
-          path="/management"
-          element={
-            <GymManagementRouteGuard>
-              <GymManageLayout />
-            </GymManagementRouteGuard>
-          }
-        >
-          <Route index element={<GymManageDashboard />} />
-          <Route path="/management/:gym_id" element={<GymManageDashboard />} />
-          <Route path="/management/gymlist" element={<GymList />} />
-          <Route path="/management/create" element={<AddGym />} />
-          <Route path="/management/addboxer" element={<AddBoxer />}/>
-          <Route path="/management/addtrainer" element={<AddTrainer />}/>
-          <Route path="/management/:gym_id/courses/create" element={<CreateCourseForm />}/>
-        </Route>
+          path="/management/:gym_id/boxers/create"
+          element={<AddBoxer />}
+        />
+        <Route
+          path="/management/:gym_id/trainers/create"
+          element={<AddTrainer />}
+        />
+        <Route path="/management/:gym_id/boxers/list" element={<BoxerList />} />
+        <Route
+          path="/management/:gym_id/trainers/list"
+          element={<TrainerList />}
+        />
+        <Route
+          path="/management/:gym_id/courses/create"
+          element={<CreateCourseForm />}
+        />
+      </Route>
 
-        <Route path ="/editCourseFrom" element={<EditCourseFrom />} />
-        <Route path ="/editCourse" element={<EditCourse />} />
-        <Route path ="/courseFrom" element={<CourseFrom />} />
-        <Route path ="/createCourse" element={<CreateCourse />} />
+      <Route path="/editCourseFrom" element={<EditCourseFrom />} />
+      <Route path="/editCourse" element={<EditCourse />} />
+      <Route path="/courseFrom" element={<CourseFrom />} />
+      <Route path="/createCourse" element={<CreateCourse />} />
 
       {/* ไม่มี Layout(Navbar) */}
       <Route path="/forrent" element={<GymForRent />} />
