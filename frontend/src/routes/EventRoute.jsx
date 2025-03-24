@@ -12,6 +12,7 @@ import FormAddResult from "../pages/events/AddResult";
 import EventDetail from "../pages/events/EventDetail";
 import RegistrationForm from "../pages/events/RegistrationForm";
 import EventManageDashboard from "../pages/events/managements/EventManageDashboard";
+import EventList from "../pages/events/managements/EventList";
 
 
 function EventRoutes() {
@@ -34,14 +35,19 @@ function EventRoutes() {
           }
         >
           <Route index element={<EventManageDashboard />} />
+          <Route path="/management/create" element={<FormAddEvent/>}/>
+          <Route path="/management/eventList" element={<EventList/>}/>
+          <Route path="/management/create/seat" element={<FormAddSeat />}/>
+          <Route path="/management/create/match" element={<FormAddFighter />}/>
+          <Route path="/management/create/weightClass" element={<FormAddWeightClass />}/>
         </Route>
 
         {/* ไม่มี Layout(Navbar) */}
-        <Route path="/addEvent" element={<FormAddEvent />}/>
+        {/* <Route path="/addEvent" element={<FormAddEvent />}/>
         <Route path="/addSeat" element={<FormAddSeat />}/>
         <Route path="/addFighter" element={<FormAddFighter />}/>
         <Route path="/addWeight" element={<FormAddWeightClass />}/>
-        <Route path="/addResult" element={<FormAddResult />}/>
+        <Route path="/addResult" element={<FormAddResult />}/> */}
         
       </Routes>
   );

@@ -78,6 +78,7 @@ interface SeatZone {
   price: number;
   seats: Seat[];
   number_of_seat: number;
+  
 }
 
 // กำหนด interface สำหรับ seats
@@ -100,10 +101,13 @@ export interface EventDocument extends Document {
   location_id: Schema.Types.ObjectId;
   event_name: string;
   level: string;
+  description: string;
+  poster_url:string;
   start_date: Date;
   end_date: Date;
   weight_classes: WeightClass[];
   seat_zones: SeatZone[];
+  seatZone_url: String;
   status: EventStatus;
   packages: Package[];
 }
@@ -113,9 +117,11 @@ const EventSchema = new Schema<EventDocument>({
   organizer_id: { type: Schema.Types.ObjectId, required: true },
   location_id: { type: Schema.Types.ObjectId, required: true },
   event_name: { type: String, required: true },
+  description: { type: String, required: false },
   level: { type: String, enum: Object.values(Level), required: true },
   start_date: { type: Date, required: true },
   end_date: { type: Date, required: true },
+  poster_url: { type: String, required: true },
   weight_classes: [{
     type: { type: String, required: true },
     weigh_name: { type: String, required: true },
@@ -123,12 +129,11 @@ const EventSchema = new Schema<EventDocument>({
     max_weight: { type: Number, required: true },
     max_enrollment: { type: Number, required: true },
     matches: [{
-      match_id: { type: Schema.Types.ObjectId, required: true },
       boxer1_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
       boxer2_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
       match_date: { type: Date, required: true },
       match_time: { type: Date, required: true },
-      result: { type: String, enum: Object.values(MatchResult), required: true },
+      result: { type: String, enum: Object.values(MatchResult)},
       previous_match: { type: Schema.Types.ObjectId },
       next_match: { type: Schema.Types.ObjectId },
     }],
@@ -140,7 +145,6 @@ const EventSchema = new Schema<EventDocument>({
       applicate_at: { type: Date, required: true },
     }],
     qualifiers: [{
-      qualifier_id: { type: Schema.Types.ObjectId, required: true },
       boxer1_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
       boxer2_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
       qualifier_date: { type: Date, required: true },
@@ -151,15 +155,14 @@ const EventSchema = new Schema<EventDocument>({
     }],
   }],
   seat_zones: [{
-    seat_zone_id: { type: Schema.Types.ObjectId, required: true },
     zone_name: { type: String, required: true },
     price: { type: Number, required: true },
     seats: [{
-      seat_id: { type: Schema.Types.ObjectId, required: true },
       seat_number: { type: String, required: true },
     }],
     number_of_seat: { type: Number, required: true },
   }],
+  seatZone_url: { type: String },
   status: { type: String, enum: Object.values(EventStatus), required: true },
   packages: [{
     order_id: { type: Schema.Types.ObjectId, required: true },
