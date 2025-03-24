@@ -21,6 +21,9 @@ import CreateCourseForm from "../pages/courses/managements/CreateCourseForm";
 import CreateCourse from "../pages/courses/CreateCourse";
 import BoxerList from "../pages/gyms/managements/BoxerList";
 import TrainerList from "../pages/gyms/managements/TrainerList";
+import GymInfo from "../pages/gyms/managements/GymInfo";
+
+
 function GymRoutes() {
   return (
     <Routes>
@@ -59,6 +62,7 @@ function GymRoutes() {
           path="/management/:gym_id/courses/create"
           element={<CreateCourseForm />}
         />
+        <Route path="/management/:gym_id/edit" element={<GymInfo />} />
       </Route>
 
       <Route path="/editCourseFrom" element={<EditCourseFrom />} />
