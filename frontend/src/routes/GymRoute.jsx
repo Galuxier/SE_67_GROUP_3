@@ -61,7 +61,13 @@ function GymRoutes() {
           <Route path="/management/create" element={<AddGym />} />
           <Route path="/management/:gym_id/boxers/create" element={<AddBoxer />}/>
           <Route path="/management/:gym_id/trainers/create" element={<AddTrainer />}/>
+          <Route path="/management/:gym_id/boxers/create" element={<AddBoxer />}/>
+          <Route path="/management/:gym_id/trainers/create" element={<AddTrainer />}/>
           <Route path="/management/:gym_id/courses/create" element={<CreateCourseForm />}/>
+
+          <Route path="/management/:gym_id/boxers/list" element={<BoxerList />}/>
+          <Route path="/management/:gym_id/trainers/list" element={<TrainerList />}/>
+
 
           <Route path="/management/:gym_id/boxers/list" element={<BoxerList />}/>
           <Route path="/management/:gym_id/trainers/list" element={<TrainerList />}/>
