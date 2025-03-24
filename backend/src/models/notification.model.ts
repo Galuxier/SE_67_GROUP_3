@@ -3,7 +3,8 @@ import { Schema, model, Document } from 'mongoose';
 enum NotificationType {
   Course = "course",
   Event = "event",
-  Shop = "shop"
+  Shop = "shop",
+  Enrollment = "enrollment"
 }
 
 export interface NotificationDocument extends Document {

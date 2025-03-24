@@ -284,7 +284,7 @@ const Login = () => {
                 </p>
               </motion.div>
 
-              <motion.div variants={itemVariants} className="mt-6 flex items-center justify-center space-x-6">
+              {/* <motion.div variants={itemVariants} className="mt-6 flex items-center justify-center space-x-6">
                 <button className="flex items-center justify-center w-10 h-10 rounded-full bg-[#4267B2] hover:bg-[#3b5998] text-white transition-colors">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M9.677 20.895v-7.745H7V10.04h2.677V7.585c0-2.668 1.621-4.12 3.998-4.12 1.138 0 2.116.086 2.4.124v2.821h-1.646c-1.291 0-1.54.617-1.54 1.521v1.993h3.064l-.399 3.11h-2.665v7.852"></path>
@@ -300,7 +300,7 @@ const Login = () => {
                     <path d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81z"></path>
                   </svg>
                 </button>
-              </motion.div>
+              </motion.div> */}
             </div>
           </motion.div>
         )}

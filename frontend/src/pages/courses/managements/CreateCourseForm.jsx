@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { ChevronLeftIcon, ChevronRightIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-toastify";
 import ActivityModal from "../../../components/courses/ActivityModal";
+import { createCoure } from "../../../services/api/CourseApi";
 
 // Step-based course creation form
 const CreateCourseForm = () => {
@@ -186,7 +187,7 @@ const CreateCourseForm = () => {
     formData.append("gym_id", courseData.gym_id);
     
     if (courseData.image_url) {
-      formData.append("image_url", courseData.image_url);
+      formData.append("course_image_url", courseData.image_url);
     }
     
     // Add activities
@@ -195,10 +196,13 @@ const CreateCourseForm = () => {
     try {
       // Simulate API call for now
       console.log("Submitting course:", Object.fromEntries(formData));
+      const response = await createCoure(formData);
+      console.log("Response: ", response);
+      
       
       // Success handling
       toast.success("Course created successfully!");
-      navigate(`/gym/management/${gym_id}`);
+      // navigate(`/gym/management/${gym_id}`);
     } catch (error) {
       console.error("Error creating course:", error);
       toast.error("Failed to create course. Please try again.");
@@ -302,10 +306,9 @@ const CreateCourseForm = () => {
               onChange={handleInputChange}
               className="w-full border border-border rounded-lg py-2 px-3 bg-background text-text focus:outline-none focus:ring-1 focus:ring-primary"
             >
-              <option value="ForKids">For Kids</option>
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
+              <option value="for_kid">For Kids</option>
+              <option value="beginner">Beginner</option>
+              <option value="advance">Advanced</option>
             </select>
           </div>
           

@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  createUserController,
+  createTempUserController,
   getUsersController,
   getUserByIdController,
   updateUserController,
@@ -12,7 +12,7 @@ import { userProfileUpload } from '../middlewares/uploads/user.upload';
 const router = express.Router();
 
 // สร้างผู้ใช้ใหม่
-router.post('/users', createUserController);
+router.post('/users', userProfileUpload, createTempUserController);
 
 // ดึงข้อมูลผู้ใช้ทั้งหมด
 router.get('/users', getUsersController);

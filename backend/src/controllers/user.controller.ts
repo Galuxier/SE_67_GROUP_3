@@ -2,10 +2,14 @@ import { Request, Response } from 'express';
 import  UserService from '../services/user.service';
 
 // สร้างผู้ใช้ใหม่
-export const createUserController = async (req: Request, res: Response) => {
+export const createTempUserController = async (req: Request, res: Response) => {
   try {
     const newUser = await UserService.add(req.body);
-    res.status(201).json(newUser);
+    res.status(201).json({
+      success: true,
+      message: 'Temp User Created',
+      data: newUser
+    });
   } catch (err) {
     res.status(400).json({ message: 'Error creating user', error: err });
   }

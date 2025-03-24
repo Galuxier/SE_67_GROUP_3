@@ -18,7 +18,6 @@ function TrainerList() {
           nickname: "Coach Deneil",
         },
       ];
-    
       const handleClick = (trainer) => {
         console.log(`Clicked on: ${trainer.nickname} (${trainer.name})`);
       };

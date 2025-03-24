@@ -46,7 +46,7 @@ export interface CourseDocument extends Document {
   end_date: Date;
   price: number;
   description?: string;
-  image_url: string[];
+  course_image_url: string[];
   status: CourseStatus;
   activities: Activity[];
   packages: Package[];
@@ -61,7 +61,7 @@ const CourseSchema = new Schema<CourseDocument>({
   end_date: { type: Date, required: true },
   price: { type: Number, required: true },
   description: { type: String },
-  image_url: { type: [String], required: true },
+  course_image_url: { type: [String], required: true },
   status: { type: String, enum: Object.values(CourseStatus), required: true },
   activities: [{
     description: { type: String, required: true },

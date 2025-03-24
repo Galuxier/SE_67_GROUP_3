@@ -12,6 +12,20 @@ export async function getUser(_id) {
     
 }
 
+export async function createTempUser(formData){
+  try{
+    const response = await api.post(`/users`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+    }
+    });
+    return response.data;
+  }catch(error){
+    console.error('Failed to Create User: ', error);
+    throw error;
+  }
+}
+
 export async function getUserProfile(username) {
     try{
         console.log("username: ", username);
