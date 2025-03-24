@@ -11,6 +11,8 @@ import Summary from "../pages/shops/managements/Summary";
 import ProductDetail from "../pages/shops/ProductDetail";
 import Cart from "../pages/shops/Cart";
 import ShopProfile from "../pages/shops/ShopProfile";
+import ProductPayment from "../pages/shops/ProductPayment";
+import ShopInfo from "../pages/shops/managements/ShopInfo";
 
 import ShopManageDashboard from "../pages/shops/managements/ShopManageDashboard";
 
@@ -23,6 +25,7 @@ function ShopRoutes() {
         <Route path="/:shop_id/:product_id" element={<ProductDetail />} />
         <Route path="cart" element={<Cart />} />
         <Route path="/:shop_id" element={<ShopProfile />} />
+        <Route path="/productPayment" element={<ProductPayment />} />
       </Route>
 
       {/* Shop Management Routes */}
@@ -31,6 +34,7 @@ function ShopRoutes() {
         <Route path=":shopId" element={<ShopManageDashboard />} />
         <Route path=":shopId/addProduct" element={<AddProduct />} />
         <Route path="addProduct" element={<AddProduct />} />
+        <Route path=":shopId/shopInfo" element={<ShopInfo />} />
       </Route>
       
       {/* Routes without Navbar */}

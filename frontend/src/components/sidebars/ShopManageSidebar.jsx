@@ -125,7 +125,13 @@ const ShopManageSidebar = ({ shopData, userShops = [], onSwitchShop }) => {
               <HomeIcon className="h-4 w-4 mr-2" />
               Overview
             </Link>
-
+            <Link
+              to={`/shop/management/${shopData._id}/shopInfo`}
+              className={getMenuItemStyles("/shop/management/shopInfo")}
+            >
+              <BuildingStorefrontIcon className="h-4 w-4 mr-2" />
+              Shop Info
+            </Link>
             <Link
               to="/shop/management/dashboard"
               className={getMenuItemStyles("/shop/management/dashboard")}

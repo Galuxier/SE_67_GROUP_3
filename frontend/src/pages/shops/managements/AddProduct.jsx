@@ -27,6 +27,7 @@ export default function AddProduct() {
   const [currentImages, setCurrentImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+
   // Product basic information
   const [product, setProduct] = useState({
     name: "",
@@ -48,6 +49,41 @@ export default function AddProduct() {
   // Validation states
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+
+  const categories = [
+    'training_gloves',
+    'bag_gloves',
+    'competition_gloves',
+    'hand_wraps',
+    'shorts',
+    'shin_guards',
+    'ankle_supports',
+    'mouth_guard',
+    'groin_protector',
+    'elbow_pads',
+    'headgear',
+    'heavy_bag',
+    'kick_pads',
+    'speed_bag',
+    'jump_rope',
+    'pra_jiad_mongkol',
+    'focus_mitts',
+    'belly_pad',
+    'freestanding_bag',
+    'knee_guards',
+    'abdominal_protector',
+    'medicine_ball',
+    'bell',
+    'stopwatch',
+    'dumbbell',
+    'barbell',
+    'other',
+  ];
+  
+  const categoryOptions = categories.map(cat => ({
+    label: cat.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+    value: cat,
+  }));
 
   // Set touched field when focusing on an input
   const handleFocus = (field) => {
@@ -413,17 +449,19 @@ export default function AddProduct() {
   
       <div>
         <label className="block text-lg font-medium mb-2 dark:text-text">Category</label>
-        <input
-          type="text"
+        <select
           name="category"
           value={product.category}
-          onChange={handleInputChange}
-          onFocus={() => handleFocus('category')}
-          placeholder="Enter product category"
-          className={`w-full border ${
-            errors.category ? 'border-red-500' : 'border-border'
-          } rounded-lg py-2 px-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-background dark:bg-card dark:text-text dark:border-border/50`}
-        />
+          onChange={(e) => setProduct({ ...product, category: e.target.value })}
+          className="w-full border border-border rounded-lg py-2 px-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-background dark:bg-card dark:text-text dark:border-border/50"
+        >
+          <option value="" disabled>Select category</option>
+          {categoryOptions.map((cat) => (
+            <option key={cat.value} value={cat.value}>
+              {cat.label}
+            </option>
+          ))}
+        </select>
         {errors.category && <p className="mt-1 text-sm text-red-500">{errors.category}</p>}
       </div>
   

@@ -217,48 +217,57 @@ export default function ProductDetail() {
       toast.error("Please select all product options");
       return;
     }
-    
-    // Check if there's enough stock
+  
     if (selectedVariant.stock < quantity) {
       toast.error(`Sorry, only ${selectedVariant.stock} items available in stock`);
       return;
     }
-    
-    // Create cart item
-    const cartItem = {
+  
+    const newCartItem = {
       product_id: product._id,
       variant_id: selectedVariant._id,
-      product_name: product.product_name,
-      price: selectedVariant.price,
-      attribute: selectedVariant.attributes || {},
       quantity: quantity,
+      price: selectedVariant.price,
       image_url: selectedVariant.variant_image_url || (imageUrls[0] || ""),
-      shop_id: product.shop_id,
-      shop_name: shopData?.shop_name || "Shop"
+      product_name: product.product_name,
+      attribute: selectedVariant.attributes || {}
     };
-    
-    // Get existing cart from localStorage
-    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    
-    // Check if item already exists in cart
-    const existingItemIndex = cart.findIndex(item => 
-      item.product_id === cartItem.product_id && item.variant_id === cartItem.variant_id
-    );
-    
-    if (existingItemIndex >= 0) {
-      // Update quantity of existing item
-      cart[existingItemIndex].quantity += quantity;
+  
+    let cart = JSON.parse(localStorage.getItem("cart")) || { shops: [], total_price: 0 };
+  
+    // หา shop_id ว่ามีอยู่ใน cart หรือไม่
+    const shopIndex = cart.shops.findIndex(shop => shop.shop_id === product.shop_id);
+  
+    if (shopIndex !== -1) {
+      // ถ้ามีร้านนี้แล้ว → เช็คว่าสินค้าซ้ำหรือไม่
+      const shop = cart.shops[shopIndex];
+      const itemIndex = shop.items.findIndex(
+        item => item.product_id === newCartItem.product_id && item.variant_id === newCartItem.variant_id
+      );
+  
+      if (itemIndex !== -1) {
+        shop.items[itemIndex].quantity += quantity;
+      } else {
+        shop.items.push(newCartItem);
+      }
     } else {
-      // Add new item to cart
-      cart.push(cartItem);
+      // ถ้ายังไม่มีร้านค้า → เพิ่มร้านใหม่ (แค่ `shop_id`)
+      cart.shops.push({
+        shop_id: product.shop_id,
+        items: [newCartItem],
+      });
     }
-    
-    // Save updated cart to localStorage
+  
+    // คำนวณ total_price ใหม่
+    cart.total_price = cart.shops.reduce((total, shop) => {
+      return total + shop.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+    }, 0);
+  
     localStorage.setItem("cart", JSON.stringify(cart));
-    
-    // Show success message
     toast.success("Added to cart successfully!");
   };
+  
+  
   
   // Buy now function
   const handleBuyNow = () => {
