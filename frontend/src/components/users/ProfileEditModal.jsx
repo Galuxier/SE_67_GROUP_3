@@ -214,7 +214,7 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
       
       // Append profile picture if it exists
       if (formData.profile_picture) {
-        submitData.append("profile_picture", formData.profile_picture);
+        submitData.append("profile_picture_url", formData.profile_picture);
       }
       
       // Update user profile
