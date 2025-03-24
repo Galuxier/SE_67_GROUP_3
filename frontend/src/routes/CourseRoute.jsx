@@ -23,7 +23,6 @@ function CourseRoutes() {
         </Route>
 
         {/* ไม่มี Layout(Navbar) */}
-        
       </Routes>
   );
 }

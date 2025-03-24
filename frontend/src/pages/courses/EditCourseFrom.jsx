@@ -7,6 +7,8 @@ export default function EditCourseFrom() {
   const { state } = useLocation();
   const navigate = useNavigate();
   // รับค่าข้อมูลคอร์สจาก state หรือ localStorage
+  const location = useLocation();
+  const { imageCourse } = location.state || {};
   const courseD =
     state?.formDataEdit || JSON.parse(localStorage.getItem("formDataEdit"));
 
@@ -20,7 +22,7 @@ export default function EditCourseFrom() {
     endTime: "",
     description: "",
     trainer: [],
-    date: ""
+    date: "",
   });
 
   // คำนวณวันทั้งหมดของคอร์สและสร้างรายการวันที่
@@ -44,7 +46,10 @@ export default function EditCourseFrom() {
       // คำนวณความต่างของวันและบวก 1 (เพื่อรวมวันเริ่มต้น)
       const diffTime = Math.abs(endDate - startDate);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      setTotalDays(diffDays);
+      // ตรวจสอบการอัปเดต totalDays
+      if (totalDays !== diffDays) {
+        setTotalDays(diffDays);  // อัปเดตเฉพาะเมื่อ totalDays เปลี่ยนแปลง
+      }
 
       // สร้างรายการวันที่ในรูปแบบ DD/MM และ YYYY-MM-DD
       const dates = [];
@@ -67,7 +72,7 @@ export default function EditCourseFrom() {
         iso: isoDateFormat,
       });
     }
-  }, [courseD]);
+  }, [courseD,totalDays]);
 
   // โหลดกิจกรรมที่บันทึกไว้
   useEffect(() => {
@@ -86,7 +91,7 @@ export default function EditCourseFrom() {
     if (courseDates.iso && courseDates.iso.length > 0) {
       setNewActivity((prev) => ({
         ...prev,
-        date: courseDates.iso[currentDay - 1]
+        date: courseDates.iso[currentDay - 1],
       }));
     }
   }, [currentDay, courseDates.iso]);
@@ -120,7 +125,8 @@ export default function EditCourseFrom() {
     // แปลงรูปแบบกิจกรรมให้ตรงตามที่ต้องการ
     const formattedActivities = activities.map((activity) => ({
       description: activity.description,
-      date: activity.date || (courseDates.iso ? courseDates.iso[0] : "2025-01-01"),
+      date:
+        activity.date || (courseDates.iso ? courseDates.iso[0] : "2025-01-01"),
       startTime: activity.startTime,
       endTime: activity.endTime,
       trainer: activity.coachDetails
@@ -128,36 +134,53 @@ export default function EditCourseFrom() {
         : activity.trainer || [],
     }));
 
-    const finalcourseD = {
-      image_url: courseD?.image_url || "",
-      gym: courseD?.gym || "",
-      course_name: courseD?.courseName || "",
-      level: courseD?.level || "",
-      startDate: courseD?.startDate || "",
-      endDate: courseD?.endDate || "",
-      price: courseD?.price || "",
-      description: courseD?.description || "",
-      activities: formattedActivities,
-    };
-    // console.log(finalcourseD);
-    
-    // บันทึกข้อมูลคอร์สที่สมบูรณ์
-    localStorage.setItem("completeCourse", JSON.stringify(finalcourseD));
+    // สร้าง FormData object
+    const form = new FormData();
 
-    // นำทางไปยังหน้าแสดงรายการคอร์ส
-    navigate("/course");
+    // Add the course details to the FormData
+    form.append("image_url", courseD?.image_url || "");
+    form.append("gym", courseD?.gym || "");
+    form.append("course_name", courseD?.courseName || "");
+    form.append("level", courseD?.level || "");
+    form.append("startDate", courseD?.startDate || "");
+    form.append("endDate", courseD?.endDate || "");
+    form.append("price", courseD?.price || "");
+    form.append("description", courseD?.description || "");
+    form.append("imageCourse", imageCourse);
+    // Add each activity to the FormData
+    formattedActivities.forEach((activity, index) => {
+      form.append(`activity_${index}_description`, activity.description);
+      form.append(`activity_${index}_date`, activity.date);
+      form.append(`activity_${index}_startTime`, activity.startTime);
+      form.append(`activity_${index}_endTime`, activity.endTime);
 
-    // ล้างข้อมูลชั่วคราว
+      // Add trainer information if available
+      if (activity.trainer && activity.trainer.length > 0) {
+        activity.trainer.forEach((trainer, trainerIndex) => {
+          form.append(`activity_${index}_trainer_${trainerIndex}`, trainer);
+        });
+      }
+    });
+    form.forEach((value, key) => {
+      if (key === "imageCourse") {
+        console.log(`File name: ${value.name}`); // Prints file name
+      } else {
+        console.log(`${key}: ${value}`);
+      }
+    });
     localStorage.removeItem("completeCourse");
     localStorage.removeItem("formDataEdit");
     localStorage.removeItem("activities");
+    navigate("/course");
   };
 
   // กรองกิจกรรมตามวันที่แสดง (ใช้ date แทน day)
   const filteredActivities = activities.filter((activity) => {
     // ตรวจสอบว่ามี courseDates.iso และมีวันที่ปัจจุบัน
-    const currentDateIso = courseDates.iso ? courseDates.iso[currentDay - 1] : null;
-    
+    const currentDateIso = courseDates.iso
+      ? courseDates.iso[currentDay - 1]
+      : null;
+
     // กรองเฉพาะกิจกรรมที่มี date ตรงกับวันที่กำลังดูอยู่
     return activity.date === currentDateIso;
   });
@@ -221,12 +244,14 @@ export default function EditCourseFrom() {
                   <tr key={act.id} className="text-center">
                     <td className="p-2 border">
                       {act.startTime} - {act.endTime}
-                    </td> 
+                    </td>
                     <td className="p-2 border">{act.description}</td>
                     <td className="p-2 border">
-                      {act.coachDetails 
-                        ? act.coachDetails.map(coach => coach.name).join(", ")
-                        : act.trainer ? act.trainer.join(", ") : ""}
+                      {act.coachDetails
+                        ? act.coachDetails.map((coach) => coach.name).join(", ")
+                        : act.trainer
+                        ? act.trainer.join(", ")
+                        : ""}
                     </td>
                     <td className="p-2 border">
                       <button className="text-blue-500 mr-2">
@@ -244,7 +269,7 @@ export default function EditCourseFrom() {
               ) : (
                 <tr>
                   <td colSpan={4} className="p-4 text-center text-gray-500">
-                    ไม่มีกิจกรรมในวันนี้ 
+                    ไม่มีกิจกรรมในวันนี้
                   </td>
                 </tr>
               )}

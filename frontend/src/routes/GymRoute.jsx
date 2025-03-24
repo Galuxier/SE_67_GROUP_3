@@ -18,6 +18,7 @@ import CreateCourse from "../pages/courses/CreateCourse";
 import CourseFrom from "../pages/courses/CourseFrom";
 import CreateCourseForm from "../pages/courses/managements/CreateCourseForm";
 
+import CreateCourse from "../pages/courses/CreateCourse";
 function GymRoutes() {
   return (
       <Routes>
@@ -51,7 +52,6 @@ function GymRoutes() {
         <Route path ="/createCourse" element={<CreateCourse />} />
 
       {/* ไม่มี Layout(Navbar) */}
-      
       <Route path="/forrent" element={<GymForRent />} />
     </Routes>
   );
