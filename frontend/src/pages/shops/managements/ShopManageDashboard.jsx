@@ -10,11 +10,11 @@ import {
   UsersIcon
 } from "@heroicons/react/24/outline";
 import { getShopProducts, getShopOrders } from "../../../services/api/ShopApi";
+import { getImage } from "../../../services/api/ImageApi";
 
 const ShopManageDashboard = () => {
-  // Get shop data from outlet context
   const { shopData, userShops } = useOutletContext() || {};
-  
+  const [logoPreview, setLogoPreview] = useState(null); 
   const [isLoading, setIsLoading] = useState(true);
   const [products, setProducts] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
@@ -36,10 +36,9 @@ const ShopManageDashboard = () => {
     });
   }, [shopData, userShops]);
 
-  // Fetch shop data when shopData changes
+  // Fetch shop data and logo when shopData changes
   useEffect(() => {
     const fetchShopData = async () => {
-      // Only fetch if we have valid shop data with an ID
       if (!shopData || !shopData._id) {
         setIsLoading(false);
         return;
@@ -51,14 +50,18 @@ const ShopManageDashboard = () => {
       try {
         console.log("Fetching data for shop:", shopData._id);
         
-        // Fetch products and recent orders in parallel
-        const [productsData, ordersData] = await Promise.all([
+        // Fetch products, orders, and logo in parallel
+        const [productsData, ordersData, logoData] = await Promise.all([
           getShopProducts(shopData._id),
-          getShopOrders(shopData._id)
+          getShopOrders(shopData._id),
+          shopData.logo_url ? getImage(shopData.logo_url) : Promise.resolve(null)
         ]);
-        
-        
-        
+
+        // Set logo preview
+        if (logoData) {
+          setLogoPreview(logoData); // Assuming getImage returns a Blob
+        }
+
         // Set products data
         const productList = Array.isArray(productsData) ? productsData : [];
         setProducts(productList);
@@ -66,7 +69,6 @@ const ShopManageDashboard = () => {
         // Set orders data and calculate statistics
         const ordersList = Array.isArray(ordersData) ? ordersData : [];
         
-        // Sort orders by date (newest first) and take first 5
         const sortedOrders = ordersList
           .sort((a, b) => new Date(b.created_at || b.createdAt || Date.now()) - 
                          new Date(a.created_at || a.createdAt || Date.now()))
@@ -74,7 +76,6 @@ const ShopManageDashboard = () => {
           
         setRecentOrders(sortedOrders);
         
-        // Calculate shop statistics
         const pendingOrdersCount = ordersList.filter(
           order => order.status?.toLowerCase() === "pending"
         ).length;
@@ -100,6 +101,13 @@ const ShopManageDashboard = () => {
     };
 
     fetchShopData();
+
+    // Cleanup logo preview URL on unmount
+    return () => {
+      if (logoPreview) {
+        URL.revokeObjectURL(logoPreview);
+      }
+    };
   }, [shopData]);
 
   // Helper to format currency
@@ -125,7 +133,6 @@ const ShopManageDashboard = () => {
     }
   };
 
-  // If no shop data available, show create shop message
   if (!shopData) {
     return (
       <div className="flex flex-col items-center justify-center h-[80vh] text-center">
@@ -181,8 +188,8 @@ const ShopManageDashboard = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              {shopData?.logo_url ? (
-                <img src={shopData.logo_url} alt="Shop Logo" className="w-full h-full object-cover" />
+              {logoPreview ? (
+                <img src={logoPreview} alt="Shop Logo" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-primary/20">
                   <ShoppingBagIcon className="h-8 w-8 text-primary" />

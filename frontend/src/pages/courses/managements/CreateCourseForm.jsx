@@ -99,10 +99,28 @@ const CreateCourseForm = () => {
   // Input change handler
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setCourseData({
-      ...courseData,
-      [name]: value
-    });
+    
+    // Special handling for start_date
+    if (name === "start_date") {
+      // Reset end_date if start_date changes and end_date is before the new start_date
+      if (courseData.end_date && new Date(courseData.end_date) < new Date(value)) {
+        setCourseData({
+          ...courseData,
+          [name]: value,
+          end_date: "" // Reset end_date
+        });
+      } else {
+        setCourseData({
+          ...courseData,
+          [name]: value
+        });
+      }
+    } else {
+      setCourseData({
+        ...courseData,
+        [name]: value
+      });
+    }
   };
 
   // Navigation between steps
@@ -392,6 +410,7 @@ const CreateCourseForm = () => {
               name="end_date"
               value={courseData.end_date}
               onChange={handleInputChange}
+              min={courseData.start_date}
               className="w-full border border-border rounded-lg py-2 px-3 bg-background text-text focus:outline-none focus:ring-1 focus:ring-primary"
               required
             />

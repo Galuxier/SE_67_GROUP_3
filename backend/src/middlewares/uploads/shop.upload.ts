@@ -1,20 +1,13 @@
-// import createUploader from './base.upload';
+import createUploader from './base.upload';
 
-// export const shopLogoUpload = createUploader(
-//   1, // จำนวนไฟล์สูงสุดที่อนุญาต
-//   true, // single file upload
-//   'shops/logos', // subfolder สำหรับเก็บไฟล์โลโก้
-//   ['image/'], // อนุญาตเฉพาะไฟล์รูปภาพ
-//   'logo' // field name ที่ใช้ใน form-data
-// );
-
-// export const shopLicenseUpload = createUploader(
-//   1, // จำนวนไฟล์สูงสุดที่อนุญาต
-//   true, // single file upload
-//   'shops/licenses', // subfolder สำหรับเก็บไฟล์ใบอนุญาต
-//   ['image/'], // อนุญาตเฉพาะไฟล์รูปภาพ
-//   'license' // field name ที่ใช้ใน form-data
-// );
+export const shopUpload = createUploader([
+  {
+    subfolder: 'shops/logos',
+    allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif'],
+    name: 'logo_url',
+    maxCount: 1,
+  }
+]); 
 
 
 import multer from 'multer';
@@ -69,3 +62,4 @@ const createMultiFieldUploader = (
 };
 
 export default createMultiFieldUploader;
+

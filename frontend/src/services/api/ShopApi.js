@@ -42,7 +42,7 @@ export async function updateShop(id, shopData) {
       },
     } : {};
     
-    const response = await api.put(`/shops/${id}`, shopData, config);
+    const response = await api.put(`/shop/${id}`, shopData, config);
     return response.data;
   } catch (error) {
     console.error("Error updating shop:", error);

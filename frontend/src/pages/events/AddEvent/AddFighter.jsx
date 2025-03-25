@@ -5,7 +5,7 @@ import Button from "../../../components/ui/Button";
 import Modal from "../../../components/ui/Modal";
 import { GrLinkNext, GrLinkPrevious } from "react-icons/gr";
 import { createEvent } from "../../../services/api/EventApi";
-import boxer from "./MockBoxer";
+import { boxers } from "./MockBoxer";
 
 export default function FormAddFighter() {
   const { state } = useLocation();

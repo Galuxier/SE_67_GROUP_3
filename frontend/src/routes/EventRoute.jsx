@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import EventManageLayout from "../layouts/EnevtManageLayout";
+import EventManageLayout from "../layouts/EventManageLayout";
 import { EventManagementRouteGuard } from "./guards/RouteGuard";
 
 import EventHome from "../pages/events/EventHome";

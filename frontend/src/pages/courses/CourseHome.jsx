@@ -240,7 +240,7 @@ function CourseHome() {
   return (
     <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
       {/* Simplified Hero Banner - Similar to GymHome */}
-      <div className="relative w-full h-[40vh] md:h-[50vh] z-0 bg-gradient-to-r from-rose-600 via-red-500 to-amber-500 overflow-hidden">
+      <div className="relative w-full h-[40vh] md:h-40vh] z-0 bg-gradient-to-r from-rose-600 via-red-500 to-amber-500 overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
           <motion.div 
@@ -249,7 +249,7 @@ function CourseHome() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
+            <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">
               Find Your Perfect <span className="text-yellow-300">Muay Thai Course</span>
             </h1>
             <p className="text-lg text-white/90 mb-8 max-w-2xl">
@@ -276,7 +276,7 @@ function CourseHome() {
         </div>
         
         {/* Courses stats bar - shows at the bottom of hero */}
-        <div className="absolute bottom-0 left-0 right-0 bg-white/10 backdrop-blur-sm p-4">
+        {/* <div className="absolute bottom-0 left-0 right-0 bg-white/10 backdrop-blur-sm p-4">
           <div className="container mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center p-2">
@@ -304,7 +304,7 @@ function CourseHome() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto pb-12 -mt-0 relative z-20">

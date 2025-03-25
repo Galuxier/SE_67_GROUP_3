@@ -161,12 +161,15 @@ function Navbar() {
                       {/* Role-specific menu items */}
                       {user?.role && (
                         <>
-                          <div className="flex items-center my-1">
-                            <hr className="flex-grow border-border dark:border-gray-600" />
-                            <span className="px-2 text-sm text-gray-500 dark:text-gray-400">Management</span>
-                            <hr className="flex-grow border-border dark:border-gray-600" />
-                          </div>
-
+                          {user.role.includes('gym_owner') || user.role.includes('organizer') || user.role.includes('shop_owner') || user.role.includes('lessor') || user.role.includes('admin')?
+                            (
+                              <div className="flex items-center my-1">
+                                <hr className="flex-grow border-border dark:border-gray-600" />
+                                <span className="px-2 text-sm text-gray-500 dark:text-gray-400">Management</span>
+                                <hr className="flex-grow border-border dark:border-gray-600" />
+                              </div>
+                            ) : null}
+                          
                           {/* <hr className="flex-grow border-border dark:border-gray-600" /> */}
 
                           {/* Gym Management for gym_owner */}
