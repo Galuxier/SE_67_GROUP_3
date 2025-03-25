@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import  UserService from '../services/user.service';
+import { Types } from 'mongoose';
 
 // สร้างผู้ใช้ใหม่
 export const createTempUserController = async (req: Request, res: Response) => {
@@ -12,6 +13,32 @@ export const createTempUserController = async (req: Request, res: Response) => {
     });
   } catch (err) {
     res.status(400).json({ message: 'Error creating user', error: err });
+  }
+};
+
+export const getUserRolesController = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id;
+
+    // เรียกใช้ UserService เพื่อดึง roles
+    const user = await UserService.getUserRoles(userId);
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    // ส่งเฉพาะ roles กลับไป
+    res.status(200).json({
+      success: true,
+      data: {
+        userId: user._id,
+        roles: user.role,
+      },
+    });
+  } catch (err) {
+    console.error('Error fetching user roles:', err);
+    res.status(500).json({ message: 'Error fetching user roles', error: err });
   }
 };
 

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { registerUser, loginUser } from "../services/auth.service";
+import { log } from "console";
 
 // สมัครสมาชิก
 export const register = async (req: Request, res: Response) => {

@@ -17,6 +17,8 @@ export const createProduct = async (productData) => {
 
 export const getProducts = async (params = {}) => {
   try {
+    console.log("params: ",params);
+    
     const response = await api.get('/products', { params });
     return response.data;
   } catch (error) {

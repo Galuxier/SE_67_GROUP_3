@@ -50,11 +50,12 @@ class ProductService extends BaseService<ProductDocument> {
     minPrice?: number,
     maxPrice?: number,
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
+    sort?: string // เพิ่ม sort parameter
   ): Promise<{ products: ProductDocument[], total: number }> {
     const filter: any = {};
     
-    // Add search query condition (search in product name and description)
+    // Add search query condition
     if (query && query.trim().length > 0) {
       const searchRegex = new RegExp(query, 'i');
       filter.$or = [
@@ -63,17 +64,17 @@ class ProductService extends BaseService<ProductDocument> {
       ];
     }
     
-    // Add category filter if provided
+    // Add category filter
     if (category) {
       filter.category = category;
     }
     
-    // Add shop filter if provided
+    // Add shop filter
     if (shopId) {
       filter.shop_id = new Types.ObjectId(shopId);
     }
     
-    // Add price range filter if provided
+    // Add price range filter
     if (minPrice !== undefined || maxPrice !== undefined) {
       filter.base_price = {};
       if (minPrice !== undefined) filter.base_price.$gte = minPrice;
@@ -83,9 +84,17 @@ class ProductService extends BaseService<ProductDocument> {
     // Calculate pagination
     const skip = (page - 1) * limit;
     
+    // Define sort options
+    let sortOption: any = { created_at: -1 }; // Default sort by created_at DESC
+    if (sort === 'low-to-high') {
+      sortOption = { base_price: 1 }; // Sort by price ASC
+    } else if (sort === 'high-to-low') {
+      sortOption = { base_price: -1 }; // Sort by price DESC
+    }
+    
     // Execute query
     const products = await Product.find(filter)
-      .sort({ created_at: -1 })
+      .sort(sortOption) // ใช้ sortOption
       .skip(skip)
       .limit(limit);
     

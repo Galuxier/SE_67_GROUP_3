@@ -3,22 +3,25 @@ import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import { 
-  CheckCircleIcon, 
-  XCircleIcon, 
-  EyeIcon, 
-  ChevronUpIcon, 
+import {
+  CheckCircleIcon,
+  XCircleIcon,
+  EyeIcon,
+  ChevronLeftIcon, // เปลี่ยนจาก ChevronUpIcon เป็น ChevronLeftIcon
+  ChevronRightIcon, // เปลี่ยนจาก ChevronUpIcon เป็น ChevronRightIcon
+  ChevronUpIcon,
   ChevronDownIcon,
   UserCircleIcon,
   XMarkIcon,
   DocumentTextIcon
 } from "@heroicons/react/24/outline";
-import { 
-  CheckCircleIcon as CheckCircleSolidIcon, 
-  XCircleIcon as XCircleSolidIcon 
+import {
+  CheckCircleIcon as CheckCircleSolidIcon,
+  XCircleIcon as XCircleSolidIcon
 } from "@heroicons/react/24/solid";
 import { toast } from "react-toastify";
 import { getAllEnrollment, updateEnrollment } from "../../services/api/AdminApi";
+import { getImage } from "../../services/api/ImageApi";
 
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
@@ -26,19 +29,29 @@ const statusColors = {
   rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
 };
 
-
 const ROLE_DISPLAY = {
-  "boxer": "นักมวย",
-  "trainer": "โค้ชมวย",
-  "gym_owner": "เจ้าของค่ายมวย",
-  "organizer": "ผู้จัดการแข่งขัน",
-  "shop_owner": "เจ้าของร้านค้า",
-  "lessor": "ผู้ให้เช่าสถานที่",
-  "admin": "ผู้ดูแลระบบ"
+  boxer: "นักมวย",
+  trainer: "โค้ชมวย",
+  gym_owner: "เจ้าของค่ายมวย",
+  organizer: "ผู้จัดการแข่งขัน",
+  shop_owner: "เจ้าของร้านค้า",
+  lessor: "ผู้ให้เช่าสถานที่",
+  admin: "ผู้ดูแลระบบ",
+};
+
+// ฟังก์ชันช่วยตรวจสอบประเภทไฟล์จากนามสกุล
+const isImageFile = (fileUrl) => {
+  const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+  return imageExtensions.some((ext) => fileUrl.toLowerCase().endsWith(ext));
+};
+
+const isPdfFile = (fileUrl) => {
+  return fileUrl.toLowerCase().endsWith(".pdf");
 };
 
 export default function AdminApproval() {
   const { user } = useAuth();
+  const [profileImages, setProfileImages] = useState({});
   const [enrollments, setEnrollments] = useState([]);
   const [filteredEnrollments, setFilteredEnrollments] = useState([]);
   const [filterRole, setFilterRole] = useState("");
@@ -50,99 +63,113 @@ export default function AdminApproval() {
   const [rejectReason, setRejectReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sortConfig, setSortConfig] = useState({
-    key: 'create_at',
-    direction: 'desc'
+    key: "create_at",
+    direction: "desc",
   });
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-      const fetchEnrollment = async () => {
-        try {
-          const response = await getAllEnrollment();
-          setEnrollments(response);
-          setFilteredEnrollments(response);
-          console.log(response);
-          
-        } catch (error) {
-          console.error("Failed to fetch gyms:", error);
-        }
-      };
-  
-      fetchEnrollment();
-    }, []);
+    const fetchEnrollment = async () => {
+      try {
+        const response = await getAllEnrollment();
+        console.log("API Response:", response);
+        const enrollmentData = Array.isArray(response) ? response : [];
+        setEnrollments(enrollmentData);
+        setFilteredEnrollments(enrollmentData);
 
-    console.log(enrollments);
-    
+        // โหลดรูปภาพสำหรับแต่ละ user
+        const imagePromises = enrollmentData.map(async (enrollment) => {
+          if (enrollment.user_id.profile_picture_url) {
+            try {
+              const imageUrl = await getImage(enrollment.user_id.profile_picture_url);
+              return { [enrollment.user_id._id]: imageUrl };
+            } catch (error) {
+              console.error(`Failed to load image for ${enrollment.user_id.username}:`, error);
+              return { [enrollment.user_id._id]: null };
+            }
+          }
+          return { [enrollment.user_id._id]: null };
+        });
+
+        const images = await Promise.all(imagePromises);
+        const imageMap = Object.assign({}, ...images);
+        setProfileImages(imageMap);
+      } catch (error) {
+        console.error("Failed to fetch enrollments:", error);
+        setEnrollments([]);
+        setFilteredEnrollments([]);
+      }
+    };
+
+    fetchEnrollment();
+  }, []);
+
+  console.log(enrollments);
 
   // Filter enrollment data based on role and search term
   useEffect(() => {
     let filtered = [...enrollments];
-    
-    // Filter by role if set
+
     if (filterRole) {
-      filtered = filtered.filter(enrollment => enrollment.role === filterRole);
+      filtered = filtered.filter((enrollment) => enrollment.role === filterRole);
     }
-    
-    // Filter by search term if present
+
     if (searchTerm) {
       const lowercasedSearch = searchTerm.toLowerCase();
-      filtered = filtered.filter(enrollment => 
-        enrollment.user_id.username.toLowerCase().includes(lowercasedSearch) ||
-        enrollment.user_id.first_name.toLowerCase().includes(lowercasedSearch) ||
-        enrollment.user_id.last_name.toLowerCase().includes(lowercasedSearch) ||
-        enrollment.user_id.email.toLowerCase().includes(lowercasedSearch)
+      filtered = filtered.filter(
+        (enrollment) =>
+          enrollment.user_id.username.toLowerCase().includes(lowercasedSearch) ||
+          enrollment.user_id.first_name.toLowerCase().includes(lowercasedSearch) ||
+          enrollment.user_id.last_name.toLowerCase().includes(lowercasedSearch) ||
+          enrollment.user_id.email.toLowerCase().includes(lowercasedSearch)
       );
     }
-    
-    // Apply sorting
+
     if (sortConfig.key) {
       filtered.sort((a, b) => {
-        // Handle nested properties
-        if (sortConfig.key.includes('.')) {
-          const [parent, child] = sortConfig.key.split('.');
+        if (sortConfig.key.includes(".")) {
+          const [parent, child] = sortConfig.key.split(".");
           if (!a[parent] || !b[parent]) return 0;
-          
+
           if (a[parent][child] < b[parent][child]) {
-            return sortConfig.direction === 'asc' ? -1 : 1;
+            return sortConfig.direction === "asc" ? -1 : 1;
           }
           if (a[parent][child] > b[parent][child]) {
-            return sortConfig.direction === 'asc' ? 1 : -1;
+            return sortConfig.direction === "asc" ? 1 : -1;
           }
           return 0;
         }
-        
-        // Handle direct properties
+
         if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
+          return sortConfig.direction === "asc" ? -1 : 1;
         }
         if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
+          return sortConfig.direction === "asc" ? 1 : -1;
         }
         return 0;
       });
     }
-    
+
     setFilteredEnrollments(filtered);
   }, [enrollments, filterRole, sortConfig, searchTerm]);
 
   const handleSortClick = (key) => {
-    let direction = 'asc';
-    
+    let direction = "asc";
     if (sortConfig.key === key) {
-      direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+      direction = sortConfig.direction === "asc" ? "desc" : "asc";
     }
-    
     setSortConfig({ key, direction });
   };
 
   const getSortIcon = (columnName) => {
     if (sortConfig.key !== columnName) {
-      return null;
+      return <ChevronUpIcon className="w-4 h-4 ml-1 opacity-30" />; // ลูกศรเริ่มต้น (จางๆ เมื่อไม่ active)
     }
-    
-    return sortConfig.direction === 'asc' 
-      ? <ChevronUpIcon className="w-4 h-4 ml-1" /> 
-      : <ChevronDownIcon className="w-4 h-4 ml-1" />;
+    return sortConfig.direction === "asc" ? (
+      <ChevronUpIcon className="w-4 h-4 ml-1 text-text" /> // ชี้ขึ้นเมื่อเรียงจากน้อยไปมาก
+    ) : (
+      <ChevronDownIcon className="w-4 h-4 ml-1 text-text" /> // ชี้ลงเมื่อเรียงจากมากไปน้อย
+    );
   };
 
   const formatDate = (dateString) => {
@@ -156,8 +183,11 @@ export default function AdminApproval() {
   };
 
   const handleInfoClick = (enrollment) => {
+    console.log("handleInfoClick triggered", enrollment);
     setSelectedEnrollment(enrollment);
     setInfoModal(true);
+    console.log("infoModal state after set:", true);
+    console.log("selectedEnrollment after set:", enrollment);
   };
 
   const handleFilesClick = (enrollment) => {
@@ -173,61 +203,39 @@ export default function AdminApproval() {
   };
 
   const handleEnrollmentAction = async (id, status, reason = null) => {
-  setIsSubmitting(true);
-  
-  try {
-    // Prepare the data to send to the API
-    const formData = new FormData();
-    
-    // Add the status to the FormData
-    formData.append('status', status);
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("status", status);
+      formData.append("reviewer_id", user._id);
+      if (reason) formData.append("reject_reason", reason);
 
-    formData.append('reviewer_id', user._id);
-    
-    // Add the reason if provided
-    if (reason) {
-      formData.append('reject_reason', reason);
+      formData.forEach((value, key) => console.log(`${key}: ${value}`));
+      const response = await updateEnrollment(id, formData);
+      console.log(response.data);
+
+      setEnrollments((prev) =>
+        prev.map((enrollment) => (enrollment._id === id ? response.data : enrollment))
+      );
+      setRejectModal(false);
+      setInfoModal(false);
+      toast.success(`คำขอได้รับการ${status === "approved" ? "อนุมัติ" : "ปฏิเสธ"}แล้ว`);
+    } catch (error) {
+      console.error(`Error ${status === "approved" ? "approving" : "rejecting"} enrollment:`, error);
+      toast.error(`เกิดข้อผิดพลาดในการ${status === "approved" ? "อนุมัติ" : "ปฏิเสธ"}คำขอ`);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    formData.forEach((value, key) => {
-      console.log(`${key}: ${value}`);
-    });
-    
-    // Make the API call to update the enrollment
-    const response = await updateEnrollment(id, formData);
-    console.log(response.data);
-    
-    // Update the enrollment in state with the response data
-    setEnrollments(prevEnrollments => 
-      prevEnrollments.map(enrollment => 
-        enrollment._id === id ? response.data : enrollment
-      )
-    );
-    
-    // Close modals
-    setRejectModal(false);
-    setInfoModal(false);
-    
-    // Show success toast
-    toast.success(`คำขอได้รับการ${status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'}แล้ว`);
-  } catch (error) {
-    console.error(`Error ${status === 'approved' ? 'approving' : 'rejecting'} enrollment:`, error);
-    toast.error(`เกิดข้อผิดพลาดในการ${status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'}คำขอ`);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   const handleSubmitReject = () => {
     if (!rejectReason.trim()) {
       toast.error("กรุณาระบุเหตุผลในการปฏิเสธคำขอ");
       return;
     }
-    
     handleEnrollmentAction(selectedEnrollment._id, "rejected", rejectReason);
   };
 
-  // Role options for filter
   const roleOptions = [
     { value: "boxer", display: "นักมวย" },
     { value: "trainer", display: "โค้ชมวย" },
@@ -243,13 +251,13 @@ export default function AdminApproval() {
         <h1 className="text-2xl font-bold mb-2">ระบบจัดการคำขอบทบาท</h1>
         <p className="text-text/70">อนุมัติหรือปฏิเสธคำขอบทบาทจากผู้ใช้งาน</p>
       </div>
-      
+
       {/* Filters and Search */}
       <div className="bg-card border border-border/50 rounded-lg p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="w-full md:w-64">
             <label className="block text-sm font-medium mb-1">ค้นหาผู้ใช้</label>
-            <input 
+            <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -257,7 +265,7 @@ export default function AdminApproval() {
               className="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-background"
             />
           </div>
-          
+
           <div className="w-full md:w-48">
             <label className="block text-sm font-medium mb-1">กรองตามบทบาท</label>
             <select
@@ -273,14 +281,14 @@ export default function AdminApproval() {
               ))}
             </select>
           </div>
-          
+
           <div className="w-full md:w-48">
             <label className="block text-sm font-medium mb-1">กรองตามสถานะ</label>
             <select
               onChange={(e) => {
                 const status = e.target.value;
-                setEnrollments(prevEnrollments => 
-                  status ? mockEnrollments.filter(item => item.status === status) : mockEnrollments
+                setFilteredEnrollments((prev) =>
+                  status ? prev.filter((item) => item.status === status) : prev
                 );
               }}
               className="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-background"
@@ -291,16 +299,12 @@ export default function AdminApproval() {
               <option value="rejected">ปฏิเสธแล้ว</option>
             </select>
           </div>
-          
-          <button 
+
+          <button
             onClick={() => {
               setFilterRole("");
               setSearchTerm("");
-              setEnrollments(mockEnrollments);
-              setSortConfig({
-                key: 'create_at',
-                direction: 'desc'
-              });
+              setSortConfig({ key: "create_at", direction: "desc" });
             }}
             className="px-4 py-2 border border-border rounded-lg hover:bg-background transition-colors"
           >
@@ -308,76 +312,118 @@ export default function AdminApproval() {
           </button>
         </div>
       </div>
-      
+
       {/* Enrollment Table */}
       <div className="bg-card rounded-lg shadow-md overflow-hidden border border-border">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border">
             <thead className="bg-bar">
               <tr>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
-                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('user_id.username')}>
+                <th
+                  scope="col"
+                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
+                >
+                  <div
+                    className="flex items-center cursor-pointer"
+                    onClick={() => handleSortClick("user_id.username")}
+                  >
                     <span>ผู้ใช้</span>
-                    {getSortIcon('user_id.username')}
+                    {getSortIcon("user_id.username")}
                   </div>
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
-                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('role')}>
+                <th
+                  scope="col"
+                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
+                >
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick("role")}>
                     <span>บทบาทที่ขอ</span>
-                    {getSortIcon('role')}
+                    {getSortIcon("role")}
                   </div>
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
-                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('user_id.first_name')}>
+                <th
+                  scope="col"
+                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
+                >
+                  <div
+                    className="flex items-center cursor-pointer"
+                    onClick={() => handleSortClick("user_id.first_name")}
+                  >
                     <span>ชื่อ-นามสกุล</span>
-                    {getSortIcon('user_id.first_name')}
+                    {getSortIcon("user_id.first_name")}
                   </div>
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
-                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('user_id.email')}>
+                <th
+                  scope="col"
+                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
+                >
+                  <div
+                    className="flex items-center cursor-pointer"
+                    onClick={() => handleSortClick("user_id.email")}
+                  >
                     <span>อีเมล</span>
-                    {getSortIcon('user_id.email')}
+                    {getSortIcon("user_id.email")}
                   </div>
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
-                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('create_at')}>
+                <th
+                  scope="col"
+                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
+                >
+                  <div
+                    className="flex items-center cursor-pointer"
+                    onClick={() => handleSortClick("create_at")}
+                  >
                     <span>เวลาร้องขอ</span>
-                    {getSortIcon('create_at')}
+                    {getSortIcon("create_at")}
                   </div>
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
-                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('updated_at')}>
+                <th
+                  scope="col"
+                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
+                >
+                  <div
+                    className="flex items-center cursor-pointer"
+                    onClick={() => handleSortClick("updated_at")}
+                  >
                     <span>เวลาตอบกลับ</span>
-                    {getSortIcon('updated_at')}
+                    {getSortIcon("updated_at")}
                   </div>
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
+                >
                   <span>ผู้ดำเนินการ</span>
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
-                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick('status')}>
+                <th
+                  scope="col"
+                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
+                >
+                  <div
+                    className="flex items-center cursor-pointer"
+                    onClick={() => handleSortClick("status")}
+                  >
                     <span>สถานะ</span>
-                    {getSortIcon('status')}
+                    {getSortIcon("status")}
                   </div>
                 </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
+                >
                   <span>การดำเนินการ</span>
                 </th>
               </tr>
             </thead>
             <tbody className="bg-card divide-y divide-border">
-              {filteredEnrollments.length > 0 ? (
+              {Array.isArray(filteredEnrollments) && filteredEnrollments.length > 0 ? (
                 filteredEnrollments.map((enrollment) => (
                   <tr key={enrollment._id} className="hover:bg-bar/30 transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex flex-col items-center">
-                        <Link 
-                          to={`/user/profile/${enrollment.user_id.username}`}
-                          className="relative group"
-                        >
-                          {enrollment.user_id.profile_picture ? (
+                        <Link to={`/user/profile/${enrollment.user_id.username}`} className="relative group">
+                          {profileImages[enrollment.user_id._id] ? (
                             <img
-                              src={`/api/images/${enrollment.user_id.profile_picture}`}
+                              src={profileImages[enrollment.user_id._id]}
                               alt={enrollment.user_id.username}
                               className="h-10 w-10 rounded-full object-cover border border-border group-hover:border-primary transition-colors"
                             />
@@ -388,7 +434,7 @@ export default function AdminApproval() {
                           )}
                           <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                         </Link>
-                        <Link 
+                        <Link
                           to={`/user/profile/${enrollment.user_id.username}`}
                           className="mt-1 text-sm text-text hover:text-primary transition-colors"
                         >
@@ -414,14 +460,14 @@ export default function AdminApproval() {
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap">
                       <div className="text-sm">
-                        {enrollment.updated_at && enrollment.updated_at !== enrollment.create_at 
+                        {enrollment.updated_at && enrollment.updated_at !== enrollment.create_at
                           ? formatDate(enrollment.updated_at)
                           : "-"}
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {enrollment.reviewer_id ? (
-                        <Link 
+                        <Link
                           to={`/user/profile/${enrollment.reviewer_id.username}`}
                           className="text-sm text-primary hover:underline"
                         >
@@ -483,30 +529,30 @@ export default function AdminApproval() {
                   </td>
                 </tr>
               )}
-        </tbody>
-      </table>
-    </div>
-  </div>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-  {/* Information Modal */}
-  {infoModal && selectedEnrollment && (
+      {/* Information Modal */}
+      {infoModal && selectedEnrollment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-border flex justify-between items-center">
               <h2 className="text-xl font-bold text-text">รายละเอียดคำขอ</h2>
-              <button 
+              <button
                 onClick={() => setInfoModal(false)}
                 className="text-text/70 hover:text-text transition-colors"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div className="flex items-center space-x-4">
-                {selectedEnrollment.user_id.profile_picture ? (
+                {profileImages[selectedEnrollment.user_id._id] ? (
                   <img
-                    src={`/api/images/${selectedEnrollment.user_id.profile_picture}`}
+                    src={profileImages[selectedEnrollment.user_id._id]}
                     alt={selectedEnrollment.user_id.username}
                     className="h-16 w-16 rounded-full object-cover border border-border"
                   />
@@ -520,7 +566,7 @@ export default function AdminApproval() {
                   <p className="text-text/70">@{selectedEnrollment.user_id.username}</p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-text/70 mb-1">บทบาทที่ขอ</label>
@@ -528,7 +574,7 @@ export default function AdminApproval() {
                     {ROLE_DISPLAY[selectedEnrollment.role] || selectedEnrollment.role}
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-text/70 mb-1">อีเมล</label>
                   <div className="px-3 py-2 bg-background border border-border rounded-lg">
@@ -536,39 +582,54 @@ export default function AdminApproval() {
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-text/70 mb-1">คำอธิบาย</label>
                 <div className="px-3 py-2 bg-background border border-border rounded-lg min-h-[100px]">
                   {selectedEnrollment.description}
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-text/70 mb-1">เอกสารประกอบ</label>
                 <div className="grid grid-cols-3 gap-4">
-                  {selectedEnrollment.license_files.map((file, index) => (
-                    <div 
-                      key={index} 
-                      className="border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => {
-                        setCurrentFileIndex(index);
-                        setFileModal(true);
-                      }}
-                    >
-                      <img
-                        src={`/api/images/${file}`}
-                        alt={`เอกสารที่ ${index + 1}`}
-                        className="w-full h-36 object-cover"
-                      />
-                      <div className="p-2 text-center text-sm text-text/70">
-                        เอกสารที่ {index + 1}
+                  {Array.isArray(selectedEnrollment.license_urls) &&
+                  selectedEnrollment.license_urls.length > 0 ? (
+                    selectedEnrollment.license_urls.map((file, index) => (
+                      <div
+                        key={index}
+                        className="border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => {
+                          setCurrentFileIndex(index);
+                          setFileModal(true);
+                        }}
+                      >
+                        {isImageFile(file) ? (
+                          <img
+                            src={`/api/images/${file}`}
+                            alt={`เอกสารที่ ${index + 1}`}
+                            className="w-full h-36 object-cover"
+                          />
+                        ) : isPdfFile(file) ? (
+                          <div className="w-full h-36 flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                            <DocumentTextIcon className="h-12 w-12 text-text/70" />
+                          </div>
+                        ) : (
+                          <div className="w-full h-36 flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                            <span className="text-text/70">ไม่รู้จัก</span>
+                          </div>
+                        )}
+                        <div className="p-2 text-center text-sm text-text/70">
+                          เอกสารที่ {index + 1}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-text/70">ไม่มีเอกสารประกอบ</p>
+                  )}
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="block text-sm font-medium text-text/70 mb-1">วันที่ร้องขอ</label>
@@ -576,17 +637,21 @@ export default function AdminApproval() {
                     {formatDate(selectedEnrollment.create_at)}
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-text/70 mb-1">สถานะ</label>
-                  <div className={`px-3 py-2 border border-border rounded-lg text-center ${statusColors[selectedEnrollment.status]}`}>
+                  <div
+                    className={`px-3 py-2 border border-border rounded-lg text-center ${
+                      statusColors[selectedEnrollment.status]
+                    }`}
+                  >
                     {selectedEnrollment.status === "pending" && "รอดำเนินการ"}
                     {selectedEnrollment.status === "approved" && "อนุมัติแล้ว"}
                     {selectedEnrollment.status === "rejected" && "ปฏิเสธแล้ว"}
                   </div>
                 </div>
               </div>
-              
+
               {selectedEnrollment.status === "rejected" && selectedEnrollment.reject_reason && (
                 <div>
                   <label className="block text-sm font-medium text-text/70 mb-1">เหตุผลการปฏิเสธ</label>
@@ -595,7 +660,7 @@ export default function AdminApproval() {
                   </div>
                 </div>
               )}
-              
+
               {selectedEnrollment.status === "pending" && (
                 <div className="flex justify-end space-x-4 mt-6">
                   <button
@@ -625,43 +690,70 @@ export default function AdminApproval() {
           <div className="bg-card rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <div className="p-6 border-b border-border flex justify-between items-center">
               <h2 className="text-xl font-bold text-text">
-                เอกสารประกอบ ({currentFileIndex + 1}/{selectedEnrollment.license_files.length})
+                เอกสารประกอบ ({currentFileIndex + 1}/{selectedEnrollment.license_urls.length})
               </h2>
-              <button 
+              <button
                 onClick={() => setFileModal(false)}
                 className="text-text/70 hover:text-text transition-colors"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
-            
-            <div className="flex-grow relative">
-              <img
-                src={`/api/images/${selectedEnrollment.license_files[currentFileIndex]}`}
-                alt={`เอกสารที่ ${currentFileIndex + 1}`}
-                className="w-full h-full object-contain"
-              />
-              
-              {selectedEnrollment.license_files.length > 1 && (
+
+            <div className="flex-grow relative p-4">
+              {selectedEnrollment.license_urls.length > 0 ? (
                 <>
-                  {currentFileIndex > 0 && (
-                    <button
-                      onClick={() => setCurrentFileIndex(prev => prev - 1)}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/50 hover:bg-white/80 p-2 rounded-full transition-colors"
-                    >
-                      <ChevronUpIcon className="h-6 w-6 rotate-90" />
-                    </button>
+                  {isImageFile(selectedEnrollment.license_urls[currentFileIndex]) ? (
+                    <img
+                      src={`/api/images/${selectedEnrollment.license_urls[currentFileIndex]}`}
+                      alt={`เอกสารที่ ${currentFileIndex + 1}`}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : isPdfFile(selectedEnrollment.license_urls[currentFileIndex]) ? (
+                    <div className="flex flex-col items-center justify-center h-full">
+                      <p className="text-text/70 mb-4">
+                        ไฟล์ PDF: {selectedEnrollment.license_urls[currentFileIndex].split("/").pop()}
+                      </p>
+                      <a
+                        href={`/api/images/${selectedEnrollment.license_urls[currentFileIndex]}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        ดู/ดาวน์โหลด PDF
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-text/70">
+                      ไม่สามารถแสดงไฟล์นี้ได้ ({selectedEnrollment.license_urls[currentFileIndex]})
+                    </div>
                   )}
-                  
-                  {currentFileIndex < selectedEnrollment.license_files.length - 1 && (
-                    <button
-                      onClick={() => setCurrentFileIndex(prev => prev + 1)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/50 hover:bg-white/80 p-2 rounded-full transition-colors"
-                    >
-                      <ChevronUpIcon className="h-6 w-6 -rotate-90" />
-                    </button>
+
+                  {selectedEnrollment.license_urls.length > 1 && (
+                    <>
+                      {currentFileIndex > 0 && (
+                        <button
+                          onClick={() => setCurrentFileIndex((prev) => prev - 1)}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full border border-gray-300 shadow-md transition-colors"
+                        >
+                          <ChevronLeftIcon className="h-6 w-6 text-gray-700" />
+                        </button>
+                      )}
+                      {currentFileIndex < selectedEnrollment.license_urls.length - 1 && (
+                        <button
+                          onClick={() => setCurrentFileIndex((prev) => prev + 1)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full border border-gray-300 shadow-md transition-colors"
+                        >
+                          <ChevronRightIcon className="h-6 w-6 text-gray-700" />
+                        </button>
+                      )}
+                    </>
                   )}
                 </>
+              ) : (
+                <div className="flex items-center justify-center h-full text-text/70">
+                  ไม่มีเอกสารประกอบ
+                </div>
               )}
             </div>
           </div>
@@ -674,14 +766,14 @@ export default function AdminApproval() {
           <div className="bg-card rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6 border-b border-border flex justify-between items-center">
               <h2 className="text-xl font-bold text-text">ปฏิเสธคำขอ</h2>
-              <button 
+              <button
                 onClick={() => setRejectModal(false)}
                 className="text-text/70 hover:text-text transition-colors"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-text/70 mb-1">เหตุผลการปฏิเสธ</label>
@@ -693,7 +785,7 @@ export default function AdminApproval() {
                   className="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-background"
                 />
               </div>
-              
+
               <div className="flex justify-end space-x-4">
                 <button
                   onClick={() => setRejectModal(false)}

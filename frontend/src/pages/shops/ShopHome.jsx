@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { PlusCircleIcon, Cog6ToothIcon, TagIcon, FireIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
-import { motion, AnimatePresence } from "framer-motion";
+import { PlusCircleIcon, Cog6ToothIcon, TagIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
 import ProductCard from "../../components/ProductCard";
 import ShopFilter from "../../components/shops/ShopFilter";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { getProducts } from "../../services/api/ProductApi";
-import { toast } from "react-toastify"; 
+import { toast } from "react-toastify";
 
 function ShopHome() {
   const navigate = useNavigate();
@@ -15,115 +15,80 @@ function ShopHome() {
   const [priceFilter, setPriceFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("");
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  // Removed activeCategory state as we're using categoryFilter now
   const searchInputRef = useRef(null);
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
-  const [categories, setCategories] = useState(["All"]); // To store dynamic categories
+  const [categories, setCategories] = useState(["All"]);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const productsPerPage = 40;
 
-  // Fetch products from API
+  const toTitleCase = (str) => {
+    if (!str || str === "All") return str;
+    return str
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        // Fetch products from API
-        const response = await getProducts();
-        
-        // Handle the response
-        const fetchedProducts = response.data;
-        console.log("Fetched products:", fetchedProducts);
-        
-        // Update state with fetched products
-        setProducts(fetchedProducts);
-        setFilteredProducts(fetchedProducts);
-        
-        // Extract unique categories from products
-        if (Array.isArray(fetchedProducts) && fetchedProducts.length > 0) {
-          const uniqueCategories = [...new Set(fetchedProducts.map(product => product.category))];
-          setCategories(["All", ...uniqueCategories.filter(Boolean)]);
+        let minPrice, maxPrice;
+        if (priceFilter) {
+          const [min, max] = priceFilter.split('-').map(Number);
+          minPrice = min;
+          maxPrice = max;
         }
+
+        const params = {
+          page: currentPage,
+          limit: productsPerPage,
+          query: searchQuery || undefined,
+          category: categoryFilter !== "All" ? categoryFilter : undefined,
+          min_price: minPrice,
+          max_price: maxPrice,
+          sort: sortOrder || undefined
+        };
+
+        const response = await getProducts(params);
+        
+        const formattedProducts = response.data.map(product => ({
+          ...product,
+          category: toTitleCase(product.category)
+        }));
+
+        setProducts(formattedProducts);
+        setTotalPages(response.totalPages);
+        setTotalItems(response.total);
+
+        const uniqueCategories = [...new Set(response.data.map(product => toTitleCase(product.category)))];
+        setCategories(["All", ...uniqueCategories.filter(Boolean)]);
       } catch (error) {
         console.error("Error fetching products:", error);
         toast.error("Failed to load products. Please try again later.");
-        
-        // Use dummy data as fallback
-        // This could be removed in production, but it's helpful during development
-        const dummyProducts = [
-          {
-            id: 1,
-            product_name: "Muay Thai Boxing Gloves",
-            description: "Professional grade boxing gloves for training and competition",
-            image_url: new URL("../../assets/images/Glove_black.jpg", import.meta.url).href,
-            price: 1200,
-            category: "Gloves",
-            shop_name: "FightGear Pro",
-            isNew: true
-          },
-          {
-            id: 2,
-            product_name: "Hand Wraps - 180cm",
-            description: "Premium quality hand wraps for maximum wrist support",
-            image_url: new URL("../../assets/images/product-003.webp", import.meta.url).href,
-            price: 350,
-            category: "Accessories",
-            shop_name: "FightGear Pro"
-          },
-          // ... other dummy products
-        ];
-        
-        setProducts(dummyProducts);
-        setFilteredProducts(dummyProducts);
-        
-        // Extract categories from dummy data as well
-        const uniqueCategories = [...new Set(dummyProducts.map(product => product.category))];
-        setCategories(["All", ...uniqueCategories.filter(Boolean)]);
+        setProducts([]);
+        setTotalPages(1);
+        setTotalItems(0);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchProducts();
-  }, []);
-
-  // Apply filters when they change
-  useEffect(() => {
-    let filtered = [...products];
-
-    // Filter by category
-    if (categoryFilter && categoryFilter !== "All") {
-      filtered = filtered.filter(product => product.category === categoryFilter);
-    }
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(product => 
-        product.product_name?.toLowerCase().includes(query) || 
-        product.description?.toLowerCase().includes(query) ||
-        product.category?.toLowerCase().includes(query) ||
-        product.shop_name?.toLowerCase().includes(query)
-      );
-    }
-
-    // Apply price filter and sort
-    if (sortOrder === "low-to-high") {
-      filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-    } else if (sortOrder === "high-to-low") {
-      filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-    }
-
-    setFilteredProducts(filtered);
-  }, [products, categoryFilter, searchQuery, sortOrder]);
+  }, [currentPage, searchQuery, categoryFilter, priceFilter, sortOrder]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(1);
   };
-
-  // Remove handleCategorySelect as we're now using the select dropdown
 
   const toggleFilterModal = () => {
     setIsFilterModalOpen(!isFilterModalOpen);
@@ -134,12 +99,14 @@ function ShopHome() {
     setPriceFilter("");
     setSortOrder("");
     setSearchQuery("");
+    setCurrentPage(1);
     if (searchInputRef.current) {
       searchInputRef.current.value = "";
     }
   };
 
-  // Animation variants
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -151,20 +118,10 @@ function ShopHome() {
       }
     }
   };
-  
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { duration: 0.3 }
-    }
-  };
 
-  // Loading skeleton UI
   const renderSkeletonCards = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {Array(6).fill().map((_, index) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {Array(8).fill().map((_, index) => (
         <div key={index} className="animate-pulse bg-card border border-border/30 rounded-xl overflow-hidden shadow-md">
           <div className="h-48 bg-gray-300 dark:bg-gray-700"></div>
           <div className="p-4">
@@ -182,7 +139,7 @@ function ShopHome() {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
-      {/* Hero Banner with search functionality */}
+      {/* Hero Banner */}
       <div className="relative bg-gradient-to-r from-purple-600 to-primary overflow-hidden z-0">
         <div className="absolute inset-0 opacity-20">
           <svg width="100%" height="100%" className="text-white">
@@ -194,7 +151,6 @@ function ShopHome() {
             <rect width="100%" height="100%" fill="url(#grid-pattern)" />
           </svg>
         </div>
-        
         <div className="relative z-10 container mx-auto px-4 py-10 md:py-16">
           <motion.div 
             className="max-w-3xl"
@@ -208,8 +164,6 @@ function ShopHome() {
             <p className="text-lg text-white/90 mb-8 max-w-2xl">
               Find premium quality gear for training and competition from trusted brands
             </p>
-            
-            {/* Search Bar */}
             <div className="relative left-5 flex items-center max-w-xl">
               <input
                 type="text"
@@ -219,7 +173,7 @@ function ShopHome() {
                 onChange={handleSearchChange}
                 className="w-full py-3 pl-5 pr-12 rounded-full border-0 shadow-lg text-gray-800 focus:ring-2 focus:ring-primary"
               />
-              <button className="absolute right-3 text-gray-500 ">
+              <button className="absolute right-3 text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -230,30 +184,11 @@ function ShopHome() {
       </div>
 
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto pb-12 -mt-12 relative z-20">
-        {/* Category Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 hide-scrollbar snap-x">
-          {categories.map((category) => (
-            <motion.button
-              key={category}
-              onClick={() => setCategoryFilter(category)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full font-medium snap-start ${
-                categoryFilter === category
-                  ? "bg-primary text-white shadow-md"
-                  : "bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-text"
-              } transition-all duration-200`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {category}
-            </motion.button>
-          ))}
-        </div>
-
         {/* Main Content */}
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Filter Panel for Desktop */}
+        <div className="flex flex-col lg:flex-row pt-20 gap-6">
+          {/* Filter Panel - Sticky */}
           <motion.div 
-            className="hidden lg:block lg:w-72 bg-card rounded-2xl shadow-lg border border-border/30 overflow-hidden flex-shrink-0 h-fit sticky top-28"
+            className="hidden lg:block lg:w-72 bg-card rounded-2xl shadow-lg border border-border/30 overflow-hidden flex-shrink-0 sticky top-4 self-start" // ปรับ top-28 เป็น top-4 และเพิ่ม self-start
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
@@ -266,7 +201,6 @@ function ShopHome() {
                 </button>
               </div>  
             </div>
-            
             <div className="p-5">
               <ShopFilter
                 categoryFilter={categoryFilter}
@@ -282,23 +216,20 @@ function ShopHome() {
 
           {/* Main Products Content */}
           <div className="flex-grow">
-            {/* Stats and Controls for results */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <div className="flex items-center">
                 <TagIcon className="w-5 h-5 text-primary mr-2" />
                 <h2 className="text-xl font-bold text-text">
                   {isLoading 
                     ? "Finding products..."
-                    : filteredProducts.length > 0 
-                      ? `${filteredProducts.length} Products ${categoryFilter !== "All" ? `in ${categoryFilter}` : "Found"}`
+                    : products.length > 0 
+                      ? `${totalItems} Products ${categoryFilter !== "All" ? `in ${categoryFilter}` : "Found"}`
                       : "No products matching your criteria"
                   }
                 </h2>
               </div>
-              
               <div className="flex flex-wrap items-center gap-3">
-                {/* Active filters display */}
-                {(categoryFilter !== "All" || searchQuery) && (
+                {(categoryFilter !== "All" || searchQuery || priceFilter) && (
                   <div className="flex flex-wrap items-center gap-2">
                     {categoryFilter !== "All" && (
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
@@ -307,11 +238,10 @@ function ShopHome() {
                           onClick={() => setCategoryFilter("All")}
                           className="ml-1 text-purple-600 hover:text-purple-800 dark:text-purple-400"
                         >
-                          &times;
+                          ×
                         </button>
                       </span>
                     )}
-                    
                     {searchQuery && (
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300">
                         Search: {searchQuery}
@@ -324,25 +254,35 @@ function ShopHome() {
                           }}
                           className="ml-1 text-amber-600 hover:text-amber-800 dark:text-amber-400"
                         >
-                          &times;
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {priceFilter && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                        Price: {priceFilter}
+                        <button 
+                          onClick={() => setPriceFilter("")}
+                          className="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-400"
+                        >
+                          ×
                         </button>
                       </span>
                     )}
                   </div>
                 )}
-                
-                {/* Sort dropdown */}
                 <select 
                   className="py-2 px-3 rounded-lg border border-border text-text bg-card focus:outline-none focus:ring-2 focus:ring-primary"
                   value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value)}
+                  onChange={(e) => {
+                    setSortOrder(e.target.value);
+                    setCurrentPage(1);
+                  }}
                 >
                   <option value="">Sort by: Featured</option>
                   <option value="low-to-high">Price: Low to High</option>
                   <option value="high-to-low">Price: High to Low</option>
                 </select>
-                
-                {/* Filter button for mobile */}
                 <button
                   onClick={toggleFilterModal}
                   className="lg:hidden bg-primary hover:bg-secondary text-white flex items-center gap-2 rounded-lg py-2 px-4 transition-colors"
@@ -356,13 +296,32 @@ function ShopHome() {
             {/* Products List */}
             {isLoading ? (
               renderSkeletonCards()
-            ) : filteredProducts.length > 0 ? (
+            ) : products.length > 0 ? (
               <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
               >
-                <ProductCard products={filteredProducts} />
+                <ProductCard products={products} />
+                <div className="flex justify-center items-center gap-2 mt-6">
+                  <button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <span className="px-4 py-2">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
               </motion.div>
             ) : (
               <div className="text-center py-16 bg-card rounded-xl shadow-md">
@@ -395,7 +354,7 @@ function ShopHome() {
           </div>
         </div>
 
-        {/* Add Product button for shop owners */}
+        {/* Add Product/View Cart Button */}
         {user && user.role && user.role.includes("shop_owner") ? (
           <motion.div 
             className="fixed bottom-6 right-6 z-30"
@@ -427,7 +386,7 @@ function ShopHome() {
             </Link>
           </motion.div>
         )}
-      </div>  
+      </div>
 
       {/* Modal for Filter on Mobile */}
       {isFilterModalOpen && (
@@ -439,7 +398,7 @@ function ShopHome() {
                 onClick={toggleFilterModal}
                 className="text-text hover:text-primary"
               >
-                &times;
+                ×
               </button>
             </div>
             <ShopFilter
@@ -452,10 +411,7 @@ function ShopHome() {
             />
             <div className="mt-4 flex justify-end">
               <button
-                onClick={() => {
-                  toggleFilterModal();
-                  // Apply filters if needed
-                }}
+                onClick={toggleFilterModal}
                 className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors"
               >
                 Apply Filters

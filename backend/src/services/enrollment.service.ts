@@ -10,7 +10,7 @@ class EnrollmentService extends BaseService<EnrollmentDocument> {
 
   async getAllEnrollment() {
     return await Enrollment.find()
-      .populate('user_id', 'username first_name last_name email')
+      .populate('user_id', 'username first_name last_name email profile_picture_url')
       .populate('reviewer_id')
       .exec();
   }
@@ -30,9 +30,12 @@ class EnrollmentService extends BaseService<EnrollmentDocument> {
         reviewer_id: data.reviewer_id,
       },
       { new: true }
-    );
+    )
+    .populate('user_id', 'username first_name last_name email profile_picture_url')  // เพิ่ม populate user_id
+    .populate('reviewer_id')  // เพิ่ม populate reviewer_id
+    .exec();
     
-    // ✅ ถ้าอัปเดตสถานะเป็น approved → ให้ไปอัปเดต role ด้วย
+    // ถ้าอัปเดตสถานะเป็น approved → ให้ไปอัปเดต role ด้วย
     if (updatedEnrollment && data.status === 'approved') {
       await UserService.addUserRole(updatedEnrollment.user_id, updatedEnrollment.role);
     }

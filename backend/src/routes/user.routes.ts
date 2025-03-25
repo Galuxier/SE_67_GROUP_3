@@ -5,9 +5,11 @@ import {
   getUserByIdController,
   updateUserController,
   deleteUserController,
-  getUserProfileController
+  getUserProfileController,
+  getUserRolesController,
 } from '../controllers/user.controller';
 import { userProfileUpload } from '../middlewares/uploads/user.upload';
+import verifyToken from '../middlewares/auth';
 
 const router = express.Router();
 
@@ -16,6 +18,8 @@ router.post('/users', userProfileUpload, createTempUserController);
 
 // ดึงข้อมูลผู้ใช้ทั้งหมด
 router.get('/users', getUsersController);
+
+router.get('/user/:id/roles', verifyToken, getUserRolesController);
 
 // ดึงข้อมูลผู้ใช้โดย ID
 router.get('/user/:id', getUserByIdController);

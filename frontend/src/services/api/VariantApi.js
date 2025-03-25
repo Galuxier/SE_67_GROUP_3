@@ -1,5 +1,17 @@
 import { api } from "../Axios";
 
+export const getVariantsByProductId = async (productId) => {
+  try {
+    const response = await api.get(`/product/${productId}/variants`);
+    console.log("variants: ", response);
+    
+    return response.data;
+  } catch (error) {
+    console.error('Get Product Variants Failed: ', error);
+    throw error;
+  }
+};
+
 // Variant-related API functions
 export const createVariant = async (variantData) => {
   try {
@@ -45,15 +57,7 @@ export const getVariantById = async (id) => {
   }
 };
 
-export const getVariantsByProductId = async (productId) => {
-  try {
-    const response = await api.get(`/product/${productId}/variants`);
-    return response.data;
-  } catch (error) {
-    console.error('Get Product Variants Failed: ', error);
-    throw error;
-  }
-};
+
 
 export const updateVariant = async (id, variantData) => {
   try {
