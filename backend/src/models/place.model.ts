@@ -1,7 +1,7 @@
 import { Schema, model, Document } from 'mongoose';
 
-// กำหนด interface สำหรับ Location document
-export interface LocationDocument extends Document {
+// กำหนด interface สำหรับ Place document
+export interface PlaceDocument extends Document {
   owner_id: Schema.Types.ObjectId;
   name: string;
   price: number;
@@ -10,8 +10,8 @@ export interface LocationDocument extends Document {
   images: string[];
 }
 
-// สร้าง schema สำหรับ Location
-const LocationSchema = new Schema<LocationDocument>({
+// สร้าง schema สำหรับ Place
+const PlaceSchema = new Schema<PlaceDocument>({
   owner_id: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
   name: { type: String, required: true },
   price: { type: Number, required: true },
@@ -20,5 +20,5 @@ const LocationSchema = new Schema<LocationDocument>({
   images: { type: [String], required: true },
 });
 
-// สร้างโมเดล Location
-export const Location = model<LocationDocument>('Location', LocationSchema);
+// สร้างโมเดล Place
+export const Place = model<PlaceDocument>('Place', PlaceSchema);
