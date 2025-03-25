@@ -1,19 +1,24 @@
 import { CheckIcon } from "@heroicons/react/24/outline";
 
-const EventStepIndicator = ({ currentStep }) => {
-  const steps = [
-    { id: 1, name: "Basic Info" },
-    { id: 2, name: "Weight Classes" },
-    { id: 3, name: "Seat Zones" },
-    { id: 4, name: "Matches" },
-  ];
+const EventStepIndicator = ({ currentStep, eventType }) => {
+  const steps = eventType === "Open for Registration"
+    ? [
+        { id: 1, name: "Basic Info" },
+        { id: 2, name: "Weight Classes" },
+      ]
+    : [
+        { id: 1, name: "Basic Info" },
+        { id: 2, name: "Weight Classes" },
+        { id: 3, name: "Seat Zones" },
+        { id: 4, name: "Matches" },
+      ];
 
   return (
     <div className="my-6">
       <nav aria-label="Progress">
         <ol className="flex items-center">
           {steps.map((step, stepIdx) => (
-            <li key={step.name} className={`relative ${stepIdx !== steps.length - 1 ? 'flex-1' : ''}`}>
+            <li key={step.name} className={`relative ${stepIdx !== steps.length - 1 ? "flex-1" : ""}`}>
               {step.id < currentStep ? (
                 <div className="group flex items-center">
                   <span className="flex items-center justify-center w-10 h-10 rounded-full bg-green-600 text-white">
@@ -37,7 +42,11 @@ const EventStepIndicator = ({ currentStep }) => {
                 </div>
               )}
               {stepIdx !== steps.length - 1 && (
-                <div className={`hidden md:block absolute top-5 left-5 w-full h-0.5 ${step.id < currentStep ? 'bg-rose-600' : 'bg-gray-300'}`}></div>
+                <div
+                  className={`hidden md:block absolute top-5 left-5 w-full h-0.5 ${
+                    step.id < currentStep ? "bg-rose-600" : "bg-gray-300"
+                  }`}
+                ></div>
               )}
             </li>
           ))}
