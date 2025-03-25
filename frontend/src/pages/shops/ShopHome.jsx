@@ -12,7 +12,7 @@ import { toast } from "react-toastify";
 function ShopHome() {
   const navigate = useNavigate();
   const [categoryFilter, setCategoryFilter] = useState("All");
-  const [priceFilter, setPriceFilter] = useState(""); // เช่น "100-500"
+  const [priceFilter, setPriceFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("");
   const [products, setProducts] = useState([]);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -27,23 +27,20 @@ function ShopHome() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const productsPerPage = 30;
+  const productsPerPage = 40;
 
-  // แปลง snake_case เป็น Title Case
   const toTitleCase = (str) => {
-    if (!str) return str;
+    if (!str || str === "All") return str;
     return str
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
   };
 
-  // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        // แยก minPrice และ maxPrice จาก priceFilter
         let minPrice, maxPrice;
         if (priceFilter) {
           const [min, max] = priceFilter.split('-').map(Number);
@@ -58,12 +55,11 @@ function ShopHome() {
           category: categoryFilter !== "All" ? categoryFilter : undefined,
           min_price: minPrice,
           max_price: maxPrice,
-          sort: sortOrder || undefined // ส่ง sort ไป Backend
+          sort: sortOrder || undefined
         };
 
         const response = await getProducts(params);
         
-        // แปลง category เป็น Title Case
         const formattedProducts = response.data.map(product => ({
           ...product,
           category: toTitleCase(product.category)
@@ -73,8 +69,7 @@ function ShopHome() {
         setTotalPages(response.totalPages);
         setTotalItems(response.total);
 
-        // Extract unique categories
-        const uniqueCategories = [...new Set(formattedProducts.map(product => product.category))];
+        const uniqueCategories = [...new Set(response.data.map(product => toTitleCase(product.category)))];
         setCategories(["All", ...uniqueCategories.filter(Boolean)]);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -112,7 +107,6 @@ function ShopHome() {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // Animation variants (คงเดิม)
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -126,8 +120,8 @@ function ShopHome() {
   };
 
   const renderSkeletonCards = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {Array(6).fill().map((_, index) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {Array(8).fill().map((_, index) => (
         <div key={index} className="animate-pulse bg-card border border-border/30 rounded-xl overflow-hidden shadow-md">
           <div className="h-48 bg-gray-300 dark:bg-gray-700"></div>
           <div className="p-4">
@@ -190,33 +184,11 @@ function ShopHome() {
       </div>
 
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto pb-12 -mt-12 relative z-20">
-        {/* Category Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 hide-scrollbar snap-x">
-          {categories.map((category) => (
-            <motion.button
-              key={category}
-              onClick={() => {
-                setCategoryFilter(category);
-                setCurrentPage(1);
-              }}
-              className={`flex-shrink-0 px-4 py-2 rounded-full font-medium snap-start ${
-                categoryFilter === category
-                  ? "bg-primary text-white shadow-md"
-                  : "bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-text"
-              } transition-all duration-200`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {category}
-            </motion.button>
-          ))}
-        </div>
-
         {/* Main Content */}
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Filter Panel */}
+        <div className="flex flex-col lg:flex-row pt-20 gap-6">
+          {/* Filter Panel - Sticky */}
           <motion.div 
-            className="hidden lg:block lg:w-72 bg-card rounded-2xl shadow-lg border border-border/30 overflow-hidden flex-shrink-0 h-fit sticky top-28"
+            className="hidden lg:block lg:w-72 bg-card rounded-2xl shadow-lg border border-border/30 overflow-hidden flex-shrink-0 sticky top-4 self-start" // ปรับ top-28 เป็น top-4 และเพิ่ม self-start
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
