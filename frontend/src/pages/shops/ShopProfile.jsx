@@ -27,12 +27,15 @@ export default function ShopProfile() {
       try {
         setIsLoadingShop(true);
         const response = await getShopById(shop_id);
+        response.contacts = JSON.parse(response.contacts);
+        response.address = JSON.parse(response.address);
+        
         setShop(response);
         
         // Fetch shop logo if available
-        if (response.logo) {
+        if (response.logo_url) {
           try {
-            const logoUrl = await getImage(response.logo);
+            const logoUrl = await getImage(response.logo_url);
             setShopLogoUrl(logoUrl);
           } catch (imageError) {
             console.error("Error fetching shop logo:", imageError);
@@ -61,26 +64,7 @@ export default function ShopProfile() {
       } catch (error) {
         console.error("Error fetching shop products:", error);
         // Use dummy data as fallback
-        setShopProducts([
-          {
-            id: 1,
-            product_name: "Muay Thai Boxing Gloves",
-            description: "Professional grade boxing gloves for training and competition",
-            image_url: new URL("../../assets/images/Glove_black.jpg", import.meta.url).href,
-            price: 1200,
-            category: "Gloves",
-            shop_name: shop?.shop_name || "Shop",
-          },
-          {
-            id: 2,
-            product_name: "Hand Wraps - 180cm",
-            description: "Premium quality hand wraps for maximum wrist support",
-            image_url: new URL("../../assets/images/product-003.webp", import.meta.url).href,
-            price: 350,
-            category: "Accessories",
-            shop_name: shop?.shop_name || "Shop",
-          }
-        ]);
+        setShopProducts([]);
       } finally {
         setIsLoadingProducts(false);
       }
@@ -179,10 +163,10 @@ export default function ShopProfile() {
               {/* Shop Details */}
               <div className="md:ml-6 flex-1 text-center md:text-left">
                 <h1 className="text-2xl font-bold text-text">{shop.shop_name}</h1>
-                <p className="text-text/70 mt-1 max-w-3xl">{shop.description || "No description available"}</p>
+                <p className="text-text/70 text-text mt-1 max-w-3xl">{shop.description || "No description available"}</p>
                 
                 {/* Shop Stats - Products count and Join date */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-3 text-sm text-text/70">
+                <div className="flex text-text flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-3 text-sm text-text/70">
                   <div className="flex items-center">
                     <ShoppingBagIcon className="w-4 h-4 mr-1 text-primary/70" />
                     <span>{isLoadingProducts ? 'Loading...' : `${shopProducts.length} Products`}</span>
@@ -190,7 +174,7 @@ export default function ShopProfile() {
                   
                   <div className="flex items-center">
                     <CalendarIcon className="w-4 h-4 mr-1 text-primary/70" />
-                    <span>Joined {formatJoinDate(shop.created_at)}</span>
+                    <span>Joined {formatJoinDate(shop.create_at)}</span>
                   </div>
                 </div>
               </div>
@@ -264,8 +248,8 @@ export default function ShopProfile() {
                 <div className="flex items-start">
                   <EnvelopeIcon className="w-5 h-5 mr-3 text-primary flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium">Email</p>
-                    <p>{shop.contacts.email}</p>
+                    <p className="font-medium text-text">Email</p>
+                    <p className="text-text">{shop.contacts.email}</p>
                   </div>
                 </div>
               )}
@@ -274,8 +258,8 @@ export default function ShopProfile() {
                 <div className="flex items-start">
                   <PhoneIcon className="w-5 h-5 mr-3 text-primary flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium">Phone</p>
-                    <p>{shop.contacts.tel}</p>
+                    <p className="font-medium text-text">Phone</p>
+                    <p className="text-text">{shop.contacts.tel}</p>
                   </div>
                 </div>
               )}
@@ -286,7 +270,7 @@ export default function ShopProfile() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                   <div>
-                    <p className="font-medium">Social Media</p>
+                    <p className="font-medium text-text">Social Media</p>
                     {shop.contacts?.line && <p>Line: {shop.contacts.line}</p>}
                     {shop.contacts?.facebook && <p>Facebook: {shop.contacts.facebook}</p>}
                   </div>
@@ -307,7 +291,7 @@ export default function ShopProfile() {
               Location
             </h2>
             
-            <div className="text-text/80">
+            <div className="text-text/80 text-text">
               {shop.address && (
                 <div className="space-y-1">
                   <p>

@@ -6,19 +6,6 @@ import { Types } from 'mongoose';
 export const createShopController = async (req: Request, res: Response) => {
   try {
     console.log(req.body);
-    console.log(req.files);
-
-    if (req.files) {
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-
-      if (files.logo) {
-        req.body.logo = files.logo[0].path.replace(/^.*?uploads\//, '');
-      }
-
-      if (files.license) {
-        req.body.license = files.license[0].path.replace(/^.*?uploads\//, '');
-      }
-    }
 
     if (req.body.contacts) {
       req.body.contacts = JSON.parse(req.body.contacts);
@@ -56,6 +43,15 @@ export const getShopByIdController = async (req: Request, res: Response) => {
       res.status(404).json({ message: 'Shop not found' });
       return;
     }
+    // if (shop.contacts) {
+    //   shop.contacts = JSON.parse(req.body.contacts);
+    // }
+
+    // if (req.body.address) {
+    //   req.body.address = JSON.parse(req.body.address);
+    // }
+
+
     res.status(200).json(shop);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching shop', error: err });

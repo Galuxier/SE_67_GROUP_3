@@ -23,7 +23,7 @@ export interface ShopDocument extends Document {
   shop_name: string;
   license?: string; // optional field
   description: string;
-  logo: string;
+  logo_url: string;
   contacts: Contacts; // key-value pairs
   address: Address;
   create_at: Date;
@@ -35,7 +35,7 @@ const ShopSchema = new Schema<ShopDocument>({
   shop_name: { type: String, required: true },
   license: { type: String },
   description: { type: String },
-  logo: { type: String },
+  logo_url: { type: String },
   contacts: { type: Schema.Types.Mixed, required: true }, // Use Mixed type for key-value pairs
   address: {
     province: { type: String },

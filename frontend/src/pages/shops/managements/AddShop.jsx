@@ -198,7 +198,7 @@ export default function AddShop() {
       const formData = new FormData();
       
       // Add owner ID from current user
-      formData.append("owner_id", user._id || "tempUserId");
+      formData.append("owner_id", user._id);
       
       // Add basic shop info
       formData.append("shop_name", shopData.shop_name);
@@ -206,7 +206,7 @@ export default function AddShop() {
       
       // Add files
       if (shopData.logo) {
-        formData.append("logo", shopData.logo);
+        formData.append("logo_url", shopData.logo);
       }
       
       if (shopData.license) {
@@ -229,7 +229,7 @@ export default function AddShop() {
       // Add the new shop with a temporary ID
       const newShop = {
         _id: `shop_${Date.now()}`,
-        owner_id: user._id || "tempUserId",
+        owner_id: user._id,
         shop_name: shopData.shop_name,
         description: shopData.description,
         logo_url: logoPreview, // In real app this would come from the API
@@ -541,40 +541,32 @@ export default function AddShop() {
           
           {/* Action buttons */}
           {!formComplete && (
-            <div className="bg-card border-t border-border/20 dark:border-border/10 p-6 flex justify-between">
-              {currentStep === 1 && (
-                <div className="flex gap-4 justify-center mt-6">
-                  <button
-                    onClick={handlePrevStep}
-                    className="px-6 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    Back
-                  </button>
-                  
-                  <button
-                    onClick={handleNextStep}
-                    disabled={isSubmitting}
-                    className="px-6 py-2 bg-primary hover:bg-secondary text-white rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center">
-                        <ClipLoader size={16} color="#ffffff" />
-                        <span className="ml-2">Checking...</span>
-                      </div>
-                    ) : (
-                      "Continue"
-                    )}
-                  </button>
-                </div>
+            <div className={`bg-card border-t border-border/20 dark:border-border/10 p-6 flex ${currentStep === 1 ? 'justify-end' : 'justify-between'}`}>
+              {currentStep > 1 && (
+                <button
+                  type="button"
+                  onClick={handlePrevStep}
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Back
+                </button>
               )}
               
               {currentStep < 3 ? (
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  Next
+                  {isSubmitting && currentStep === 1 ? (
+                    <div className="flex items-center">
+                      <ClipLoader size={16} color="#ffffff" />
+                      <span className="ml-2">Checking...</span>
+                    </div>
+                  ) : (
+                    "Next"
+                  )}
                 </button>
               ) : (
                 <button

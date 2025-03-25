@@ -5,17 +5,17 @@ import Button from "../../../components/ui/Button";
 import Modal from "../../../components/ui/Modal";
 import { GrLinkNext, GrLinkPrevious } from "react-icons/gr";
 import { createEvent } from "../../../services/api/EventApi";
-import { boxers } from "./mockBoxer";
+import { boxers } from "./MockBoxer";
+import EventStepIndicator from "./EventStepIndicator";
 
 export default function FormAddFighter() {
   const { state } = useLocation();
   const navigate = useNavigate();
 
   // รับค่าข้อมูลอีเวนต์จาก state หรือ localStorage
-  const eventData =
-    state?.formData || JSON.parse(localStorage.getItem("eventData"));
-  const seatZone64 = localStorage.getItem("seatZone_url");
-  const poster64 = localStorage.getItem("poster_url");
+  const eventData = state?.formData || JSON.parse(sessionStorage.getItem("eventData"));
+  const seatZoneImage = sessionStorage.getItem("seatZoneImage");
+  const posterImage = sessionStorage.getItem("posterImage");
 
   const [matches, setMatches] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -109,31 +109,35 @@ export default function FormAddFighter() {
   const handleSaveFighter = async () => {
     const eventDataToSend = {
       organizer_id: eventData.organizer_id,
-      location_id: eventData.location_id, // ใส่ ObjectId จริง
+      location_id: eventData.location_id,
       event_name: eventData.event_name,
-      level: eventData.level.toLowerCase(), // ✅ ใช้พิมพ์เล็ก
+      level: eventData.level.toLowerCase(),
       start_date: eventData.start_date,
       end_date: eventData.end_date,
       description: eventData.description,
-      poster_url: createFileFromBase64(poster64, "poster_url.png"), // ✅ ถ้ามีการอัปโหลด ต้องใช้ FormData
-      seatZone_url: createFileFromBase64(seatZone64, "seatZone_url.png"), // ✅ ถ้ามีการอัปโหลด ต้องใช้ FormData
-      status: eventData.status || "preparing", // ✅ ค่าเริ่มต้น
-      seat_zones: eventData.seat_zones, // ✅ ส่งเป็น Object/Array โดยตรง
-      weight_classes: eventData.weight_classes, // ✅ ส่งเป็น Object/Array โดยตรง
+      poster_url: createFileFromBase64(posterImage, "poster_url.png"),
+      seatZone_url: createFileFromBase64(seatZoneImage, "seatZone_url.png"),
+      status: eventData.status || "preparing",
+      seat_zones: eventData.seat_zones,
+      weight_classes: eventData.weight_classes,
     };
-
-    console.log("sentData", eventDataToSend);
-
-    const res = await createEvent(eventDataToSend);
-    console.log("res", res);
-    // ✅ บันทึกลง localStorage เป็น JSON (ไม่สามารถเก็บ `FormData` ตรงๆ ได้)
-    localStorage.removeItem("fighters");
-    localStorage.removeItem("eventData");
-    localStorage.removeItem("poster_url");
-    localStorage.removeItem("seatZone_url");
-    localStorage.removeItem("seatZone");
-
-    navigate("/event/management/eventList");
+  
+    try {
+      const res = await createEvent(eventDataToSend);
+      console.log("Event created successfully:", res);
+      
+      // Clear all event data from sessionStorage after submission
+      sessionStorage.removeItem("eventData");
+      sessionStorage.removeItem("posterImage");
+      sessionStorage.removeItem("seatZoneImage");
+      sessionStorage.removeItem("weightClasses");
+      sessionStorage.removeItem("fighters");
+      
+      navigate("/event/management/eventList");
+    } catch (error) {
+      console.error("Error creating event:", error);
+      // Handle error
+    }
   };
 
   const handleAddFighter = () => {
@@ -142,81 +146,63 @@ export default function FormAddFighter() {
     if (!weight) newErrors.weight = "Please enter weight.";
     if (!boxer1) newErrors.boxer1 = "Please enter Boxer 1.";
     if (!boxer2) newErrors.boxer2 = "Please enter Boxer 2.";
-
+  
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
+  
     const newMatch = {
       match_id: Date.now(),
       match_time,
       weight,
-      boxer1, // Generate a valid ObjectId
-      boxer2, // Generate a valid ObjectId
+      boxer1,
+      boxer2,
       match_date: eventDates[selectedDateIndex],
       result: null,
-      previous_match: null,
-      next_match: null,
     };
-    const matchToPush = {
-      match_time: new Date(`1970-01-01T${match_time}:00Z`),
-      weight,
-      boxer1_id: boxer1.id, // Generate a valid ObjectId
-      boxer2_id: boxer2.id, // Generate a valid ObjectId
-      match_date: eventDates[selectedDateIndex],
-      result: null,
-      previous_match: null,
-      next_match: null,
-    };
-
-    console.log(newMatch);
-
+  
     const updatedFighters = editingFighter
-      ? matches.map((match) =>
-          match.id === editingFighter.id ? newMatch : match
-        )
+      ? matches.map((match) => match.id === editingFighter.id ? newMatch : match)
       : [...matches, newMatch];
-
+  
     setMatches(updatedFighters);
-    localStorage.setItem("fighters", JSON.stringify(updatedFighters));
-    console.log("updatedFighters", updatedFighters);
-
-    // อัปเดต eventData
+    sessionStorage.setItem("fighters", JSON.stringify(updatedFighters));
+  
+    // Update eventData with match data
     const updatedEventData = { ...eventData };
     const selectedWeightClass = updatedEventData.weight_classes.find(
       (wc) => wc.weigh_name === weight
     );
-
+  
     if (selectedWeightClass) {
       selectedWeightClass.matches = selectedWeightClass.matches || [];
+      
+      const matchToPush = {
+        match_time: new Date(`1970-01-01T${match_time}:00Z`),
+        weight,
+        boxer1_id: boxer1.id,
+        boxer2_id: boxer2.id,
+        match_date: eventDates[selectedDateIndex],
+        result: null,
+      };
+      
       if (editingFighter) {
-        // แก้ไข match ที่มีอยู่
-        const matchIndex = selectedWeightClass.matches.findIndex(
-          (m) => m.id === editingFighter.id
-        );
+        const matchIndex = selectedWeightClass.matches.findIndex(m => m.id === editingFighter.id);
         if (matchIndex !== -1) {
           selectedWeightClass.matches[matchIndex] = matchToPush;
         }
       } else {
-        // เพิ่ม match ใหม่
         selectedWeightClass.matches.push(matchToPush);
       }
-
-      localStorage.setItem("eventData", JSON.stringify(updatedEventData));
-      // localStorage.setItem("matchData", JSON.stringify(updatedEventData));
+  
+      sessionStorage.setItem("eventData", JSON.stringify(updatedEventData));
       setEventData(updatedEventData);
-    } else {
-      alert("Selected weight class not found.");
     }
-
+  
     setIsModalOpen(false);
     setEditingFighter(null);
-    setTime("");
-    setWeight("");
-    setBoxer1("");
-    setBoxer2("");
-    setErrors({});
+    resetFormFields();
   };
 
   const handleEditFighter = (match) => {
@@ -282,7 +268,7 @@ export default function FormAddFighter() {
             Location : {eventData?.location_id}
           </label>
         </div>
-        <br></br>
+        <EventStepIndicator currentStep={4} />
         <div className="flex items-center gap-2">
           <h3 className="text-2xl font-Bold">Match</h3>
           <button

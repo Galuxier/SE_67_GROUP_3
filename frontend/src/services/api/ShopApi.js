@@ -42,7 +42,7 @@ export async function updateShop(id, shopData) {
       },
     } : {};
     
-    const response = await api.put(`/shops/${id}`, shopData, config);
+    const response = await api.put(`/shop/${id}`, shopData, config);
     return response.data;
   } catch (error) {
     console.error("Error updating shop:", error);
@@ -54,7 +54,7 @@ export async function updateShop(id, shopData) {
 export async function getShopById(id) {
   try {
     const response = await api.get(`/shop/${id}`);
-    console.log("getsssss: ", response.data);
+    // console.log("getsssss: ", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching shop:", error);

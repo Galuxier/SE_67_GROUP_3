@@ -1,57 +1,368 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { MagnifyingGlassIcon, FunnelIcon, PlusIcon, PencilSquareIcon, UserCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
 
 function BoxerList() {
-  // const [boxer,setBoxer] = useState({
-  //     profile_picture_url:null,
-  //     first_name:"",
-  //     last_name:"",
-  //     nickname:""
-  // })
-
-  const boxers = [
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  // We no longer need status filtering
+  const [filterWeight, setFilterWeight] = useState("all");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedBoxer, setSelectedBoxer] = useState(null);
+  
+  // Mock data - in a real app, you would fetch this from an API
+  const [boxers, setBoxers] = useState([
     {
+      id: 1,
       image: new URL("../assets/images/boxer9.jpg", import.meta.url).href,
-      name: "nakarach thupbok",
+      name: "Nakarach Thupbok",
       nickname: "NakaPhonFire",
+      age: 24,
+      weight: 62,
+      wins: 12,
+      losses: 3,
+      draws: 1
     },
     {
+      id: 2,
       image: new URL("../assets/images/boxer10.jpg", import.meta.url).href,
       name: "Pach Dum",
       nickname: "YingYai",
+      age: 22,
+      weight: 58,
+      wins: 8,
+      losses: 2,
+      draws: 0
     },
     {
+      id: 3,
       image: new URL("../assets/images/boxer11.jpg", import.meta.url).href,
       name: "Diamond Jab",
       nickname: "YaiYing",
+      age: 26,
+      weight: 70,
+      wins: 15,
+      losses: 5,
+      draws: 2
     },
-  ];
+    {
+      id: 4,
+      image: "/api/placeholder/400/320",
+      name: "Somchai Jaidee",
+      nickname: "The Thunder",
+      age: 23,
+      weight: 65,
+      wins: 7,
+      losses: 2,
+      draws: 1
+    },
+    {
+      id: 5,
+      image: "/api/placeholder/400/320",
+      name: "Tanawat Kongpol",
+      nickname: "Iron Fist",
+      age: 25,
+      weight: 72,
+      wins: 11,
+      losses: 4,
+      draws: 0
+    },
+    {
+      id: 6,
+      image: "/api/placeholder/400/320",
+      name: "Preecha Sukkasem",
+      nickname: "The Hawk",
+      age: 21,
+      weight: 59,
+      wins: 5,
+      losses: 1,
+      draws: 3
+    }
+  ]);
 
-  const handleClick = (boxer) => {
-    console.log(`Clicked on: ${boxer.nickname} (${boxer.name})`);
+  // Filter and search logic
+  const filteredBoxers = boxers.filter(boxer => {
+    const matchesSearch = boxer.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          boxer.nickname.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (filterWeight === "all") return matchesSearch;
+    
+    if (filterWeight === "lightweight") return matchesSearch && boxer.weight < 60;
+    if (filterWeight === "welterweight") return matchesSearch && boxer.weight >= 60 && boxer.weight < 70;
+    if (filterWeight === "heavyweight") return matchesSearch && boxer.weight >= 70;
+    
+    return matchesSearch;
+  });
+
+  const handleAddBoxer = () => {
+    navigate("/gym/management/boxers/create");
   };
-  return(
-    <div className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold text-center mb-8">Boxer List</h1>
 
-      <div className="flex flex-wrap justify-center gap-6">
-        {boxers.map((boxer, index) => (
-          <div
-            key={index}
-            className="bg-white shadow-md rounded-lg w-64 p-4 cursor-pointer hover:shadow-xl transition"
-            onClick={() => handleClick(boxer)}
-          >
-            <img
-              src={boxer.image}
-              alt={boxer.nickname}
-              className="w-full h-48 object-cover rounded-md mb-4"
-            />
-            <h2 className="text-lg font-semibold text-center">{boxer.name}</h2>
-            <p className="text-center text-rose-600">{boxer.nickname}</p>
+  const handleEditBoxer = (boxer, e) => {
+    e.stopPropagation();
+    navigate(`/gym/management/boxers/edit/${boxer.id}`);
+  };
+
+  const handleDeletePrompt = (boxer, e) => {
+    e.stopPropagation();
+    setSelectedBoxer(boxer);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    // In a real app, you would call an API to delete the boxer
+    setBoxers(boxers.filter(boxer => boxer.id !== selectedBoxer.id));
+    setIsDeleteModalOpen(false);
+    setSelectedBoxer(null);
+  };
+
+  const handleViewProfile = (boxer) => {
+    navigate(`/gym/management/boxers/${boxer.id}`);
+  };
+
+  // Weight category badge 
+  const getWeightCategory = (weight) => {
+    if (weight < 60) return "Lightweight";
+    if (weight >= 60 && weight < 70) return "Welterweight";
+    return "Heavyweight";
+  };
+
+  // Animation variants for list items
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 100 }
+    }
+  };
+
+  return (
+    <div className="min-h-screen p-8 bg-gray-50">
+      <div className="max-w-7xl mx-auto">
+        {/* Header and Actions */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">Boxer Management</h1>
+          
+          <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={handleAddBoxer}
+              className="inline-flex items-center px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors"
+            >
+              <PlusIcon className="w-5 h-5 mr-2" />
+              Add New Boxer
+            </button>
           </div>
-        ))}
+        </div>
+
+        {/* Search and Filter Bar */}
+        <div className="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="relative w-full sm:w-64">
+            <input
+              type="text"
+              placeholder="Search boxers..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            />
+            <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+          </div>
+          
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <FunnelIcon className="h-5 w-5 text-gray-500" />
+            <select
+              value={filterWeight}
+              onChange={(e) => setFilterWeight(e.target.value)}
+              className="py-2 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+            >
+              <option value="all">All Weights</option>
+              <option value="lightweight">Lightweight (&lt;60kg)</option>
+              <option value="welterweight">Welterweight (60-70kg)</option>
+              <option value="heavyweight">Heavyweight (&gt;70kg)</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Stats Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white p-4 rounded-lg shadow-md flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Total Boxers</p>
+              <p className="text-2xl font-bold">{boxers.length}</p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-full">
+              <UserCircleIcon className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+          
+          <div className="bg-white p-4 rounded-lg shadow-md flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Average Age</p>
+              <p className="text-2xl font-bold">
+                {boxers.length > 0 
+                  ? Math.round(boxers.reduce((sum, boxer) => sum + boxer.age, 0) / boxers.length) 
+                  : 0}
+              </p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-full">
+              <div className="h-6 w-6 text-green-600">📅</div>
+            </div>
+          </div>
+          
+          <div className="bg-white p-4 rounded-lg shadow-md flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Win Rate</p>
+              <p className="text-2xl font-bold">
+                {boxers.length > 0 
+                  ? Math.round(boxers.reduce((sum, boxer) => sum + boxer.wins, 0) / 
+                      boxers.reduce((sum, boxer) => sum + boxer.wins + boxer.losses + boxer.draws, 0) * 100) + '%'
+                  : '0%'}
+              </p>
+            </div>
+            <div className="p-3 bg-amber-100 rounded-full">
+              <div className="h-6 w-6 text-amber-600">🏆</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Boxers List */}
+        {filteredBoxers.length > 0 ? (
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {filteredBoxers.map((boxer) => (
+              <motion.div
+                key={boxer.id}
+                className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                variants={itemVariants}
+                onClick={() => handleViewProfile(boxer)}
+              >
+                <div className="relative">
+                  <img
+                    src={boxer.image}
+                    alt={boxer.nickname}
+                    className="w-full h-56 object-cover"
+                  />
+                  <div className="absolute top-0 right-0 m-2 flex space-x-1">
+                    <button
+                      className="p-1.5 bg-white rounded-full shadow hover:bg-gray-100 transition-colors"
+                      onClick={(e) => handleEditBoxer(boxer, e)}
+                      title="Edit"
+                    >
+                      <PencilSquareIcon className="h-4 w-4 text-gray-600" />
+                    </button>
+                    <button
+                      className="p-1.5 bg-white rounded-full shadow hover:bg-gray-100 transition-colors"
+                      onClick={(e) => handleDeletePrompt(boxer, e)}
+                      title="Delete"
+                    >
+                      <TrashIcon className="h-4 w-4 text-red-600" />
+                    </button>
+                  </div>
+                  {/* <div className="absolute bottom-0 left-0 m-2 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {boxer.weight} kg
+                  </div> */}
+                </div>
+                
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-800">{boxer.name}</h2>
+                      <p className="text-rose-600 font-medium">{boxer.nickname}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600">{boxer.age} yrs, {boxer.weight} kg</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between mt-4 pt-2 border-t border-gray-100">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">WINS</p>
+                      <p className="font-bold text-green-600">{boxer.wins}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">LOSSES</p>
+                      <p className="font-bold text-red-600">{boxer.losses}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">DRAWS</p>
+                      <p className="font-bold text-gray-600">{boxer.draws}</p>
+                    </div>
+                    {/* <div className="text-center">
+                      <p className="text-xs text-gray-500">AGE</p>
+                      <p className="font-bold text-gray-600">{boxer.age}</p>
+                    </div> */}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          <div className="flex flex-col items-center justify-center p-12 bg-white rounded-lg shadow">
+            <svg className="w-16 h-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
+            <h3 className="mt-4 text-lg font-medium text-gray-900">No boxers found</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {searchTerm 
+                ? `No results for "${searchTerm}"` 
+                : filterWeight !== "all" 
+                  ? `No boxers in the ${filterWeight} category`
+                  : "There are no boxers registered yet."}
+            </p>
+            {(searchTerm || filterWeight !== "all") && (
+              <button
+                onClick={() => { setSearchTerm(""); setFilterWeight("all"); }}
+                className="mt-4 text-rose-600 hover:text-rose-800"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Confirm Deletion</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Are you sure you want to remove <span className="font-medium text-gray-700">{selectedBoxer?.name} ({selectedBoxer?.nickname})</span> from your gym? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
+}
 
 export default BoxerList;

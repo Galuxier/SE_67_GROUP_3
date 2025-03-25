@@ -39,6 +39,8 @@ export default function ProductDetail() {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
+  const [variantImageMapping, setVariantImageMapping] = useState({});
+  const [mainSwiperRef, setMainSwiperRef] = useState(null);
   
   // Fetch product and variant data
   useEffect(() => {
@@ -60,39 +62,73 @@ export default function ProductDetail() {
         // Fetch variants
         const variantsResponse = await getVariantsByProductId(product_id);
         const variantsList = variantsResponse.data || variantsResponse || [];
-        setVariants(variantsList);
+        console.log(variantsList);
         
-        // Set default selected variant
-        if (variantsList.length > 0) {
-          setSelectedVariant(variantsList[0]);
-          setSelectedAttrs(variantsList[0].attributes || {});
-        }
+        setVariants(variantsList);
+        setSelectedAttrs({});
         
         // Fetch product images
+        const variantImageMap = {};
+        if (variantsList && variantsList.length > 0) {
+          for (const variant of variantsList) {
+            if (variant.variant_image_url) {
+              try {
+                const imgUrl = await getImage(variant.variant_image_url);
+                if (imgUrl) {
+                  variantImageMap[variant._id] = imgUrl;
+                }
+              } catch (error) {
+                console.error(`Error fetching variant image for ${variant._id}:`, error);
+              }
+            }
+          }
+        }
+        
+        // Get product images
+        let allImageUrls = [];
+        
+        // First add product images
         if (productData.product_image_urls && productData.product_image_urls.length > 0) {
-          const urls = await Promise.all(
+          const productImages = await Promise.all(
             productData.product_image_urls.map(async (imageUrl) => {
               try {
                 return await getImage(imageUrl);
               } catch (error) {
-                console.error("Error fetching image:", error);
+                console.error("Error fetching product image:", error);
                 return null;
               }
             })
           );
           
           // Filter out null values from failed image fetches
-          setImageUrls(urls.filter(Boolean));
-        } else {
-          // Fallback image
-          setImageUrls([new URL("../../assets/images/product-placeholder.jpg", import.meta.url).href]);
+          allImageUrls = productImages.filter(Boolean);
         }
         
+        // Then add variant images (that aren't duplicates)
+        const variantImages = Object.values(variantImageMap);
+        for (const img of variantImages) {
+          if (!allImageUrls.includes(img)) {
+            allImageUrls.push(img);
+          }
+        }
+        
+        // If no images at all, use fallback
+        if (allImageUrls.length === 0) {
+          allImageUrls = [new URL("../../assets/images/product-placeholder.jpg", import.meta.url).href];
+        }
+        
+        setImageUrls(allImageUrls);
+        
+        // Store variant image mapping for later use
+        setVariantImageMapping(variantImageMap);
+          
         // Fetch shop data if shop_id exists
         if (productData.shop_id) {
           try {
             const shopResponse = await getShopById(productData.shop_id);
+            shopResponse.logo_url = await getImage(shopResponse.logo_url);
             setShopData(shopResponse.data || shopResponse);
+
           } catch (shopError) {
             console.error("Error fetching shop data:", shopError);
             // Non-critical error, continue without shop data
@@ -109,7 +145,7 @@ export default function ProductDetail() {
     fetchProductData();
   }, [product_id]);
 
-  // Helper function to get available attribute values
+  // Helper function to get available attribute values - แก้ไขให้มีเพียงครั้งเดียว
   const getAttributeValues = (attrName) => {
     if (!variants || variants.length === 0) return [];
     
@@ -121,7 +157,7 @@ export default function ProductDetail() {
     return [...new Set(values)];
   };
   
-  // Get all attribute names from variants
+  // Get all attribute names from variants - แก้ไขให้มีเพียงครั้งเดียว
   const getAttributeNames = () => {
     if (!variants || variants.length === 0) return [];
     
@@ -135,38 +171,7 @@ export default function ProductDetail() {
     return Array.from(allAttributes);
   };
   
-  // Handle attribute selection
-  const handleAttrChange = (attrName, value) => {
-    // Update selectedAttrs
-    const newSelectedAttrs = {
-      ...selectedAttrs,
-      [attrName]: value
-    };
-    
-    setSelectedAttrs(newSelectedAttrs);
-    
-    // Find matching variant
-    const matchingVariant = variants.find(variant => {
-      if (!variant.attributes) return false;
-      
-      // Check if all selected attributes match this variant
-      return Object.entries(newSelectedAttrs).every(([key, val]) => 
-        variant.attributes[key] === val
-      );
-    });
-    
-    // Update selectedVariant if found
-    if (matchingVariant) {
-      setSelectedVariant(matchingVariant);
-      // Reset quantity to 1 when switching variants
-      setQuantity(1);
-    } else {
-      // No exact match found, keep the current selectedAttrs but don't update selectedVariant
-      setSelectedVariant(null);
-    }
-  };
-  
-  // Check if an attribute value is compatible with current selections
+  // Check if an attribute value is compatible with current selections - ย้ายไปอยู่ก่อนฟังก์ชันที่ใช้
   const isAttributeValueAvailable = (attrName, attrValue) => {
     // If no variants available, nothing is available
     if (!variants || variants.length === 0) return false;
@@ -184,6 +189,57 @@ export default function ProductDetail() {
         key === attrName ? variant.attributes[key] === attrValue : variant.attributes[key] === val
       );
     });
+  };
+  
+  // Handle attribute selection
+  const handleAttrChange = (attrName, value) => {
+    // สร้าง newSelectedAttrs object
+    let newSelectedAttrs = { ...selectedAttrs };
+    
+    // ถ้าค่าที่เลือกเหมือนกับค่าที่เลือกอยู่แล้ว = ต้องการยกเลิกการเลือก
+    if (selectedAttrs[attrName] === value) {
+      // ลบ attribute ออกจาก object
+      delete newSelectedAttrs[attrName];
+    } else {
+      // กรณีปกติ - เลือกค่าใหม่
+      newSelectedAttrs[attrName] = value;
+    }
+    
+    // อัปเดต state
+    setSelectedAttrs(newSelectedAttrs);
+    
+    // หา variant ที่ตรงกับตัวเลือกทั้งหมดที่เลือกไว้
+    // หากไม่มีการเลือกตัวเลือกใดๆ หรือเลือกไม่ครบ จะไม่มี matching variant
+    const matchingVariant = variants.find(variant => {
+      if (!variant.attributes) return false;
+      
+      // ต้องมีตัวเลือกอย่างน้อย 1 อัน และตรวจสอบว่าทุกตัวเลือกที่เลือกตรงกับ variant
+      return Object.keys(newSelectedAttrs).length > 0 && 
+             Object.entries(newSelectedAttrs).every(([key, val]) => 
+               variant.attributes[key] === val
+             ) &&
+             // ตรวจสอบว่าจำนวน attribute ใน newSelectedAttrs เท่ากับจำนวน attribute ใน variant
+             Object.keys(newSelectedAttrs).length === Object.keys(variant.attributes).length;
+    });
+    
+    // อัปเดต selectedVariant ถ้าพบที่ตรงกัน
+    if (matchingVariant) {
+      setSelectedVariant(matchingVariant);
+      setQuantity(1);
+      
+      // ส่วนที่เกี่ยวกับการเลื่อนไปที่รูปภาพ variant (ถ้ามี)
+      if (matchingVariant.variant_image_url && variantImageMapping && variantImageMapping[matchingVariant._id] && mainSwiperRef) {
+        const variantImgUrl = variantImageMapping[matchingVariant._id];
+        const variantImgIndex = imageUrls.findIndex(url => url === variantImgUrl);
+        
+        if (variantImgIndex !== -1) {
+          mainSwiperRef.slideTo(variantImgIndex);
+        }
+      }
+    } else {
+      // ไม่พบ variant ที่ตรงกัน หรือมีการยกเลิกการเลือก
+      setSelectedVariant(null);
+    }
   };
   
   // Handle quantity changes
@@ -371,6 +427,7 @@ export default function ProductDetail() {
                   thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
                   modules={[Thumbs, Navigation]}
                   navigation={true}
+                  onSwiper={setMainSwiperRef}
                   className="product-main-swiper"
                 >
                   {imageUrls.map((image, index) => (

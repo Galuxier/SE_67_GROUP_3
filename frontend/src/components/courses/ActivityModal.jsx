@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { Plus } from "lucide-react";
+import { Plus, X, Users, Clock, Calendar, Info } from "lucide-react";
 import { useState, useEffect } from "react";
 import { trainer } from "../Trainer"; // Import the trainer data from TrainerList
 
@@ -15,6 +15,7 @@ export default function ActivityModal({
   const [isCoachSelectOpen, setIsCoachSelectOpen] = useState(false);
   const [existingActivities, setExistingActivities] = useState([]);
   const [busyTimeSlots, setBusyTimeSlots] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Load existing activities on component mount
   useEffect(() => {
@@ -73,6 +74,7 @@ export default function ActivityModal({
     }
     
     setIsCoachSelectOpen(false);
+    setSearchQuery("");
   };
   
   const handleRemoveCoach = (coachId) => {
@@ -126,29 +128,29 @@ export default function ActivityModal({
   const handleAddActivitySubmit = (e) => {
     e.preventDefault();
 
-    // // Validate required fields
-    // if (!newActivity.startTime || !newActivity.endTime || !newActivity.description) {
-    //   alert("กรุณากรอกข้อมูลเวลาและรายละเอียดให้ครบ");
-    //   return;
-    // }
+    // Validate required fields
+    if (!newActivity.startTime || !newActivity.endTime || !newActivity.description) {
+      alert("Please fill in all required fields (time and description)");
+      return;
+    }
     
-    // // Validate that end time is after start time
-    // if (convertTimeToMinutes(newActivity.endTime) <= convertTimeToMinutes(newActivity.startTime)) {
-    //   alert("เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น");
-    //   return;
-    // }
+    // Validate that end time is after start time
+    if (convertTimeToMinutes(newActivity.endTime) <= convertTimeToMinutes(newActivity.startTime)) {
+      alert("End time must be later than start time");
+      return;
+    }
     
-    // // Check time overlap
-    // if (isTimeOverlapping(newActivity.startTime, newActivity.endTime)) {
-    //   alert("เวลานี้ซ้ำซ้อนกับกิจกรรมที่มีอยู่แล้ว กรุณาเลือกเวลาอื่น");
-    //   return;
-    // }
+    // Check time overlap
+    if (isTimeOverlapping(newActivity.startTime, newActivity.endTime)) {
+      alert("This time slot overlaps with an existing activity");
+      return;
+    }
     
-    // // Validate coach selection
-    // if (!newActivity.trainer || newActivity.trainer.length === 0) {
-    //   alert("กรุณาเพิ่มโค้ชอย่างน้อย 1 คน");
-    //   return;
-    // }
+    // Validate coach selection
+    if (!newActivity.trainer || newActivity.trainer.length === 0) {
+      alert("Please add at least one coach");
+      return;
+    }
 
     const newActivityData = {
       id: Date.now(),
@@ -180,136 +182,219 @@ export default function ActivityModal({
     setIsOpen(false);
   };
 
+  // Filter trainers based on search query
+  const filteredTrainers = trainer.filter(t => 
+    t.Nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.lastName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-20">
-      <div className="w-[700px] p-10 shadow-lg bg-white rounded-lg relative">
-        <h3 className="text-base font-medium mb-3">เพิ่มกิจกรรม - วันที่ {currentDay}</h3>
+    <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 backdrop-blur-sm">
+      <div className="w-[650px] bg-white p-6 shadow-xl rounded-xl relative max-h-[85vh] overflow-y-auto">
+        <button
+          onClick={() => setIsOpen(false)}
+          className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
+        >
+          <X size={20} />
+        </button>
         
-        {/* Show busy time slots */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-800">Add Activity</h2>
+          <div className="flex items-center mt-1 text-sm text-gray-600">
+            <Calendar size={16} className="mr-1" />
+            <span>Day {currentDay} • {new Date(currentDate).toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}</span>
+          </div>
+        </div>
+        
+        {/* Busy time slots indicator */}
         {busyTimeSlots.length > 0 && (
-          <div className="mb-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">ช่วงเวลาที่ไม่ว่าง:</h4>
-            <div className="grid grid-cols-1 gap-1">
+          <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <div className="flex items-center mb-2 text-gray-700">
+              <Info size={16} className="mr-2 text-amber-500" />
+              <h3 className="font-medium">Busy Time Slots</h3>
+            </div>
+            <div className="space-y-2 max-h-28 overflow-y-auto pr-2">
               {busyTimeSlots.map((slot, index) => (
                 <div 
                   key={index} 
-                  className="bg-gray-100 p-2 rounded text-sm flex items-center"
+                  className="flex items-center p-2 bg-white rounded-md border border-gray-200 text-sm"
                 >
-                  <div className="w-3 h-3 rounded-full bg-red-400 mr-2"></div>
-                  <span className="font-medium text-gray-500">{slot.start} - {slot.end}</span>
-                  <span className="ml-2 text-gray-500">({slot.description})</span>
+                  <div className="w-2 h-2 rounded-full bg-rose-500 mr-2"></div>
+                  <span className="font-medium text-gray-700">{slot.start} - {slot.end}</span>
+                  <span className="ml-2 text-gray-500 truncate">({slot.description})</span>
                 </div>
               ))}
             </div>
           </div>
         )}
         
-        <form onSubmit={handleAddActivitySubmit} className="space-y-3">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-sm text-gray-700">เวลาเริ่มต้น</label>
-              <input
-                type="time"
-                name="startTime"
-                value={newActivity.startTime || ""}
-                onChange={handleInputChange}
-                className={`w-full p-2 border rounded-lg text-sm ${
-                  newActivity.startTime && isTimeOverlapping(newActivity.startTime, newActivity.startTime+':01') 
-                    ? 'border-red-500 bg-red-50' 
-                    : 'border-blue-300 bg-blue-50'
-                }`}
-                required
-              />
-              {newActivity.startTime && isTimeOverlapping(newActivity.startTime, newActivity.startTime+':01') && (
-                <p className="text-red-500 text-xs mt-1">เวลานี้ซ้ำซ้อนกับกิจกรรมอื่น</p>
-              )}
+        <form onSubmit={handleAddActivitySubmit} className="space-y-5">
+          {/* Time selection */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Start Time <span className="text-rose-500">*</span></label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Clock size={16} className="text-gray-500" />
+                </div>
+                <select
+                  name="startTime"
+                  value={newActivity.startTime || ""}
+                  onChange={handleInputChange}
+                  className={`w-full pl-10 pr-3 py-2 border rounded-lg text-sm appearance-none ${
+                    newActivity.startTime && isTimeOverlapping(newActivity.startTime, newActivity.startTime+':01') 
+                      ? 'border-rose-500 bg-rose-50' 
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                  }`}
+                  required
+                >
+                  <option value="">Select time</option>
+                  {[...Array(24)].map((_, hour) => (
+                    [0, 15, 30, 45].map((minute) => (
+                      <option 
+                        key={`${hour}-${minute}`} 
+                        value={`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`}
+                      >
+                        {hour.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')}
+                      </option>
+                    ))
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+                {newActivity.startTime && isTimeOverlapping(newActivity.startTime, newActivity.startTime+':01') && (
+                  <p className="mt-1 text-rose-500 text-xs">Time conflicts with another activity</p>
+                )}
+              </div>
             </div>
-            <div className="flex-1">
-              <label className="block text-sm text-gray-700">เวลาสิ้นสุด</label>
-              <input
-                type="time"
-                name="endTime"
-                value={newActivity.endTime || ""}
-                onChange={handleInputChange}
-                className={`w-full p-2 border rounded-lg text-sm ${
-                  newActivity.startTime && newActivity.endTime && !isValidTimeRange()
-                    ? 'border-red-500 bg-red-50' 
-                    : 'border-blue-300 bg-blue-50'
-                }`}
-                required
-              />
-              {newActivity.startTime && newActivity.endTime && !isValidTimeRange() && (
-                <p className="text-red-500 text-xs mt-1">
-                  {convertTimeToMinutes(newActivity.endTime) <= convertTimeToMinutes(newActivity.startTime)
-                    ? "เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น"
-                    : "ช่วงเวลานี้ซ้ำซ้อนกับกิจกรรมอื่น"}
-                </p>
-              )}
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">End Time <span className="text-rose-500">*</span></label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Clock size={16} className="text-gray-500" />
+                </div>
+                <select
+                  name="endTime"
+                  value={newActivity.endTime || ""}
+                  onChange={handleInputChange}
+                  className={`w-full pl-10 pr-3 py-2 border rounded-lg text-sm appearance-none ${
+                    newActivity.startTime && newActivity.endTime && !isValidTimeRange()
+                      ? 'border-rose-500 bg-rose-50' 
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                  }`}
+                  required
+                >
+                  <option value="">Select time</option>
+                  {[...Array(24)].map((_, hour) => (
+                    [0, 15, 30, 45].map((minute) => (
+                      <option 
+                        key={`${hour}-${minute}`} 
+                        value={`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`}
+                      >
+                        {hour.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')}
+                      </option>
+                    ))
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+                {newActivity.startTime && newActivity.endTime && !isValidTimeRange() && (
+                  <p className="mt-1 text-rose-500 text-xs">
+                    {convertTimeToMinutes(newActivity.endTime) <= convertTimeToMinutes(newActivity.startTime)
+                      ? "End time must be after start time"
+                      : "Time conflicts with another activity"}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
           
+          {/* Description */}
           <div>
-            <label className="block text-sm text-gray-700">รายละเอียด</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description <span className="text-rose-500">*</span></label>
             <input
               type="text"
               name="description"
-              placeholder="รายละเอียด"
+              placeholder="E.g., Basic techniques, Sparring session, etc."
               value={newActivity.description || ""}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded-lg text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500"
               required
             />
           </div>
           
+          {/* Coach selection */}
           <div>
-            <div className="flex justify-between items-center">
-              <label className="block text-sm text-gray-700">โค้ช (Coach)</label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-gray-700">Coaches <span className="text-rose-500">*</span></label>
               <button
                 type="button"
                 onClick={() => setIsCoachSelectOpen(true)}
-                className="flex items-center text-sm text-blue-500 hover:text-blue-700"
+                className="flex items-center text-sm text-blue-600 hover:text-blue-800"
               >
-                <Plus size={16} className="mr-1" /> เลือกโค้ช
+                <Plus size={16} className="mr-1" /> Add Coach
               </button>
             </div>
             
-            {/* Display selected trainer */}
-            {newActivity.trainer && newActivity.trainer.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
+            {/* Display selected coaches */}
+            {newActivity.trainer && newActivity.trainer.length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
                 {newActivity.trainer.map(coach => (
-                  <div key={coach.id} className="flex items-center bg-gray-100 rounded-full px-3 py-1 text-xs">
-                    <span>{coach.name}</span>
+                  <div key={coach.id} className="flex items-center bg-white rounded-full pl-2 pr-3 py-1 shadow-sm border border-gray-200">
+                    <span className="w-6 h-6 flex items-center justify-center bg-blue-100 text-blue-700 rounded-full text-xs font-medium mr-1">
+                      {coach.name.charAt(0)}
+                    </span>
+                    <span className="text-sm font-medium">{coach.name}</span>
                     <button 
                       type="button"
                       onClick={() => handleRemoveCoach(coach.id)}
-                      className="ml-2 text-gray-500 hover:text-red-500"
+                      className="ml-2 text-gray-400 hover:text-rose-500 transition-colors"
                     >
-                      ✕
+                      <X size={14} />
                     </button>
                   </div>
                 ))}
               </div>
+            ) : (
+              <div className="flex items-center justify-center p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50 text-gray-500 text-sm">
+                <Users size={16} className="mr-2" />
+                No coaches selected yet
+              </div>
             )}
           </div>
           
-          <div className="flex justify-end space-x-2">
+          {/* Action buttons */}
+          <div className="flex justify-end gap-3 pt-2 mt-6 border-t border-gray-200">
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="px-3 py-1 border rounded-lg text-sm"
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors"
             >
-              ยกเลิก
+              Cancel
             </button>
             <button
               type="submit"
-              className={`px-3 py-1 text-white rounded-lg text-sm ${
+              className={`px-5 py-2 text-white rounded-lg text-sm font-medium ${
                 newActivity.startTime && newActivity.endTime && isValidTimeRange() && newActivity.description && newActivity.trainer?.length > 0
-                  ? 'bg-blue-500 hover:bg-blue-600' 
+                  ? 'bg-blue-600 hover:bg-blue-700' 
                   : 'bg-gray-400 cursor-not-allowed'
               }`}
               disabled={!newActivity.startTime || !newActivity.endTime || !isValidTimeRange() || !newActivity.description || !newActivity.trainer?.length}
             >
-              เพิ่ม
+              Add Activity
             </button>
           </div>
         </form>
@@ -317,33 +402,68 @@ export default function ActivityModal({
       
       {/* Coach Selection Modal */}
       {isCoachSelectOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
-          <div className="w-[500px] p-6 shadow-lg bg-white rounded-lg relative">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="w-[520px] bg-white p-6 shadow-xl rounded-xl relative max-h-[80vh] overflow-hidden flex flex-col">
             <button
-              onClick={() => setIsCoachSelectOpen(false)}
-              className="absolute top-3 right-3 text-gray-600 hover:text-black text-sm"
+              onClick={() => {
+                setIsCoachSelectOpen(false);
+                setSearchQuery("");
+              }}
+              className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
             >
-              ✕
+              <X size={20} />
             </button>
-            <h3 className="text-base font-medium mb-4">เลือกโค้ช</h3>
             
-            <div className="grid grid-cols-3 gap-3">
-              {trainer.map(trainerItem => (
+            <h3 className="text-lg font-bold mb-4 text-gray-800">Select Coach</h3>
+            
+            {/* Search input */}
+            <div className="relative mb-4">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Search by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            
+            {/* Coach list */}
+            <div className="grid grid-cols-2 gap-3 overflow-y-auto pb-2">
+              {filteredTrainers.map(trainerItem => (
                 <button
                   key={trainerItem.id}
                   type="button"
-                  className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50"
+                  className="flex items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors text-left"
                   onClick={() => handleAddCoach(trainerItem)}
+                  disabled={newActivity.trainer?.some(t => t.id === trainerItem.id)}
                 >
                   <img
                     src={trainerItem.image_url}
                     alt={trainerItem.Nickname}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-gray-300"
+                    className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
                   />
-                  <p className="mt-1 text-sm font-semibold">{trainerItem.Nickname}</p>
-                  <p className="text-xs text-gray-500">{trainerItem.gym}</p>
+                  <div className="ml-3">
+                    <p className="font-medium text-gray-800">{trainerItem.Nickname}</p>
+                    <p className="text-xs text-gray-500">{trainerItem.gym}</p>
+                  </div>
+                  {newActivity.trainer?.some(t => t.id === trainerItem.id) && (
+                    <span className="ml-auto bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
+                      Selected
+                    </span>
+                  )}
                 </button>
               ))}
+              
+              {filteredTrainers.length === 0 && (
+                <div className="col-span-2 flex items-center justify-center p-6 text-gray-500 bg-gray-50 rounded-lg">
+                  No coaches match your search
+                </div>
+              )}
             </div>
           </div>
         </div>

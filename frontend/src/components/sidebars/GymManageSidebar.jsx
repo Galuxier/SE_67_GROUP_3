@@ -108,7 +108,11 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
           <nav className="flex flex-col space-y-1">
             {/* Dashboard */}
             <Link
-              to="/gym/management/dashboard"
+              to={
+                gymData
+                  ? `/gym/management/${gymData._id}`
+                  : `gym/management/create`
+              }
               className={`p-2 rounded-md hover:bg-primary/10 ${
                 isActive("/dashboard")
                   ? "bg-primary/10 text-primary font-medium"
@@ -208,7 +212,7 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
 
               {expandedMenus.courses && (
                 <div className="pl-10 space-y-1">
-                  <Link
+                  {/* <Link
                     to="/gym/management/courses/active"
                     className={`block p-2 rounded-md hover:bg-primary/10 ${
                       location.pathname === "/gym/management/courses/active"
@@ -227,7 +231,7 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                     } text-sm transition-colors`}
                   >
                     Completed Courses
-                  </Link>
+                  </Link> */}
                   <Link
                     to={gymData ? `/gym/management/${gymData._id}/courses/create` : "/gym/management/create"}
                     className={`block p-2 rounded-md hover:bg-primary/10 ${
@@ -344,7 +348,7 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
             </div>
 
             {/* Schedule */}
-            <Link
+            {/* <Link
               to="/gym/management/schedule"
               className={`p-2 rounded-md hover:bg-primary/10 ${
                 isActive("/schedule")
@@ -354,10 +358,10 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
             >
               <CalendarIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
               Schedule
-            </Link>
+            </Link> */}
 
             {/* Reports */}
-            <Link
+            {/* <Link
               to="/gym/management/reports"
               className={`p-2 rounded-md hover:bg-primary/10 ${
                 isActive("/reports")
@@ -367,7 +371,7 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
             >
               <ClipboardDocumentListIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
               Reports
-            </Link>
+            </Link> */}
 
             {/* All My Gyms Section */}
             {showMultipleGyms && (

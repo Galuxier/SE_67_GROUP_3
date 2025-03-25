@@ -6,6 +6,7 @@ import{
     updateCourseController,
     deleteCourseController
 } from '../controllers/course.controller';
+import { courseImagesUpload } from '../middlewares/uploads/course.upload';
 
 const route = express.Router();
 
@@ -13,7 +14,7 @@ route.get('/courses', getCoursesController);
 
 route.get('/course/:id', getCourseByIdController);
 
-route.post('/course', createCourseController);
+route.post('/course',courseImagesUpload ,createCourseController);
 
 route.put('/course/:id', updateCourseController);
 
