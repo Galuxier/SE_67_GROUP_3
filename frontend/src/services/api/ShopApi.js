@@ -54,7 +54,7 @@ export async function updateShop(id, shopData) {
 export async function getShopById(id) {
   try {
     const response = await api.get(`/shop/${id}`);
-    console.log("getsssss: ", response.data);
+    // console.log("getsssss: ", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching shop:", error);

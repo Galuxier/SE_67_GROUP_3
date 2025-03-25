@@ -4,36 +4,33 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../../../components/ui/Button";
 import Modal from "../../../components/ui/Modal";
 import { createEvent } from "../../../services/api/EventApi";
+import EventStepIndicator from "./EventStepIndicator";
+
 
 export default function FormAddWeightClass() {
   const { state } = useLocation();
   const navigate = useNavigate();
 
   // รับค่าข้อมูลอีเวนต์จาก state หรือ localStorage
-  const eventData = state?.formData || JSON.parse(localStorage.getItem("eventData"));
+  const eventData = state?.formData || JSON.parse(sessionStorage.getItem("eventData"));
+  const posterImage = sessionStorage.getItem("posterImage");
 
   const [weightClasses, setWeightClasses] = useState([]); 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // State สำหรับเก็บค่าจากฟอร์ม
-  const [weight_name, setWeightName] = useState(""); // ชื่อ Weight Class
-  const [min_weight, setMinWeight] = useState(""); // น้ำหนักขั้นต่ำ
-  const [max_weight, setMaxWeight] = useState(""); // น้ำหนักขั้นสูง
-  const [max_enrollment, setMaxEnrollment] = useState(""); // จำนวนนักมวยสูงสุด
-
-  // State สำหรับเก็บข้อมูล Weight Class ที่กำลังแก้ไข
+  const [weight_name, setWeightName] = useState("");
+  const [min_weight, setMinWeight] = useState("");
+  const [max_weight, setMaxWeight] = useState("");
+  const [max_enrollment, setMaxEnrollment] = useState("");
   const [editingWeight, setEditingWeight] = useState(null);
-
-  // State สำหรับ Modal ยืนยันการลบ
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [weightClassToDelete, setWeightClassToDelete] = useState(null);
-
-  // State สำหรับแสดงข้อผิดพลาด
   const [errors, setErrors] = useState({});
 
   // โหลดข้อมูล Weight Classes จาก localStorage
   useEffect(() => {
-    const savedWeightClasses = JSON.parse(localStorage.getItem("weightClasses")) || [];
+    const savedWeightClasses = JSON.parse(sessionStorage.getItem("weightClasses")) || [];
     setWeightClasses(savedWeightClasses);
   }, []);
 
@@ -41,9 +38,9 @@ export default function FormAddWeightClass() {
     if (weightClassToDelete) {
       const updatedWeightClasses = weightClasses.filter((wc) => wc.id !== weightClassToDelete.id);
       setWeightClasses(updatedWeightClasses);
-      localStorage.setItem("weightClasses", JSON.stringify(updatedWeightClasses));
-      setIsDeleteModalOpen(false); // ปิด Modal ยืนยันการลบ
-      setWeightClassToDelete(null); // รีเซ็ต weightClassToDelete
+      sessionStorage.setItem("weightClasses", JSON.stringify(updatedWeightClasses));
+      setIsDeleteModalOpen(false);
+      setWeightClassToDelete(null);
     }
   };
 
@@ -72,35 +69,26 @@ export default function FormAddWeightClass() {
     }
   };
 
-  const handleSaveWeightClasses = async () => {
-    const poster64 = localStorage.getItem("poster_url");
+  const handleSaveWeightClasses = () => {
+    // Create the final event data with weight classes
     const eventDataWithWeightClasses = {
-      organizer_id: eventData.organizer_id,
-      location_id: eventData.location_id, // ใส่ ObjectId จริง
-      event_name: eventData.event_name,
-      level: eventData.level.toLowerCase(), // ✅ ใช้พิมพ์เล็ก
-      start_date: eventData.start_date,
-      end_date: eventData.end_date,
-      description: eventData.description,
-      poster_url: createFileFromBase64(poster64, "poster_url.png"), // ✅ ถ้ามีการอัปโหลด ต้องใช้ FormData
-      seatZone_url:"",
-      status: eventData.status || "preparing", // ✅ ค่าเริ่มต้น
+      ...eventData,
       weight_classes: weightClasses.map((wc) => ({
-        type: eventData.weight_classes.type, // ใช้ type จาก eventData หรือค่าเริ่มต้น
-        weigh_name: wc.weight_name, // ใช้ weigh_name จาก weightClasses
+        type: eventData.weight_classes.type,
+        weigh_name: wc.weight_name,
         min_weight: wc.min_weight,
         max_weight: wc.max_weight,
         max_enrollment: wc.max_enrollment,
       })),
     };
 
-    const res = await createEvent(eventDataWithWeightClasses);
-        console.log("res", res);
-    localStorage.removeItem("eventData");
-    localStorage.removeItem("weightClasses");
-    localStorage.removeItem("poster_url");
-    navigate("/event/management/eventList"); // ไปที่หน้า /event
-
+    // Store in sessionStorage
+    sessionStorage.setItem("eventData", JSON.stringify(eventDataWithWeightClasses));
+    
+    // Navigate to next step
+    navigate("/event/management/create/seat", { 
+      state: { formDataW: eventDataWithWeightClasses }
+    });
   };
 
   // ฟังก์ชันสำหรับเพิ่มหรือแก้ไข Weight Class
@@ -117,16 +105,16 @@ export default function FormAddWeightClass() {
     }
   
     if (editingWeight) {
-      // แก้ไข Weight Class ที่มีอยู่
+      // Edit existing weight class
       const updatedWeightClasses = weightClasses.map((wc) =>
         wc.id === editingWeight.id
           ? { ...wc, weight_name, min_weight, max_weight, max_enrollment } 
           : wc
       );
       setWeightClasses(updatedWeightClasses);
-      localStorage.setItem("weightClasses", JSON.stringify(updatedWeightClasses));
+      sessionStorage.setItem("weightClasses", JSON.stringify(updatedWeightClasses));
     } else {
-      // เพิ่ม Weight Class ใหม่
+      // Add new weight class
       const newWeightClass = {
         id: Date.now(),
         weight_name,
@@ -134,17 +122,18 @@ export default function FormAddWeightClass() {
         max_weight,
         max_enrollment,
       };
-      setWeightClasses([...weightClasses, newWeightClass]);
-      localStorage.setItem("weightClasses", JSON.stringify([...weightClasses, newWeightClass]));
+      const updatedWeightClasses = [...weightClasses, newWeightClass];
+      setWeightClasses(updatedWeightClasses);
+      sessionStorage.setItem("weightClasses", JSON.stringify(updatedWeightClasses));
     }
   
-    setIsModalOpen(false); // ปิด Modal
-    setEditingWeight(null); // รีเซ็ต editingWeight
-    setWeightName(""); // รีเซ็ต weight_name
-    setMinWeight(""); // รีเซ็ต min_weight
-    setMaxWeight(""); // รีเซ็ต max_weight
-    setMaxEnrollment(""); // รีเซ็ต max_enrollment
-    setErrors({}); // รีเซ็ต errors
+    setIsModalOpen(false);
+    setEditingWeight(null);
+    setWeightName("");
+    setMinWeight("");
+    setMaxWeight("");
+    setMaxEnrollment("");
+    setErrors({});
   };
 
   // ฟังก์ชันสำหรับเปิด Modal แก้ไข
@@ -183,7 +172,8 @@ export default function FormAddWeightClass() {
             Location : {eventData?.location_id}
           </label>
         </div>
-        <br></br>
+        <EventStepIndicator currentStep={2} />
+        {/* <br></br> */}
         <div className="flex items-center gap-2 mb-3">
           <h3 className="text-2xl font-blod">Weight Class</h3>
           <button
@@ -231,12 +221,16 @@ export default function FormAddWeightClass() {
             </tbody>
           </table>
 
-          <div className="flex justify-end mt-4">
+          <div className="flex justify-between mt-6">
             <Button onClick={() => navigate(-1)} variant="secondary">
-              Cancel
+              Previous
             </Button>
-            <Button className="ml-2" onClick={handleSaveWeightClasses}>
-              Save
+            <Button 
+              className="ml-2" 
+              onClick={handleSaveWeightClasses}
+              disabled={weightClasses.length === 0}
+            >
+              Next
             </Button>
           </div>
         </div>

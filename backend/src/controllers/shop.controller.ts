@@ -6,19 +6,6 @@ import { Types } from 'mongoose';
 export const createShopController = async (req: Request, res: Response) => {
   try {
     console.log(req.body);
-    console.log(req.files);
-
-    if (req.files) {
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-
-      if (files.logo) {
-        req.body.logo = files.logo[0].path.replace(/^.*?uploads\//, '');
-      }
-
-      if (files.license) {
-        req.body.license = files.license[0].path.replace(/^.*?uploads\//, '');
-      }
-    }
 
     if (req.body.contacts) {
       req.body.contacts = JSON.parse(req.body.contacts);

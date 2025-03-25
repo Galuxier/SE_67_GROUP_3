@@ -33,6 +33,7 @@ function ShopRoutes() {
         element={<ShopManagementRouteGuard><ShopManageLayout /></ShopManagementRouteGuard>}
       >
         <Route index element={<ShopManageDashboard />} />
+        <Route path="addShop" element={<AddShop />} />
         <Route path=":shopId" element={<ShopManageDashboard />} />
         <Route path=":shopId/detail" element={<ShopDetail />} />
         <Route path=":shopId/dashboard" element={<ShopManageDashboard />} />
@@ -52,10 +53,10 @@ function ShopRoutes() {
       </Route>
 
       {/* Routes without Navbar */}
-      <Route
+      {/* <Route
         path="/shop/management/addShop"
         element={<ShopManagementRouteGuard><AddShop /></ShopManagementRouteGuard>}
-      />
+      /> */}
       <Route path="/shop/summary" element={<Summary />} />
     </Routes>
   );
