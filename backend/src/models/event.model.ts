@@ -8,6 +8,11 @@ enum EventStatus {
   Cancel = 'cancel',
 }
 
+enum EventType {
+  Registration = 'registration',
+  TicketSales = 'ticket_sales',
+}
+
 enum PackageStatus {
   Active = 'active',
   Inactive = 'inactive',
@@ -102,15 +107,16 @@ export interface EventDocument extends Document {
   event_name: string;
   level: string;
   description: string;
-  poster_url:string;
+  poster_url: string;
   start_date: Date;
   end_date: Date;
   weight_classes: WeightClass[];
   seat_zones: SeatZone[];
-  seatZone_url: String;
+  seatZone_url: string;
   status: EventStatus;
   packages: Package[];
-}
+  event_type: EventType;
+} 
 
 // สร้าง schema สำหรับ Event
 const EventSchema = new Schema<EventDocument>({
@@ -122,6 +128,7 @@ const EventSchema = new Schema<EventDocument>({
   start_date: { type: Date, required: true },
   end_date: { type: Date, required: true },
   poster_url: { type: String, required: true },
+  event_type: { type: String, enum: Object.values(EventType), required: true }, // ✅ เพิ่มตรงนี้
   weight_classes: [{
     type: { type: String, required: true },
     weigh_name: { type: String, required: true },
@@ -133,7 +140,7 @@ const EventSchema = new Schema<EventDocument>({
       boxer2_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
       match_date: { type: Date, required: true },
       match_time: { type: Date, required: true },
-      result: { type: String, enum: Object.values(MatchResult)},
+      result: { type: String, enum: Object.values(MatchResult) },
       previous_match: { type: Schema.Types.ObjectId },
       next_match: { type: Schema.Types.ObjectId },
     }],

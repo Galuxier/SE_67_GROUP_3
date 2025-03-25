@@ -1,6 +1,6 @@
 import { api } from "../Axios";
 
-export async function createCoure(CourseData){
+export async function createCourse(CourseData){
     try{
         const response = await api.post('/course', CourseData, {
             headers: {

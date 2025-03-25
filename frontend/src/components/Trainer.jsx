@@ -1,7 +1,7 @@
 
 export const trainer = [
   {
-    id: 1,
+    _id: 1,
     image_url: new URL("../assets/images/coach1.jpg", import.meta.url).href,
     firstName: "นายเก้า",
     lastName: "เท็นสิบ",
@@ -13,7 +13,7 @@ export const trainer = [
     gym: "Phuket Fight Club",
   },
   {
-    id: 2,
+    _id: 2,
     image_url: new URL("../assets/images/coach2.jpg", import.meta.url).href,
     firstName: "นายสิบ",
     lastName: "สิบสาม",
@@ -25,7 +25,7 @@ export const trainer = [
     gym: "Bangkok Fight Club",
   },
   {
-    id: 3,
+    _id: 3,
     image_url: new URL("../assets/images/coach3.jpg", import.meta.url).href,
     firstName: "นายสิบเอ็ด",
     lastName: "เจ็ดแปดเก้า",

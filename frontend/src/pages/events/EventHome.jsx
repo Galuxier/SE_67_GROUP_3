@@ -7,7 +7,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { getEvents } from "../../services/api/EventApi";
 import EventCard from "../../components/EventCard";
 import EventFilter from "../../components/events/EventFilter"; // Add the import
-import proviceData from "../../data/thailand/address/provinces.json";
+import provinceData from "../../data/thailand/address/provinces.json";
 
 function EventHome() {
   const [province, setProvince] = useState("All");
@@ -21,6 +21,10 @@ function EventHome() {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log("Province data:", provinceData);
+  }, []);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -107,17 +111,17 @@ function EventHome() {
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { 
-      y: 0, 
+      y: 0,   
       opacity: 1,
       transition: { duration: 0.3 }
     }
   };
 
   const registrationEvents = Array.isArray(filteredEvents)
-    ? filteredEvents.filter(event => event.event_type === "Registration")
+    ? filteredEvents.filter(event => event.event_type === "registration")
     : [];
   const ticketSaleEvents = Array.isArray(filteredEvents)
-    ? filteredEvents.filter(event => event.event_type === "TicketSale")
+    ? filteredEvents.filter(event => event.event_type === "ticket_sales")
     : [];
   const featuredEvents = Array.isArray(events)
     ? events.filter(event => event.featured)
@@ -343,7 +347,11 @@ function EventHome() {
             </div>
             
             <div className="p-5">
-              <EventFilter province={province} handleProvinceSelect={handleProvinceSelect} />
+            <EventFilter 
+              province={province} 
+              handleProvinceSelect={handleProvinceSelect} 
+              provinceData={provinceData} 
+            />
             </div>
           </motion.div>
 
@@ -527,13 +535,17 @@ function EventHome() {
               </button>
             </div>
             
-            <EventFilter province={province} handleProvinceSelect={handleProvinceSelect} />
+            <EventFilter 
+              province={province} 
+              handleProvinceSelect={handleProvinceSelect} 
+              provinceData={provinceData} 
+            />
             
             <div className="mt-6 flex justify-between">
               <button
                 onClick={handleClearFilters}
                 className="px-4 py-2 border border-border text-text rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
+              >ss
                 Clear All
               </button>
               <button
