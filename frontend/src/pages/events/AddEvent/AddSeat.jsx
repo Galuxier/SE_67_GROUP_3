@@ -4,13 +4,15 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../../../components/ui/Button";
 import Modal from "../../../components/ui/Modal";
 import {PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import EventStepIndicator from "./EventStepIndicator";
 
 export default function FormAddSeat() {
   const { state } = useLocation();
   const navigate = useNavigate();
 
   // รับค่าข้อมูลอีเวนต์จาก state หรือ localStorage
-  const eventData = state?.formDataW || JSON.parse(localStorage.getItem("eventData"));
+  const eventData = state?.formDataW || JSON.parse(sessionStorage.getItem("eventData"));
+  const posterImage = sessionStorage.getItem("posterImage");
 
   // console.log("poster",poster);
   
@@ -190,7 +192,7 @@ export default function FormAddSeat() {
             Location : {eventData?.location_id}
           </label>
         </div>
-        <br></br>
+        <EventStepIndicator currentStep={3} />
         <div className="space-y-4">
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
