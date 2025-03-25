@@ -140,7 +140,7 @@ function Enrollment() {
       
       // Add all license files
       licenseFiles.forEach((file) => {
-        formData.append("license_ulrs", file);
+        formData.append("license_urls", file);
       });
       
       // 🔥 อ่านค่าใน formData

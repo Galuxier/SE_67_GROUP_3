@@ -1,5 +1,16 @@
 import { api } from "../Axios";
 
+export async function getUserRoles(_id) {
+  try{
+    const response = await api.get(`/user/${_id}/roles`);
+    return response;
+  }catch (error) {
+    console.error("Failed To Get User Roles", error);
+    throw error;
+  }
+  
+}
+
 export async function getUser(_id) {
     try{
         const response = await api.get(`/user/${_id}`);

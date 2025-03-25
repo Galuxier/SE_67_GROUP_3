@@ -1,75 +1,130 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
+import { getUserRoles } from "../services/api/UserApi"; // นำเข้า getUserRoles จาก UserApi
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
-  const [roles, setRoles] = useState([]); // เพิ่ม state สำหรับ roles
+  const [user, setUser] = useState(null); // null หมายถึง guest
+  const [roles, setRoles] = useState([]);
+  const [isSessionExpired, setIsSessionExpired] = useState(false);
+  const [loading, setLoading] = useState(true); // เพิ่ม loading state
+
+  // ฟังก์ชัน sync roles กับ API
+  const syncRoles = async (userId) => {
+    try {
+      const response = await getUserRoles(userId);
+      const fetchedRoles = response.data.data.roles || []; // ปรับตามโครงสร้าง response
+      
+      setRoles(fetchedRoles);
+      return fetchedRoles;
+    } catch (error) {
+      console.error("Failed to sync roles:", error);
+      setRoles([]); // ถ้า sync ไม่ได้ ตั้ง roles เป็น array ว่าง
+      return [];
+    }
+  };
 
   // ฟังก์ชัน login
   const login = async (token) => {
-    const userData = jwtDecode(token); // ถอดรหัส JWT Token
-    console.log("Auth Context Decode Data: ", userData);
-    
-    const userRoles = userData.role; // ดึง roles จาก Token (เป็น Array)
-    console.log("Auth Context userRoles: ",userRoles);
+    try {
+      console.log(token);
+      const userData = jwtDecode(token);
+      // console.log("Auth Context Decode Data: ", userData);
 
-    setIsLoggedIn(true);
-    setUser(userData);
-    setRoles(userRoles); // ตั้งค่า roles
-    
-    localStorage.setItem("token", token); // บันทึก token ใน localStorage
-    localStorage.setItem("user", JSON.stringify(userData)); // บันทึกข้อมูลผู้ใช้ใน localStorage
-    localStorage.setItem("isLoggedIn", "true"); // บันทึกสถานะการล็อกอินใน localStorage
-  
-    return userRoles; // Return roles เพื่อให้สามารถรอการอัปเดต state ได้
+      if (userData.exp * 1000 < Date.now()) {
+        console.log("Token หมดอายุแล้ว");
+        logout(true);
+        return;
+      }
+
+      setIsLoggedIn(true);
+      setUser(userData);
+
+      // เก็บ token และ user ใน localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("isLoggedIn", "true");
+
+      // Sync roles กับ API แทนการใช้จาก JWT
+      const userRoles = await syncRoles(userData._id); // สมมติว่า _id อยู่ใน JWT
+      return userRoles;
+    } catch (error) {
+      console.error("Invalid token:", error);
+      logout(true);
+    }
   };
 
   // ฟังก์ชัน logout
-  const logout = () => {
+  const logout = (expired = false) => {
     setIsLoggedIn(false);
     setUser(null);
-    setRoles([]); // ลบ roles
+    setRoles([]);
+    setIsSessionExpired(expired);
 
-    localStorage.removeItem("token"); // ลบ token จาก localStorage
-    localStorage.removeItem("user"); // ลบข้อมูลผู้ใช้จาก localStorage
-    localStorage.removeItem("isLoggedIn"); // ลบสถานะการล็อกอินจาก localStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("isLoggedIn");
+
+    if (expired) {
+      alert("Session หมดอายุ กรุณา login ใหม่");
+    }
+    window.location.href = "/login";
   };
 
-  // โหลดข้อมูลจาก localStorage เมื่อ component ถูกโหลด
+  // โหลดข้อมูลจาก localStorage และ sync roles เมื่อเริ่มต้น
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-    const storedIsLoggedIn = localStorage.getItem("isLoggedIn");
+    const initializeAuth = async () => {
+      const storedToken = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
+      const storedIsLoggedIn = localStorage.getItem("isLoggedIn");
 
-    if (storedToken && storedUser && storedIsLoggedIn === "true") {
-      const userData = JSON.parse(storedUser);
-      const userRoles = userData.role || []; // ดึง roles จากข้อมูลผู้ใช้
+      if (storedToken && storedUser && storedIsLoggedIn === "true") {
+        try {
+          const userData = JSON.parse(storedUser);
+          const decoded = jwtDecode(storedToken);
 
-      setUser(userData);
-      setRoles(userRoles); // ตั้งค่า roles
-      setIsLoggedIn(true);
-    }
+          if (decoded.exp * 1000 < Date.now()) {
+            console.log("Token หมดอายุแล้ว");
+            logout(true);
+            return;
+          }
+
+          setUser(userData);
+          setIsLoggedIn(true);
+
+          // Sync roles กับ API
+          const userRoles = await syncRoles(userData._id); // ใช้ _id จาก JWT
+          setRoles(userRoles);
+        } catch (error) {
+          console.error("Failed to load user:", error);
+          logout(true);
+        }
+      }
+      setLoading(false); // เสร็จสิ้นการโหลด
+    };
+
+    initializeAuth();
   }, []);
 
-  // ตรวจสอบ roles และส่งค่าไปยัง context
-  const isAdmin = roles.includes("admin"); // ตรวจสอบว่าผู้ใช้มี role เป็น admin หรือไม่
-  
+  // ตรวจสอบ roles
+  const isAdmin = roles.includes("admin");
+
   return (
     <AuthContext.Provider
       value={{
         isLoggedIn,
         user,
         roles,
-        isAdmin, // ส่งค่า isAdmin ไปยัง context
+        isAdmin,
         login,
         logout,
         setUser,
+        loading,
       }}
     >
-      {children}
+      {loading ? <div>Loading...</div> : children}
     </AuthContext.Provider>
   );
 }

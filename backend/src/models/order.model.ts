@@ -46,7 +46,7 @@ const OrderSchema = new Schema<OrderDocument>({
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // อ้างอิงไปที่ Users
     order_type: { type: String, enum: Object.values(OrderType), required: true },
     items: [{
-      ref_id: { type: Schema.Types.ObjectId, refPath: 'items.refModel', required: true }, // ใช้ refPath
+      ref_id: { type: Schema.Types.ObjectId, refPath: 'items.refModel', required: true }, // ใช้ refPath (product_id, course_id, event_id)
       refModel: { type: String, required: true, enum: ['Product', 'Course', 'Event'] }, // เก็บชื่อ collection
       variant_id: { type: Schema.Types.ObjectId, ref: 'Variant' }, // อ้างอิงไปที่ Variants (ถ้ามี)
       price_at_order: { type: Number, required: true },

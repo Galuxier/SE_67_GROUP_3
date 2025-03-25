@@ -6,7 +6,12 @@ export async function loginUser(credentials) {
     return response.data;
   } catch (error) {
     console.error("Login failed:", error);
-    throw error;
+    // ดึงข้อความ error จาก response ของ backend
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    } else {
+      throw new Error("Login failed. Please try again.");
+    }
   }
 }
 

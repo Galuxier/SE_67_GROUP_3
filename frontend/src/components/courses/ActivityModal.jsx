@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { Plus, X, Users, Clock, Calendar, Info } from "lucide-react";
 import { useState, useEffect } from "react";
-import { trainer } from "../Trainer"; // Import the trainer data from TrainerList
+import { trainer } from "../Trainer"; 
 
 export default function ActivityModal({ 
   isOpen, 
@@ -17,6 +17,8 @@ export default function ActivityModal({
   const [busyTimeSlots, setBusyTimeSlots] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   
+  
+
   // Load existing activities on component mount
   useEffect(() => {
     // Load existing activities from localStorage

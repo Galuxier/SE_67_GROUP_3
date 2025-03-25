@@ -51,12 +51,10 @@ export const loginUser = async (credentials: { identifier: string; password: str
   const { identifier, password } = credentials;
 
   try {
-    // ตรวจสอบว่ามีการส่ง identifier และ password มา
     if (!identifier || !password) {
       throw new Error("Email/username and password are required");
     }
 
-    // ค้นหาผู้ใช้ในฐานข้อมูล
     const user = await User.findOne({
       $or: [
         { email: identifier }, 
@@ -64,37 +62,29 @@ export const loginUser = async (credentials: { identifier: string; password: str
       ],
     });
 
-    // ตรวจสอบว่าพบผู้ใช้หรือไม่
     if (!user) {
-      throw new Error("User not found");
+      throw new Error("User not found"); // เปลี่ยนข้อความให้ชัดเจน
     }
 
-    // ตรวจสอบรหัสผ่าน
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      throw new Error("Invalid email/username or password");
+      throw new Error("Incorrect password"); // เปลี่ยนข้อความให้ชัดเจน
     }
 
-    // สร้าง token
     var payload = {
       username: user.username,
       _id: user._id,
       role: user.role,
       first_name: user.first_name,
       last_name: user.last_name
-    }
+    };
     const token = jwt.sign(payload, `${process.env.TOKEN_KEY}`, { expiresIn: "2h" });
-    // ส่งคืน token และข้อมูลผู้ใช้
     return { token };
   } catch (error) {
     console.error("Login error:", error);
-
-    // จัดการ error ต่าง ๆ
     if (error instanceof Error) {
-      // หาก error เป็นประเภท Error (เช่น throw new Error)
       throw new Error(error.message);
     } else {
-      // หาก error เป็นประเภทอื่น (เช่น error จากฐานข้อมูล)
       throw new Error("An unexpected error occurred during login");
     }
   }

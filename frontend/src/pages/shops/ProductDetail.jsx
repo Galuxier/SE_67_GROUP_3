@@ -126,6 +126,7 @@ export default function ProductDetail() {
         if (productData.shop_id) {
           try {
             const shopResponse = await getShopById(productData.shop_id);
+            console.log(shopResponse);
             shopResponse.logo_url = await getImage(shopResponse.logo_url);
             setShopData(shopResponse.data || shopResponse);
 
