@@ -14,3 +14,14 @@ export async function createEvent(EventData) {
     }
     
 }
+
+export async function getEvents() {
+    try{
+        const response = await api.get('/events');
+        return response;
+    }catch (error){
+        console.error('Get All Events Failed: ', error);
+        throw new error;
+    }
+    
+}

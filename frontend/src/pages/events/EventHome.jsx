@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PlusCircleIcon, Cog6ToothIcon, TicketIcon, UserGroupIcon, CalendarIcon, FireIcon, ChevronRightIcon, MapPinIcon } from "@heroicons/react/24/outline";
-import { motion, AnimatePresence } from "framer-motion";
-// import { getAllEvents } from "../../services/api/EventApi";
-import EventCard from "../../components/EventCard";
-import provinceData from "../../data/thailand/address/provinces.json";
+import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-// import EventFilter from "../../components/events/EventFilter";
-import { Navigate } from "react-router-dom";
+import { getEvents } from "../../services/api/EventApi";
+import EventCard from "../../components/EventCard";
+import EventFilter from "../../components/events/EventFilter"; // Add the import
+import proviceData from "../../data/thailand/address/provinces.json";
 
 function EventHome() {
   const [province, setProvince] = useState("All");
@@ -21,218 +20,40 @@ function EventHome() {
   const [activeEventType, setActiveEventType] = useState("All");
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
-
-  // Mock events data
-  const mockEvents = [
-    {
-      _id: "1",
-      image_url: new URL("../assets/images/muaythai-001.jpg", import.meta.url).href,
-      event_name: "Bangkok Championship 2025",
-      level: "Rookie",
-      start_date: new Date("2025-04-15"),
-      end_date: new Date("2025-04-21"),
-      event_type: "Registration",
-      status: "preparing",
-      location: { province: "Bangkok", district: "Pathumwan" },
-      featured: true,
-      weight_classes: [
-        {
-          type: "lightweight",
-          weigh_name: "Lightweight",
-          min_weight: 50,
-          max_weight: 60,
-        },
-        {
-          type: "middleweight",
-          weigh_name: "Middleweight",
-          min_weight: 61,
-          max_weight: 70,
-        },
-      ],
-    },
-    {
-      _id: "2",
-      image_url: new URL("../assets/images/muaythai-002.jpg", import.meta.url).href,
-      event_name: "Muay Thai Grand Prix",
-      level: "Fighter",
-      start_date: new Date("2025-05-10"),
-      end_date: new Date("2025-05-11"),
-      event_type: "TicketSale",
-      status: "preparing",
-      location: { province: "Chiang Mai", district: "Mueang" },
-      featured: true,
-      seat_zones: [
-        {
-          seat_zone_id: "660b3f5f1b2c001c8e4da01",
-          zone_name: "VIP",
-          price: 5000,
-          number_of_seat: 50,
-        },
-        {
-          seat_zone_id: "660b3f5f1b2c001c8e4da02",
-          zone_name: "Standard",
-          price: 1000,
-          number_of_seat: 200,
-        },
-      ],
-    },
-    {
-      _id: "3",
-      image_url: new URL("../assets/images/muaythai-003.png", import.meta.url).href,
-      event_name: "Phuket Fight Night",
-      level: "Fighter",
-      start_date: new Date("2025-06-05"),
-      end_date: new Date("2025-06-05"),
-      event_type: "TicketSale",
-      status: "preparing",
-      location: { province: "Phuket", district: "Patong" },
-      featured: false,
-      seat_zones: [
-        {
-          seat_zone_id: "660b3f5f1b2c001c8e4da03",
-          zone_name: "Ringside",
-          price: 3000,
-          number_of_seat: 30,
-        },
-        {
-          seat_zone_id: "660b3f5f1b2c001c8e4da04",
-          zone_name: "General",
-          price: 800,
-          number_of_seat: 150,
-        },
-      ],
-    },
-    {
-      _id: "4",
-      image_url: new URL("../assets/images/muaythai-001.jpg", import.meta.url).href,
-      event_name: "Northern Thailand Tournament",
-      level: "Rookie",
-      start_date: new Date("2025-04-28"),
-      end_date: new Date("2025-05-02"),
-      event_type: "Registration",
-      status: "preparing",
-      location: { province: "Chiang Rai", district: "Mueang" },
-      featured: false,
-      weight_classes: [
-        {
-          type: "lightweight",
-          weigh_name: "Lightweight",
-          min_weight: 50,
-          max_weight: 60,
-        },
-        {
-          type: "heavyweight",
-          weigh_name: "Heavyweight",
-          min_weight: 71,
-          max_weight: 80,
-        },
-      ],
-    },
-    {
-      _id: "5",
-      image_url: new URL("../assets/images/muaythai-002.jpg", import.meta.url).href,
-      event_name: "Lumpinee Stadium Fight Night",
-      level: "Fighter",
-      start_date: new Date("2025-05-22"),
-      end_date: new Date("2025-05-22"),
-      event_type: "TicketSale",
-      status: "preparing",
-      location: { province: "Bangkok", district: "Pathum Wan" },
-      featured: true,
-      seat_zones: [
-        {
-          seat_zone_id: "660b3f5f1b2c001c8e4da05",
-          zone_name: "VIP",
-          price: 8000,
-          number_of_seat: 20,
-        },
-        {
-          seat_zone_id: "660b3f5f1b2c001c8e4da06",
-          zone_name: "Ringside",
-          price: 3500,
-          number_of_seat: 100,
-        },
-        {
-          seat_zone_id: "660b3f5f1b2c001c8e4da07",
-          zone_name: "General",
-          price: 1200,
-          number_of_seat: 300,
-        },
-      ],
-    },
-    {
-      _id: "6",
-      image_url: new URL("../assets/images/muaythai-003.png", import.meta.url).href,
-      event_name: "Pattaya Open Championship",
-      level: "Rookie",
-      start_date: new Date("2025-07-10"),
-      end_date: new Date("2025-07-15"),
-      event_type: "Registration",
-      status: "preparing",
-      location: { province: "Chonburi", district: "Pattaya" },
-      featured: true,
-      weight_classes: [
-        {
-          type: "featherweight",
-          weigh_name: "Featherweight",
-          min_weight: 45,
-          max_weight: 55,
-        },
-        {
-          type: "lightweight",
-          weigh_name: "Lightweight",
-          min_weight: 56,
-          max_weight: 65,
-        },
-        {
-          type: "middleweight",
-          weigh_name: "Middleweight",
-          min_weight: 66,
-          max_weight: 75,
-        },
-      ],
-    },
-  ];
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Simulate API call with mock data
-    setTimeout(() => {
-      setEvents(mockEvents);
-      setFilteredEvents(mockEvents);
-      setIsLoading(false);
-    }, 800);
-    
-    // For actual API implementation:
-    // const fetchEvents = async () => {
-    //   try {
-    //     setIsLoading(true);
-    //     const response = await getAllEvents();
-    //     setEvents(response);
-    //     setFilteredEvents(response);
-    //     setIsLoading(false);
-    //   } catch (error) {
-    //     console.error("Failed to fetch events:", error);
-    //     setIsLoading(false);
-    //   }
-    // };
-    // fetchEvents();
+    const fetchEvents = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getEvents();
+        console.log(response.data);
+        
+        const eventsArray = Array.isArray(response) ? response : response?.data || [];
+        setEvents(eventsArray);
+        console.log("event: ", response.data);
+        
+        setFilteredEvents(eventsArray);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch events:", error);
+        setIsLoading(false);
+      }
+    };
+    fetchEvents();
   }, []);
 
-  // Apply filters when they change
   useEffect(() => {
     let filtered = [...events];
     
-    // Filter by province
     if (province !== "All") {
       filtered = filtered.filter(event => event.location?.province === province);
     }
     
-    // Filter by event type
     if (activeEventType !== "All") {
       filtered = filtered.filter(event => event.event_type === activeEventType);
     }
     
-    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(event => 
@@ -271,7 +92,6 @@ function EventHome() {
     setSearchQuery("");
   };
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -293,11 +113,16 @@ function EventHome() {
     }
   };
 
-  // Group events by type
-  const registrationEvents = filteredEvents.filter(event => event.event_type === "Registration");
-  const ticketSaleEvents = filteredEvents.filter(event => event.event_type === "TicketSale");
+  const registrationEvents = Array.isArray(filteredEvents)
+    ? filteredEvents.filter(event => event.event_type === "Registration")
+    : [];
+  const ticketSaleEvents = Array.isArray(filteredEvents)
+    ? filteredEvents.filter(event => event.event_type === "TicketSale")
+    : [];
+  const featuredEvents = Array.isArray(events)
+    ? events.filter(event => event.featured)
+    : [];
 
-  // Loading skeleton UI
   const renderSkeletonCards = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {Array(6).fill().map((_, index) => (
@@ -315,9 +140,6 @@ function EventHome() {
       ))}
     </div>
   );
-
-  // Feature events section (similar to feature courses in CourseHome)
-  const featuredEvents = events.filter(event => event.featured);
 
   return (
     <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
@@ -338,7 +160,6 @@ function EventHome() {
               From championship tournaments to professional fight nights - find your next Muay Thai experience
             </p>
             
-            {/* Search Bar */}
             <div className="relative flex items-center max-w-xl">
               <input
                 type="text"
@@ -356,7 +177,6 @@ function EventHome() {
           </motion.div>
         </div>
         
-        {/* Event stats bar */}
         <div className="absolute bottom-0 left-0 right-0 bg-white/10 backdrop-blur-sm p-4">
           <div className="container mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -389,7 +209,6 @@ function EventHome() {
       </div>
 
       <div className="container px-4 sm:px-6 lg:px-8 mx-auto pb-12 relative z-20">
-        {/* Event Type Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 hide-scrollbar snap-x bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-3 rounded-lg shadow-sm -mt-5">
           {["All", "TicketSale", "Registration"].map((type) => (
             <motion.button
@@ -410,7 +229,6 @@ function EventHome() {
           ))}
         </div>
 
-        {/* Featured Events */}
         {featuredEvents.length > 0 && !searchQuery && province === "All" && activeEventType === "All" && (
           <motion.div 
             className="mb-12 bg-gradient-to-r from-orange-50 to-purple-50 dark:from-orange-900/20 dark:to-purple-900/20 p-6 rounded-2xl"
@@ -448,7 +266,6 @@ function EventHome() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                     
-                    {/* Event type badge */}
                     <div className="absolute bottom-3 left-3">
                       <span className={`px-2 py-1 text-xs rounded-full text-white ${
                         event.event_type === "TicketSale" 
@@ -476,9 +293,9 @@ function EventHome() {
                     <div className="flex items-center text-sm text-text/70 mb-4">
                       <CalendarIcon className="w-4 h-4 mr-1" />
                       <span>
-                        {event.start_date.toLocaleDateString()} 
-                        {event.start_date.toDateString() !== event.end_date.toDateString() && 
-                          ` - ${event.end_date.toLocaleDateString()}`}
+                        {new Date(event.start_date).toLocaleDateString()} 
+                        {new Date(event.start_date).toDateString() !== new Date(event.end_date).toDateString() && 
+                          ` - ${new Date(event.end_date).toLocaleDateString()}`}
                       </span>
                     </div>
                     
@@ -508,16 +325,15 @@ function EventHome() {
           </motion.div>
         )}
 
-        {/* Main Content with Filter and Events */}
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Filter Panel for Desktop */}
+          {/* Desktop Filter Panel */}
           <motion.div 
             className="hidden lg:block lg:w-72 bg-card rounded-2xl shadow-lg border border-border/30 overflow-hidden flex-shrink-0 h-fit sticky top-28"
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="p-5 bg-primary to-purple-600 text-white">
+            <div className="p-5 bg-primary text-white">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Filter Events</h3>
                 <button onClick={handleClearFilters} className="text-sm underline hover:text-white/80">
@@ -527,98 +343,12 @@ function EventHome() {
             </div>
             
             <div className="p-5">
-              {/* Province Filter */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-text mb-2">Province</label>
-                <select
-                  className="w-full border border-border rounded-lg py-2 px-3 bg-background text-text focus:outline-none focus:ring-1 focus:ring-primary"
-                  value={province}
-                  onChange={(e) => handleProvinceSelect(e.target.value)}
-                >
-                  <option value="All">All Provinces</option>
-                  {provinceData
-                    .sort((a, b) => a.provinceNameTh.localeCompare(b.provinceNameTh))
-                    .map((province, index) => (
-                      <option key={index} value={province.provinceNameTh}>
-                        {province.provinceNameTh}
-                      </option>
-                    ))}
-                </select>
-              </div>
-              
-              {/* Event Type Filter */}
-              <div className="mb-6">
-                <h4 className="text-sm font-medium text-text mb-2">Event Type</h4>
-                <div className="space-y-2">
-                  {[
-                    { id: "All", label: "All Types" },
-                    { id: "TicketSale", label: "Fight Nights", icon: <TicketIcon className="w-4 h-4 mr-2" /> },
-                    { id: "Registration", label: "Tournaments", icon: <UserGroupIcon className="w-4 h-4 mr-2" /> }
-                  ].map((type) => (
-                    <div key={type.id} className="flex items-center">
-                      <input
-                        type="radio"
-                        id={`type-${type.id}`}
-                        checked={activeEventType === type.id}
-                        onChange={() => handleEventTypeSelect(type.id)}
-                        className="rounded-full text-primary focus:ring-primary"
-                      />
-                      <label 
-                        htmlFor={`type-${type.id}`} 
-                        className={`ml-2 text-text flex items-center ${activeEventType === type.id ? 'font-medium' : ''}`}
-                      >
-                        {type.icon} {type.label}
-                      </label>
-                    </div>
-                  ))}
-                </div>  
-              </div>
-              
-              {/* Level Filter */}
-              <div className="mb-6">
-                <h4 className="text-sm font-medium text-text mb-2">Level</h4>
-                <div className="space-y-2">
-                  {["Rookie", "Fighter"].map((level) => (
-                    <div key={level} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={`level-${level}`}
-                        className="rounded text-primary focus:ring-primary"
-                      />
-                      <label htmlFor={`level-${level}`} className="ml-2 text-text">
-                        {level}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Date Range Filter */}
-              <div className="mb-6">
-                <h4 className="text-sm font-medium text-text mb-2">Date Range</h4>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-xs text-text/70 block mb-1">From</label>
-                    <input 
-                      type="date" 
-                      className="w-full border border-border rounded-lg py-1.5 px-3 bg-background text-text text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-text/70 block mb-1">To</label>
-                    <input 
-                      type="date" 
-                      className="w-full border border-border rounded-lg py-1.5 px-3 bg-background text-text text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                    />
-                  </div>
-                </div>
-              </div>
+              <EventFilter province={province} handleProvinceSelect={handleProvinceSelect} />
             </div>
           </motion.div>
 
           {/* Main Events Display */}
           <div className="flex-grow" id="all-events">
-            {/* Stats and Controls */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <div className="flex items-center">
                 <FireIcon className="w-5 h-5 text-primary mr-2" />
@@ -633,7 +363,6 @@ function EventHome() {
               </div>
               
               <div className="flex flex-wrap items-center gap-3">
-                {/* Active filters display */}
                 {(province !== "All" || activeEventType !== "All" || searchQuery) && (
                   <div className="flex flex-wrap items-center gap-2">
                     {province !== "All" && (
@@ -643,7 +372,7 @@ function EventHome() {
                           onClick={() => setProvince("All")}
                           className="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-400"
                         >
-                          &times;
+                          ×
                         </button>
                       </span>
                     )}
@@ -655,7 +384,7 @@ function EventHome() {
                           onClick={() => setActiveEventType("All")}
                           className="ml-1 text-purple-600 hover:text-purple-800 dark:text-purple-400"
                         >
-                          &times;
+                          ×
                         </button>
                       </span>
                     )}
@@ -667,14 +396,13 @@ function EventHome() {
                           onClick={() => setSearchQuery("")}
                           className="ml-1 text-amber-600 hover:text-amber-800 dark:text-amber-400"
                         >
-                          &times;
+                          ×
                         </button>
                       </span>
                     )}
                   </div>
                 )}
                 
-                {/* Sort dropdown */}
                 <select className="py-2 px-3 rounded-lg border border-border text-text bg-card focus:outline-none focus:ring-2 focus:ring-primary">
                   <option>Sort by: Upcoming</option>
                   <option>Date: Earliest First</option>
@@ -682,7 +410,6 @@ function EventHome() {
                   <option>Name: A-Z</option>
                 </select>
                 
-                {/* Filter button for mobile */}
                 <button
                   onClick={toggleFilterModal}
                   className="lg:hidden bg-primary hover:bg-secondary text-white flex items-center gap-2 rounded-lg py-2 px-4 transition-colors"
@@ -693,7 +420,6 @@ function EventHome() {
               </div>
             </div>
 
-            {/* Section for Tournament Events (Registration) */}
             {activeEventType !== "TicketSale" && registrationEvents.length > 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -705,87 +431,10 @@ function EventHome() {
                   <UserGroupIcon className="w-5 h-5 text-blue-500 mr-2" />
                   <h2 className="text-xl font-bold text-text">Tournaments</h2>
                 </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {registrationEvents.slice(0, visibleEvents).map((event) => (
-                    <motion.div
-                      key={event._id}
-                      className="bg-card rounded-xl overflow-hidden shadow-md border border-border/30 hover:shadow-xl transition-all duration-300 cursor-pointer"
-                      whileHover={{ y: -5 }}
-                      onClick={() => navigate(`/event/${event._id}`)}
-                    >
-                      <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={event.image_url}
-                          alt={event.event_name}
-                          className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                        
-                        {/* Event level badge */}
-                        <div className="absolute top-3 left-3">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            event.level === "Rookie" 
-                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"
-                          }`}>
-                            {event.level}
-                          </span>
-                        </div>
-                        
-                        {/* Event type badge */}
-                        <div className="absolute bottom-3 left-3">
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-500 text-white">
-                            Tournament
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="p-4">
-                        <h3 className="text-lg font-bold text-text mb-2">{event.event_name}</h3>
-                        
-                        <div className="flex items-center text-sm text-text/70 mb-2">
-                          <CalendarIcon className="w-4 h-4 mr-1 flex-shrink-0" />
-                          <span>
-                            {event.start_date.toLocaleDateString()} 
-                            {event.start_date.toDateString() !== event.end_date.toDateString() && 
-                              ` - ${event.end_date.toLocaleDateString()}`}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center text-sm text-text/70 mb-3">
-                          <MapPinIcon className="w-4 h-4 mr-1 flex-shrink-0" />
-                          <span>{event.location?.district}, {event.location?.province}</span>
-                        </div>
-                        
-                        <div className="mt-3">
-                          {/* Weight classes summary */}
-                          <p className="text-sm text-text/80 mb-2">Weight Classes:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {event.weight_classes?.map((weightClass, index) => (
-                              <span 
-                                key={index}
-                                className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-text/70 rounded-full"
-                              >
-                                {weightClass.weigh_name}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        
-                        <div className="flex justify-end mt-3">
-                          <span className="text-primary hover:text-secondary text-sm font-medium">
-                            Register Now →
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                <EventCard events={registrationEvents.slice(0, visibleEvents)} />
               </motion.div>
             )}
-            
-            {/* Section for Fight Night Events (TicketSale) */}
+
             {activeEventType !== "Registration" && ticketSaleEvents.length > 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -797,82 +446,10 @@ function EventHome() {
                   <TicketIcon className="w-5 h-5 text-red-500 mr-2" />
                   <h2 className="text-xl font-bold text-text">Fight Nights</h2>
                 </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {ticketSaleEvents.slice(0, visibleEvents).map((event) => (
-                    <motion.div
-                      key={event._id}
-                      className="bg-card rounded-xl overflow-hidden shadow-md border border-border/30 hover:shadow-xl transition-all duration-300 cursor-pointer"
-                      whileHover={{ y: -5 }}
-                      onClick={() => navigate(`/event/${event._id}`)}
-                    >
-                      <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={event.image_url}
-                          alt={event.event_name}
-                          className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                        
-                        {/* Event level badge */}
-                        <div className="absolute top-3 left-3">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            event.level === "Rookie" 
-                              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"
-                          }`}>
-                            {event.level}
-                          </span>
-                        </div>
-                        
-                        {/* Event type badge */}
-                        <div className="absolute bottom-3 left-3">
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-500 text-white">
-                            Fight Night
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="p-4">
-                        <h3 className="text-lg font-bold text-text mb-2">{event.event_name}</h3>
-                        
-                        <div className="flex items-center text-sm text-text/70 mb-2">
-                          <CalendarIcon className="w-4 h-4 mr-1 flex-shrink-0" />
-                          <span>
-                            {event.start_date.toLocaleDateString()} 
-                            {event.start_date.toDateString() !== event.end_date.toDateString() && 
-                              ` - ${event.end_date.toLocaleDateString()}`}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center text-sm text-text/70 mb-3">
-                          <MapPinIcon className="w-4 h-4 mr-1 flex-shrink-0" />
-                          <span>{event.location?.district}, {event.location?.province}</span>
-                        </div>
-                        
-                        <div className="mt-3">
-                          {/* Ticket zones summary */}
-                          <p className="text-sm text-text/80 mb-2">Tickets From:</p>
-                          <div className="flex flex-wrap justify-between">
-                            {/* Showing cheapest ticket price */}
-                            {event.seat_zones && event.seat_zones.length > 0 && (
-                              <div className="font-bold text-primary text-lg">
-                                ฿{Math.min(...event.seat_zones.map(zone => zone.price)).toLocaleString()}
-                              </div>
-                            )}
-                            <span className="text-primary hover:text-secondary text-sm font-medium">
-                              Buy Tickets →
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                <EventCard events={ticketSaleEvents.slice(0, visibleEvents)} />
               </motion.div>
             )}
             
-            {/* No Events Found Section */}
             {!isLoading && filteredEvents.length === 0 && (
               <div className="text-center py-16 bg-card rounded-xl shadow-md">
                 <svg
@@ -902,10 +479,8 @@ function EventHome() {
               </div>
             )}
             
-            {/* Loading Skeleton */}
             {isLoading && renderSkeletonCards()}
 
-            {/* Load More Button */}
             {!isLoading && filteredEvents.length > visibleEvents && (
               <div className="flex justify-center mt-10">
                 <motion.button
@@ -922,7 +497,6 @@ function EventHome() {
         </div>
       </div>
 
-      {/* Add Event button for organizers and gym owners */}
       {user && user.role && (user.role.includes("organizer") || user.role.includes("gym_owner")) && (
         <motion.div 
           className="fixed bottom-6 right-6 z-30"
@@ -940,7 +514,6 @@ function EventHome() {
         </motion.div>
       )}
 
-      {/* Mobile Filter Modal */}
       {isFilterModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-background rounded-lg shadow-lg w-11/12 max-w-md p-4">
@@ -950,75 +523,11 @@ function EventHome() {
                 onClick={toggleFilterModal}
                 className="text-text hover:text-primary"
               >
-                &times;
+                ×
               </button>
             </div>
             
-            {/* Mobile Province Filter */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-text mb-2">Province</label>
-              <select
-                className="w-full border border-border rounded-lg py-2 px-3 bg-background text-text focus:outline-none focus:ring-1 focus:ring-primary"
-                value={province}
-                onChange={(e) => handleProvinceSelect(e.target.value)}
-              >
-                <option value="All">All Provinces</option>
-                {provinceData
-                  .sort((a, b) => a.provinceNameTh.localeCompare(b.provinceNameTh))
-                  .map((province, index) => (
-                    <option key={index} value={province.provinceNameTh}>
-                      {province.provinceNameTh}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            
-            {/* Mobile Event Type Filter */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-text mb-2">Event Type</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { id: "All", label: "All Types" },
-                  { id: "TicketSale", label: "Fight Nights", icon: <TicketIcon className="w-4 h-4 mr-1" /> },
-                  { id: "Registration", label: "Tournaments", icon: <UserGroupIcon className="w-4 h-4 mr-1" /> }
-                ].map((type) => (
-                  <div key={type.id} className="flex items-center">
-                    <input
-                      type="radio"
-                      id={`mobile-type-${type.id}`}
-                      checked={activeEventType === type.id}
-                      onChange={() => handleEventTypeSelect(type.id)}
-                      className="rounded-full text-primary focus:ring-primary"
-                    />
-                    <label 
-                      htmlFor={`mobile-type-${type.id}`} 
-                      className={`ml-2 text-text flex items-center ${activeEventType === type.id ? 'font-medium' : ''}`}
-                    >
-                      {type.icon} {type.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Mobile Level Filter */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-text mb-2">Level</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {["Rookie", "Fighter"].map((level) => (
-                  <div key={level} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`mobile-level-${level}`}
-                      className="rounded text-primary focus:ring-primary"
-                    />
-                    <label htmlFor={`mobile-level-${level}`} className="ml-2 text-text">
-                      {level}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <EventFilter province={province} handleProvinceSelect={handleProvinceSelect} />
             
             <div className="mt-6 flex justify-between">
               <button

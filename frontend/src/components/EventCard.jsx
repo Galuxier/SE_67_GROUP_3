@@ -1,152 +1,29 @@
 import { useNavigate } from "react-router-dom";
 
-function EventCard() {
+function EventCard({ events }) {  // Added events as a prop
   const navigate = useNavigate();
 
   const handleEventClick = (event) => {
     console.log("navigate to:", `/event/${event._id}`);
 
-    // ✅ แปลง `Date` object เป็น `string` "YYYY-MM-DD" ก่อนส่งไปยัง `EventDetail`
+    // Convert dates to proper format
     const eventData = {
       ...event,
-      start_date: event.start_date.toISOString().split("T")[0], // 🔥 "YYYY-MM-DD"
-      end_date: event.end_date.toISOString().split("T")[0], // 🔥 "YYYY-MM-DD"
+      start_date: new Date(event.start_date).toISOString().split("T")[0],
+      end_date: new Date(event.end_date).toISOString().split("T")[0],
     };
 
     navigate(`/event/${event._id}`, { state: { event: eventData } });
   };
 
-  const events = [
-    {
-      _id: "1",
-      image_url: new URL("../assets/images/muaythai-001.jpg", import.meta.url)
-        .href,
-      event_name: "Muaythai",
-      level: "Rookie",
-      start_date: new Date("2024-02-27"), // ใช้ Date object
-      end_date: new Date("2024-03-07"),
-      event_type: "TicketSale", // ใช้ event_type ตาม Model
-      status: "preparing",
-      seat_zones: [
-        {
-          seat_zone_id: "660b3f5f1b2c001c8e4da01",
-          zone_name: "VIP",
-          price: 5000,
-          number_of_seat: 50,
-          seats: [],
-        },
-        {
-          seat_zone_id: "660b3f5f1b2c001c8e4da02",
-          zone_name: "Standard",
-          price: 1000,
-          number_of_seat: 200,
-          seats: [],
-        },
-      ],
-      weight_classes: [], // ไม่ต้องใส่ถ้าเป็น TicketSale
-    },
-    {
-      _id: "2",
-      image_url: new URL("../assets/images/muaythai-002.jpg", import.meta.url)
-        .href,
-      event_name: "Muaythai",
-      level: "Fighter",
-      start_date: new Date("2024-02-27"),
-      end_date: new Date("2024-03-07"),
-      event_type: "Registration",
-      status: "preparing",
-      seat_zones: [], // ไม่ต้องมีที่นั่งถ้าเป็น Registration
-      weight_classes: [
-        {
-          type: "lightweight",
-          weigh_name: "Lightweight",
-          min_weight: 50,
-          max_weight: 60,
-          max_enrollment: 16, // เพิ่มตาม Model
-          matches: [],
-          applicants: [],
-          qualifiers: [],
-        },
-        {
-          type: "middleweight",
-          weigh_name: "Middleweight",
-          min_weight: 61,
-          max_weight: 70,
-          max_enrollment: 16,
-          matches: [],
-          applicants: [],
-          qualifiers: [],
-        },
-      ],
-    },
-    {
-      _id: "3",
-      image_url: new URL("../assets/images/muaythai-003.png", import.meta.url)
-        .href,
-      event_name: "Muaythai",
-      level: "Rookie",
-      start_date: new Date("2024-02-27"),
-      end_date: new Date("2024-03-07"),
-      event_type: "Registration",
-      status: "preparing",
-      seat_zones: [],
-      weight_classes: [
-        {
-          type: "middleweight",
-          weigh_name: "Middleweight",
-          min_weight: 61,
-          max_weight: 70,
-          max_enrollment: 16,
-          matches: [],
-          applicants: [],
-          qualifiers: [],
-        },
-        {
-          type: "heavyweight",
-          weigh_name: "Heavyweight",
-          min_weight: 71,
-          max_weight: 80,
-          max_enrollment: 16,
-          matches: [],
-          applicants: [],
-          qualifiers: [],
-        },
-      ],
-    },
-    {
-      _id: "4",
-      image_url: new URL("../assets/images/muaythai-003.png", import.meta.url)
-        .href,
-      event_name: "Muaythai",
-      level: "Fighter",
-      start_date: new Date("2024-02-27"),
-      end_date: new Date("2024-03-07"),
-      event_type: "TicketSale",
-      status: "preparing",
-      seat_zones: [
-        {
-          seat_zone_id: "660b3f5f1b2c001c8e4da03",
-          zone_name: "VIP",
-          price: 5000,
-          number_of_seat: 50,
-          seats: [],
-        },
-        {
-          seat_zone_id: "660b3f5f1b2c001c8e4da04",
-          zone_name: "Standard",
-          price: 1000,
-          number_of_seat: 200,
-          seats: [],
-        },
-      ],
-      weight_classes: [],
-    },
-  ];
-
   const formatDate = (dateValue) => {
     if (!dateValue) return "N/A";
     const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
-    return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+    return date.toLocaleDateString("en-GB", { 
+      day: "2-digit", 
+      month: "short",
+      year: "numeric"
+    });
   };
 
   const getLevelColor = (level) => {
@@ -160,6 +37,11 @@ function EventCard() {
     }
   };
 
+  // If no events provided, return null or a placeholder
+  if (!events || !Array.isArray(events) || events.length === 0) {
+    return <div>No events available</div>;
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
       {events.map((event) => (
@@ -172,22 +54,32 @@ function EventCard() {
           <div className="w-full aspect-[4/3] relative">
             <img
               className="w-full h-full object-cover"
-              src={event.image_url}
+              src={event.poster_url || "/default-event-image.jpg"}  // Use poster_url from your data
               alt={event.event_name}
+              onError={(e) => { e.target.src = "/default-event-image.jpg" }} // Fallback image
             />
           </div>
           <div className="px-6 py-2">
             <div className="text-base mb-1 text-text font-semibold">
-              {event.event_name}
+              {event.event_name || "Unnamed Event"}
             </div>
             <div className={`font-normal ${getLevelColor(event.level)}`}>
-              {event.level}
+              {event.level || "Unknown Level"}
             </div>
             <div className="flex items-center font-base text-sm mb-1">
               <span className="mr-2">{formatDate(event.start_date)}</span>
               <span className="mr-2">-</span>
               <span className="mr-2">{formatDate(event.end_date)}</span>
             </div>
+            {/* Additional info from your data */}
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Status: {event.status}
+            </div>
+            {event.seat_zones?.length > 0 && (
+              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Starting at: ฿{Math.min(...event.seat_zones.map(zone => zone.price)).toLocaleString()}
+              </div>
+            )}
           </div>
         </button>
       ))}
