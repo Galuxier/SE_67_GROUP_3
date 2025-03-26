@@ -1,31 +1,66 @@
 /* eslint-disable react/prop-types */
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect,useRef,useMemo  } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeftIcon, ChevronRightIcon, CheckIcon, TrashIcon, PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-toastify";
 import { createEvent } from "../../../services/api/EventApi";
 import { useAuth } from "../../../context/AuthContext";
 import { PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { boxers } from "./mockBoxer";
 import { defaultWeightClass } from "./DefaultWeightClass";
+import { getBoxers } from "../../../services/api/BoxerApi";
+import { getImage } from "../../../services/api/ImageApi";
 
 const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [imageUrls, setImageUrls] = useState({});
 
-  const filteredBoxers = boxers.filter(
-    (boxer) =>
-      boxer.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      boxer.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      boxer.nickname.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // console.log(selectedBoxer);
+  
+  const filteredBoxers = (boxers || []).filter((boxer) => {
+    const firstName = boxer.first_name || "";
+    const lastName = boxer.last_name || "";
+    const nickname = boxer.nickname || "";
+    
+    return (
+      firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      nickname.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
+  const fetchImage = async (url) => {
+    try {
+      const imageUrl = await getImage(url); // รับค่า imageUrl
+      console.log(imageUrl); // ดูผลลัพธ์ที่ได้
+  
+      // ถ้า imageUrl เป็น Blob (ตรวจสอบประเภทข้อมูล)
+      if (imageUrl && imageUrl instanceof Blob) {
+        const objectUrl = URL.createObjectURL(imageUrl); // สร้าง URL จาก Blob
+        return objectUrl;
+      }
+      
+      // ถ้าเป็น URL ที่ใช้ได้เลย (เช่น URL ภายนอก)
+      if (imageUrl && typeof imageUrl === 'string') {
+        return imageUrl; // ใช้ URL ที่ได้เลย
+      }
+  
+      return "/default-event-image.jpg"; // ใช้ default ถ้าไม่มีการคืนค่า
+    } catch (error) {
+      console.error("Error fetching image:", error);
+      return "/default-event-image.jpg"; // ใช้ default ในกรณีเกิดข้อผิดพลาด
+    }
+  };
+  
+  
+  
+  
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">{label}</label>
       <input
         type="text"
         placeholder="ค้นหา Boxer..."
-        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-gray-900"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
@@ -34,15 +69,16 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
         <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg bg-white shadow-md">
           {filteredBoxers.map((boxer) => (
             <div
-              key={boxer.id}
+              key={boxer._id}
               className="flex items-center gap-3 p-3 hover:bg-gray-100 cursor-pointer transition duration-200"
               onClick={() => {
                 setSelectedBoxer(boxer);
-                setSearchTerm(""); // clear the search term after selection
+                setSearchTerm(""); // ล้างค่าค้นหาหลังจากเลือก
               }}
             >
               <img
-                src={boxer.profile_picture_url}
+                src={fetchImage(boxer.profile_picture_url)}
+                alt={`${boxer.first_name} ${boxer.last_name}`}
                 className="w-12 h-12 rounded-full object-cover border-2 border-gray-300"
               />
               <p className="text-gray-800 font-medium">
@@ -56,7 +92,8 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
       {selectedBoxer && (
         <div className="mt-2 flex items-center bg-gray-100 rounded-full px-4 py-2 shadow-md">
           <img
-            src={selectedBoxer.profile_picture_url}
+            src={fetchImage(selectedBoxer.profile_picture_url) || "/default-event-image.jpg"}
+            alt={`${selectedBoxer.first_name} ${selectedBoxer.last_name}`}
             className="w-14 h-14 rounded-full object-cover border-2 border-gray-300"
           />
           <p className="ml-3 text-lg font-semibold text-gray-800">
@@ -65,8 +102,8 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
           <button
             type="button"
             onClick={() => {
-              setSelectedBoxer(null); // Clear the selected boxer
-              setSearchTerm(""); // Reset the search term
+              setSelectedBoxer(null);
+              setSearchTerm("");
             }}
             className="ml-auto text-gray-500 hover:text-red-500 transition duration-200"
           >
@@ -119,6 +156,27 @@ const MatchModal = ({
     setIsOpen(false);
   };
 
+  const [boxers, setBoxers] = useState([]); // ✅ ใช้ useState เก็บข้อมูลนักมวย
+
+  // เรียก API โหลดรายชื่อนักมวย
+  useEffect(() => {
+    const fetchBoxers = async () => {
+      try {
+        const response = await getBoxers();
+        // console.log("boxers:", response);
+        if (response.success) {
+          setBoxers(response.data); // ✅ กำหนดค่า boxers ให้เป็นอาร์เรย์ที่ได้จาก API
+        } else {
+          console.error("Failed to fetch boxers");
+        }
+      } catch (error) {
+        console.error("Error fetching boxers:", error);
+      }
+    };
+
+    fetchBoxers();
+  }, []); // ✅ ทำงานครั้งเดียวตอน component mount
+
   if (!isOpen) return null;
 
   return (
@@ -149,18 +207,18 @@ const MatchModal = ({
       <SearchableSelect
         label="Boxer 1"
         boxers={boxers}
-        selectedBoxer={boxers.find(b => b.id === newMatch.boxer1_id) || null}
+        selectedBoxer={boxers.find(b => b._id === newMatch.boxer1_id) || null}
         setSelectedBoxer={(boxer) => {
-          setNewMatch({ ...newMatch, boxer1_id: boxer?.id || null });
+          setNewMatch({ ...newMatch, boxer1_id: boxer?._id || null });
         }}
       />
 
       <SearchableSelect
         label="Boxer 2"
         boxers={boxers}
-        selectedBoxer={boxers.find(b => b.id === newMatch.boxer2_id) || null}
+        selectedBoxer={boxers.find(b => b._id === newMatch.boxer2_id) || null}
         setSelectedBoxer={(boxer) => {
-          setNewMatch({ ...newMatch, boxer2_id: boxer?.id || null });
+          setNewMatch({ ...newMatch, boxer2_id: boxer?._id || null });
         }}
       />
 
@@ -682,7 +740,7 @@ const handleAddWeightClass = () => {
     // console.log(eventData);
       const formData = new FormData();
 
-      console.log(eventData);
+      // console.log(eventData);
       // ใส่ค่าที่ไม่ใช่ไฟล์โดยแปลงเป็น JSON String
       formData.append("organizer_id", eventData.organizer_id);
       formData.append("location_id", eventData.location_id);
@@ -1030,6 +1088,27 @@ const handleAddWeightClass = () => {
       setMatches(updatedFighters);
     }
   };
+
+  const [boxers, setBoxers] = useState([]); // ✅ ใช้ useState เก็บข้อมูลนักมวย
+
+  // เรียก API โหลดรายชื่อนักมวย
+  useEffect(() => {
+    const fetchBoxers = async () => {
+      try {
+        const response = await getBoxers();
+        // console.log("boxers:", response);
+        if (response.success) {
+          setBoxers(response.data); // ✅ กำหนดค่า boxers ให้เป็นอาร์เรย์ที่ได้จาก API
+        } else {
+          console.error("Failed to fetch boxers");
+        }
+      } catch (error) {
+        console.error("Error fetching boxers:", error);
+      }
+    };
+
+    fetchBoxers();
+  }, []); // ✅ ทำงานครั้งเดียวตอน component mount
   
   const renderMatches = () => (
     eventData.event_type === "ticket_sales" ? (
@@ -1054,8 +1133,8 @@ const handleAddWeightClass = () => {
                   </h4>
                   <div className="space-y-2">
                     {dayMatches.map((match, matchIndex) => {
-                      const boxer1 = boxers.find(boxer => boxer.id === match.boxer1_id);
-                      const boxer2 = boxers.find(boxer => boxer.id === match.boxer2_id);
+                      const boxer1 = boxers.find(boxer => boxer._id === match.boxer1_id);
+                      const boxer2 = boxers.find(boxer => boxer._id === match.boxer2_id);
                       return (
                         <div key={matchIndex} className="flex items-center justify-between p-3 bg-white rounded-lg border dark:bg-gray-800">
                           <div>
@@ -1158,8 +1237,8 @@ const handleAddWeightClass = () => {
         <div className="border p-4 rounded-lg">
           <h4 className="text-lg font-medium mb-3">Matches</h4>
           {matches.map((m, index) => {
-            const boxer1 = boxers.find(b => b.id === m.boxer1_id);
-            const boxer2 = boxers.find(b => b.id === m.boxer2_id);
+            const boxer1 = boxers.find(b => b._id === m.boxer1_id);
+            const boxer2 = boxers.find(b => b._id === m.boxer2_id);
             
             return (
               <div key={index} className="mb-2">
