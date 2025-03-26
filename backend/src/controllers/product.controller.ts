@@ -100,7 +100,8 @@ export const getProductsController = async (req: Request, res: Response) => {
       min_price, 
       max_price,
       page = '1',
-      limit = '10'
+      limit = '10',
+      sort // เพิ่ม sort parameter
     } = req.query;
     
     // Parse numeric parameters
@@ -117,7 +118,8 @@ export const getProductsController = async (req: Request, res: Response) => {
       minPrice,
       maxPrice,
       pageNum,
-      limitNum
+      limitNum,
+      sort as string | undefined // ส่ง sort ไปยัง service
     );
     
     // Calculate pagination info
