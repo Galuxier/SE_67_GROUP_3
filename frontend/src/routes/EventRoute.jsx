@@ -4,7 +4,8 @@ import EventManageLayout from "../layouts/EventManageLayout";
 import { EventManagementRouteGuard } from "./guards/RouteGuard";
 
 import EventHome from "../pages/events/EventHome";
-import FormAddEvent from "../pages/events/AddEvent/AddEvent";
+// import FormAddEvent from "../pages/events/AddEvent/AddEvent";
+import FormAddEvent from "../pages/events/AddEvent/AddEventForm";
 import FormAddSeat from "../pages/events/AddEvent/AddSeat";
 import FormAddFighter from "../pages/events/AddEvent/AddFighter";
 import FormAddWeightClass from "../pages/events/AddEvent/AddWeight";

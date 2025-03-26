@@ -347,7 +347,7 @@ const ShopManageSidebar = ({ shopData, userShops = [], onSwitchShop }) => {
                     My Shops
                   </h3>
                   <Link
-                    to="/shop/management/create"
+                    to="/shop/management/addShop"
                     className="text-primary hover:text-secondary text-xs"
                   >
                     <PlusCircleIcon className="inline-block h-3 w-3 mr-1" />

@@ -8,7 +8,7 @@ import { useTheme } from "../../context/ThemeContext";
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -22,12 +22,11 @@ function Navbar() {
     navigate("/login");
   };
 
-  // ฟังก์ชันสำหรับตรวจสอบ path
   const getBasePath = (path) => {
-    return path.split("/")[1]; // แยกส่วนแรกของ path
+    return path.split("/")[1];
   };
 
-  const basePath = getBasePath(location.pathname); // ดึงส่วนแรกของ path ปัจจุบัน
+  const basePath = getBasePath(location.pathname);
   const isHomePage = location.pathname === "/";
 
   const path = [
@@ -37,12 +36,14 @@ function Navbar() {
     { name: "Shop", path: "/shop" },
   ];
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <>
-      {/* Navbar */}
       <header className="bg-bar shadow-md sticky top-0 z-50">
         <div className="mx-auto flex h-16 max-w-screen-xl items-center gap-8 px-4 sm:px-6 lg:px-8">
-          {/* Logo หรือลิงก์ Home */}
           <Link to="/" className="block text-primary dark:text-rose-400">
             <span className="sr-only">Home</span>
             <svg width="50" height="50" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
@@ -51,7 +52,7 @@ function Navbar() {
           </Link>
 
           <div className="flex flex-1 items-center justify-end md:justify-between">
-            {/* Navigation Links */}
+            {/* Navigation Links - แสดงให้ทั้ง guest และ authenticated user */}
             <nav aria-label="Global" className="hidden md:block">
               <ul className="flex items-center gap-6 text-medium">
                 {path.map((item) => (
@@ -69,49 +70,29 @@ function Navbar() {
               </ul>
             </nav>
 
-            {/* Right Side: Search, Dark Mode, Profile, and Mobile Menu */}
             <div className="flex items-center gap-4">
               {/* Search Bar */}
               <div className="flex items-center">
-                {/* Mobile: แสดงแค่ไอคอน Search */}
                 <button className="md:hidden p-2 rounded-full text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                   <BsSearch className="size-5" />
                 </button>
-
-                {/* Desktop: แสดงช่องค้นหาเต็มรูปแบบ */}
-                {/* <form className="hidden md:block relative">
-                  <div className="flex relative">
-                    <input
-                      type="search"
-                      placeholder="Search"
-                      className="w-[160px] lg:w-[200px] rounded-full py-1.5 px-4 border border-gray-300 dark:border-gray-600 bg-background dark:bg-gray-800 text-text dark:text-white focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500 transition-all"
-                    />
-                    <button className="absolute right-1 p-1.5 mt-[2px] rounded-full text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                      <BsSearch className="size-4" />
-                    </button>
-                  </div>
-                </form> */}
               </div>
 
-              {/* Dark Mode Toggle with Icons */}
-              <div className="flex items-center gap-2">
-                {/* ปุ่ม Dark Mode Toggle */}
-                <button
-                  onClick={toggleDarkMode}
-                  className="p-2 rounded-full text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  {isDarkMode ? (
-                    <BsSun className="size-5 text-yellow-500" />
-                  ) : (
-                    <BsMoon className="size-5 text-gray-600" />
-                  )}
-                </button>
-              </div>
+              {/* Dark Mode Toggle */}
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-full text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                {isDarkMode ? (
+                  <BsSun className="size-5 text-yellow-500" />
+                ) : (
+                  <BsMoon className="size-5 text-gray-600" />
+                )}
+              </button>
 
-              {/* Profile Dropdown หรือปุ่ม Login/Signup */}
+              {/* แยกกรณี guest และ authenticated user */}
               {user ? (
                 <>
-                  {/* Notification */}
                   <button
                     type="button"
                     className="relative rounded-full p-2 text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -119,7 +100,6 @@ function Navbar() {
                     <BellIcon className="size-5" />
                   </button>
 
-                  {/* Profile Menu */}
                   <Menu as="div" className="relative">
                     <MenuButton className="flex rounded-full text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                       <BsPersonCircle className="size-6" />
@@ -157,36 +137,29 @@ function Navbar() {
                           Enrollment
                         </Link>
                       </MenuItem>
-                      
+
                       {/* Role-specific menu items */}
                       {user?.role && (
                         <>
-                          {user.role.includes('gym_owner') || user.role.includes('organizer') || user.role.includes('shop_owner') || user.role.includes('lessor') || user.role.includes('admin')?
-                            (
-                              <div className="flex items-center my-1">
-                                <hr className="flex-grow border-border dark:border-gray-600" />
-                                <span className="px-2 text-sm text-gray-500 dark:text-gray-400">Management</span>
-                                <hr className="flex-grow border-border dark:border-gray-600" />
-                              </div>
-                            ) : null}
-                          
-                          {/* <hr className="flex-grow border-border dark:border-gray-600" /> */}
+                          {(user.role.includes('gym_owner') || user.role.includes('organizer') || user.role.includes('shop_owner') || user.role.includes('lessor') || user.role.includes('admin')) && (
+                            <div className="flex items-center my-1">
+                              <hr className="flex-grow border-border dark:border-gray-600" />
+                              <span className="px-2 text-sm text-gray-500 dark:text-gray-400">Management</span>
+                              <hr className="flex-grow border-border dark:border-gray-600" />
+                            </div>
+                          )}
 
-                          {/* Gym Management for gym_owner */}
-                          {user.role.includes('gym_owner') ? (
+                          {user.role.includes('gym_owner') && (
                             <MenuItem>
                               <Link
                                 to="/gym/management"
                                 className="block px-4 py-1 text-sm text-text hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                               >
-                                {/* Gym/Course Management */}
                                 Gym/Course
                               </Link>
                             </MenuItem>
-                          ) : null}
-                          
-                          {/* Event Management for organizer and gym_owner */}
-                          {user.role.includes('organizer') || user.role.includes('gym_owner') ? (
+                          )}
+                          {(user.role.includes('organizer') || user.role.includes('gym_owner')) && (
                             <MenuItem>
                               <Link
                                 to="/event/management"
@@ -195,9 +168,7 @@ function Navbar() {
                                 Event
                               </Link>
                             </MenuItem>
-                          ) : null}
-                          
-                          {/* Shop Management for shop_owner */}
+                          )}
                           {user.role.includes('shop_owner') && (
                             <MenuItem>
                               <Link
@@ -208,8 +179,6 @@ function Navbar() {
                               </Link>
                             </MenuItem>
                           )}
-                          
-                          {/* Place Management for lessor */}
                           {user.role.includes('lessor') && (
                             <MenuItem>
                               <Link
@@ -220,8 +189,6 @@ function Navbar() {
                               </Link>
                             </MenuItem>
                           )}
-                          
-                          {/* Admin Dashboard for admin */}
                           {user.role.includes('admin') && (
                             <MenuItem>
                               <Link
@@ -234,7 +201,7 @@ function Navbar() {
                           )}
                         </>
                       )}
-                      
+
                       <hr className="border-border dark:border-gray-600" />
                       <MenuItem>
                         <button
@@ -249,15 +216,12 @@ function Navbar() {
                 </>
               ) : (
                 <div className="flex gap-4">
-                  {/* ปุ่ม Signup */}
                   <Link
                     to="/signup"
                     className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-text hover:border-gray-400 hover:bg-gray-50 hover:shadow-sm transition-all dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                   >
                     Signup
                   </Link>
-
-                  {/* ปุ่ม Login */}
                   <Link
                     to="/login"
                     className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/80 hover:shadow-md transition-all dark:bg-rose-400 dark:hover:bg-rose-500"
@@ -291,68 +255,108 @@ function Navbar() {
               </Link>
             </li>
           ))}
+          {/* เพิ่มเมนูสำหรับ authenticated user ใน mobile */}
+          {user && (
+            <>
+              <li className="py-1">
+                <Link
+                  to={`/user/${user.username}`}
+                  className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Your Profile
+                </Link>
+              </li>
+              <li className="py-1">
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Sign out
+                </button>
+              </li>
+            </>
+          )}
+          {!user && (
+            <>
+              <li className="py-1">
+                <Link
+                  to="/signup"
+                  className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Signup
+                </Link>
+              </li>
+              <li className="py-1">
+                <Link
+                  to="/login"
+                  className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Login
+                </Link>
+              </li>
+            </>
+          )}
         </ul>
       </header>
 
-      {/* Header และ Breadcrumbs */}
+      {/* Breadcrumbs */}
       {!isHomePage && (
-      <div className="absolute w-full z-10 left-0 py-4">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Breadcrumbs - Floating version */}
-          <nav className="flex" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center px-2 py-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm">
-              <li className="inline-flex items-center">
-                <Link
-                  to="/"
-                  className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-white"
-                >
-                  <svg
-                    className="w-3 h-3 mr-2.5"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
+        <div className="absolute w-full z-10 left-0 py-4">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <nav className="flex" aria-label="Breadcrumb">
+              <ol className="inline-flex items-center px-2 py-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm">
+                <li className="inline-flex items-center">
+                  <Link
+                    to="/"
+                    className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-white"
                   >
-                    <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
-                  </svg>
-                  Home
-                </Link>
-              </li>
-              {location.pathname
-                .split("/")
-                .filter((path) => path !== "")
-                .map((path, index, arr) => (
-                  <li key={index}>
-                    <div className="flex items-center">
-                      <svg
-                        className="w-3 h-3 mx-1 text-gray-400"
-                        aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 6 10"
-                      >
-                        <path
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="m1 9 4-4-4-4"
-                        />
-                      </svg>
-                      <Link
-                        to={`/${arr.slice(0, index + 1).join("/")}`}
-                        className="ml-1 text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-white"
-                      >
-                        {path.charAt(0).toUpperCase() + path.slice(1)}
-                      </Link>
-                    </div>
-                  </li>
-                ))}
-            </ol>
-          </nav>
+                    <svg
+                      className="w-3 h-3 mr-2.5"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
+                    </svg>
+                    Home
+                  </Link>
+                </li>
+                {location.pathname
+                  .split("/")
+                  .filter((path) => path !== "")
+                  .map((path, index, arr) => (
+                    <li key={index}>
+                      <div className="flex items-center">
+                        <svg
+                          className="w-3 h-3 mx-1 text-gray-400"
+                          aria-hidden="true"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 6 10"
+                        >
+                          <path
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="m1 9 4-4-4-4"
+                          />
+                        </svg>
+                        <Link
+                          to={`/${arr.slice(0, index + 1).join("/")}`}
+                          className="ml-1 text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-white"
+                        >
+                          {path.charAt(0).toUpperCase() + path.slice(1)}
+                        </Link>
+                      </div>
+                    </li>
+                  ))}
+              </ol>
+            </nav>
+          </div>
         </div>
-      </div>
-    )}
+      )}
     </>
   );
 }

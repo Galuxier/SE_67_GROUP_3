@@ -9,7 +9,7 @@ import notificationRoutes from './routes/notification.routes';
 import courseRoutes from './routes/course.routes';
 import cartRoutes from './routes/cart.routes';
 import eventRoutes from './routes/event.routes';
-import locationRoutes from './routes/location.routes';
+import locationRoutes from './routes/place.routes';
 import orderRoutes from './routes/order.routes';
 import paymentRoutes from './routes/payment.routes';
 import productRoutes from './routes/product.routes';

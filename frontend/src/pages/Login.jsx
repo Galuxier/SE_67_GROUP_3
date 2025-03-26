@@ -86,7 +86,7 @@ const Login = () => {
       });
   
       if (!token) throw new Error("Invalid response from server");
-
+  
       toast.success("เข้าสู่ระบบสำเร็จ!", {
         position: "top-left",
         autoClose: 3000,
@@ -95,10 +95,9 @@ const Login = () => {
         pauseOnHover: true,
         draggable: true,
       });
-      
+  
       localStorage.setItem("token", token);
   
-      // Set roles in state to allow useEffect to access
       const userRoles = await login(token);
       setRoles(userRoles);
   
@@ -108,11 +107,23 @@ const Login = () => {
         navigate("/");
       }
     } catch (error) {
-      toast.error(error.message || "เข้าสู่ระบบล้มเหลว โปรดลองอีกครั้ง", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-    } finally {
+      if (error.message === "User not found") {
+        setFormError({
+          identifier: "ไม่พบอีเมลหรือชื่อผู้ใช้นี้",
+          password: "",
+        });
+      } else if (error.message === "Incorrect password") {
+        setFormError({
+          identifier: "",
+          password: "รหัสผ่านไม่ถูกต้อง",
+        });
+      } else {
+        toast.error(error.message || "เข้าสู่ระบบล้มเหลว โปรดลองอีกครั้ง", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
+    }finally {
       setIsLoading(false);
       setTimeout(() => setIsLoggingIn(false), 100);
     }
@@ -241,7 +252,7 @@ const Login = () => {
                 </motion.div>
 
                 <motion.div variants={itemVariants} className="flex items-center justify-between">
-                  <div className="flex items-center">
+                  {/* <div className="flex items-center">
                     <input
                       id="remember-me"
                       name="remember-me"
@@ -251,13 +262,13 @@ const Login = () => {
                     <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                       จดจำฉัน
                     </label>
-                  </div>
+                  </div> */}
 
-                  <div className="text-sm">
+                  {/* <div className="text-sm">
                     <a href="#" className="font-medium text-primary hover:text-secondary">
                       ลืมรหัสผ่าน?
                     </a>
-                  </div>
+                  </div> */}
                 </motion.div>
 
                 <motion.div variants={itemVariants}>

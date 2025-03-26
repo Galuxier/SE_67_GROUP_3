@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShoppingCartIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { getImage } from "../services/api/ImageApi";
+import { getVariantsByProductId } from "../services/api/VariantApi";
 import { useState, useEffect } from "react";
-// Note: We're dynamically importing getShopById in the component to avoid issues with circular dependencies
 
 function ProductCard({ products = [], size = "default" }) {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ function ProductCard({ products = [], size = "default" }) {
         return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5";
       case "default":
       default:
-        return "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6";
+        return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"; // ปรับเป็น 4 คอลัมน์ที่ lg
     }
   };
 
@@ -47,7 +47,9 @@ function ProductCard({ products = [], size = "default" }) {
 const ProductCardItem = ({ product, size = "default" }) => {
   const navigate = useNavigate();
   const [productImage, setProductImage] = useState("");
-  
+  const [variants, setVariants] = useState([]);
+  const [isLoadingVariants, setIsLoadingVariants] = useState(false);
+
   // Set animation variants and styles based on size
   const getCardStyles = () => {
     switch (size) {
@@ -84,7 +86,7 @@ const ProductCardItem = ({ product, size = "default" }) => {
         };
     }
   };
-  
+
   // Animation variants
   const cardVariants = {
     initial: { opacity: 0, y: 20 },
@@ -98,15 +100,13 @@ const ProductCardItem = ({ product, size = "default" }) => {
     hover: { opacity: 1, y: 0, transition: { duration: 0.2 } }
   };
 
-  // Fetch product image if available
+  // Fetch product image
   useEffect(() => {
     const fetchProductImage = async () => {
       try {
         const fallbackImage = new URL("../assets/images/product-001.webp", import.meta.url).href;
         
-        // If product has image URLs
         if (product.product_image_urls && product.product_image_urls.length > 0) {
-          // Try to get image from API
           try {
             const imageUrl = await getImage(product.product_image_urls[0]);
             setProductImage(imageUrl || fallbackImage);
@@ -114,18 +114,13 @@ const ProductCardItem = ({ product, size = "default" }) => {
             console.error("Error fetching product image:", error);
             setProductImage(fallbackImage);
           }
-        } 
-        // Handle direct image_url property
-        else if (product.image_url) {
+        } else if (product.image_url) {
           setProductImage(product.image_url);
-        }
-        // Use fallback image if no product images
-        else {
+        } else {
           setProductImage(fallbackImage);
         }
       } catch (error) {
         console.error("Error in image handling:", error);
-        // Use fallback image on any error
         setProductImage(new URL("../assets/images/product-001.webp", import.meta.url).href);
       }
     };
@@ -133,21 +128,44 @@ const ProductCardItem = ({ product, size = "default" }) => {
     fetchProductImage();
   }, [product]);
 
+  // Fetch variants
+  useEffect(() => {
+    const fetchVariants = async () => {
+      if (!product._id && !product.id) return;
+      
+      setIsLoadingVariants(true);
+      try {
+        const productId = product._id || product.id;
+        const response = await getVariantsByProductId(productId);
+        setVariants(response.data || []);
+      } catch (error) {
+        console.error("Error fetching variants:", error);
+        setVariants([]);
+      } finally {
+        setIsLoadingVariants(false);
+      }
+    };
+
+    fetchVariants();
+  }, [product]);
+
   // Calculate the display price for products
   const getDisplayPrice = () => {
-    // For products with variants
-    if (product.variants?.length > 0) {
-      const prices = product.variants.map(v => parseFloat(v.price));
+    if (variants.length > 0) {
+      const prices = variants.map(v => parseFloat(v.price));
       const minPrice = Math.min(...prices);
-      return minPrice ? minPrice.toLocaleString() : "N/A";
+      const maxPrice = Math.max(...prices);
+      if (minPrice === maxPrice) {
+        return minPrice.toLocaleString();
+      }
+      return `${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()}`;
     }
     
-    // For products with base_price (from API)
-    if (product.base_price) {
-      return parseFloat(product.base_price).toLocaleString();
+    if ('base_price' in product || product.base_price !== undefined) {
+      const basePrice = parseFloat(product.base_price);
+      return isNaN(basePrice) ? "N/A" : basePrice.toLocaleString();
     }
     
-    // Fallback to regular price field
     return product.price ? parseFloat(product.price).toLocaleString() : "N/A";
   };
 
@@ -160,56 +178,35 @@ const ProductCardItem = ({ product, size = "default" }) => {
   // Handle add to cart
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    // Add to cart functionality would go here
     console.log("Adding to cart:", product);
   };
 
   // Get shop name from API
   const getShopNameForUrl = async () => {
-    if (!product.shop_id) {
-      console.log("No shop_id available for product:", product);
-      return "shop"; // Default fallback
-    }
-    
-    console.log("Fetching shop_id:", product.shop_id);
+    if (!product.shop_id) return "shop";
     
     try {
-      // Import getShopById at the top of the file
       const { getShopById } = await import("../services/api/ShopApi");
       const response = await getShopById(product.shop_id);
-      console.log("Shop API response:", response);
-      
-      if (response && response.shop_name) {
-        // Format shop name for URL (convert to lowercase, replace spaces with hyphens)
-        return encodeURIComponent(response.shop_name.replace(/\s+/g, '-').toLowerCase());
-      } else {
-        // Fallback to shop_id if no shop_name is found
-        return product.shop_id;
-      }
+      return response?.shop_name 
+        ? encodeURIComponent(response.shop_name.replace(/\s+/g, '-').toLowerCase())
+        : product.shop_id;
     } catch (error) {
       console.error("Error fetching shop details:", error);
-      // Fallback to using product.shop_name or shop_id if API call fails
-      if (product.shop_name) {
-        return encodeURIComponent(product.shop_name.replace(/\s+/g, '-').toLowerCase());
-      }
-      return product.shop_id || "shop";
+      return product.shop_name 
+        ? encodeURIComponent(product.shop_name.replace(/\s+/g, '-').toLowerCase())
+        : product.shop_id || "shop";
     }
   };
 
-  // Navigate to product detail page with shop name from API
+  // Navigate to product detail page
   const navigateToProductDetail = async () => {
     const productId = product._id || product.id;
-    
     try {
-      // Show loading state if needed
       const shopName = await getShopNameForUrl();
-      
-      // Navigate to /shop/:shop_name/:product_id
-      // navigate(`/shop/${shopName}/${productId}`);
-      navigate(`/shop/${product.shop_id}/${productId}`);
+      navigate(`/shop/${shopName}/${productId}`);
     } catch (error) {
       console.error("Error navigating to product:", error);
-      // Fallback navigation using just the product ID if there's an error
       navigate(`/shop/product/${productId}`);
     }
   };
@@ -283,10 +280,10 @@ const ProductCardItem = ({ product, size = "default" }) => {
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center">
             <span className="text-text/90 text-sm mr-1">฿</span>
-            <span className={styles.priceClasses}>{getDisplayPrice()}</span>
-            
-            {/* Show price range indicator if product has variants */}
-            {product.variants?.length > 1 && (
+            <span className={styles.priceClasses}>
+              {isLoadingVariants ? "Loading..." : getDisplayPrice()}
+            </span>
+            {variants.length > 1 && !isLoadingVariants && (
               <span className="text-sm text-text/70 ml-1">+</span>
             )}
           </div>
@@ -299,7 +296,7 @@ const ProductCardItem = ({ product, size = "default" }) => {
         </div>
       </div>
       
-      {/* New badge - can be added based on created_at */}
+      {/* New badge */}
       {new Date(product.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
         <div className="absolute top-3 left-3 bg-green-500 text-white text-xs uppercase font-bold rounded-full px-2 py-1 z-10">
           New

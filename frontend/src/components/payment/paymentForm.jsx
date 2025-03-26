@@ -1,349 +1,416 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import AddressForm from "../forms/AddressForm";
 
-const PaymentForm = ({ DatafromOrder }) => {
-  const [paymentMethod, setPaymentMethod] = useState("card");
+const PaymentForm = ({ type, DatafromOrder }) => {
+  const navigate = useNavigate();
+  const [paymentMethod, setPaymentMethod] = useState("promptpay");
   const [formStep, setFormStep] = useState(1);
   const [errors, setErrors] = useState({});
+  const [addressData, setAddressData] = useState({});
+  const [isProcessing, setIsProcessing] = useState(false);
+  
   const [formData, setFormData] = useState({
     email: "",
     firstName: "",
     lastName: "",
+    phone: "", // เพิ่มฟิลด์ phone
     cardNumber: "",
     expiry: "",
     cvc: "",
     cardHolder: "",
-    order_id: "1234567890", // Mock order_id
-    user_id: "0987654321", // Mock user_id
-    amount: 1000, // Mock amount
-    payment_status: "pending", // Mock status
-    paid_at: null, // Mock paid_at
+    order_id: DatafromOrder?.product?.product_id || "",
+    user_id: "",
+    amount: DatafromOrder?.total || 0,
+    payment_status: "pending",
+    paid_at: null,
   });
 
   const handleInputChange = (field, value) => {
-    setFormData({
-      ...formData,
-      [field]: value,
-    });
-
+    setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors({
-        ...errors,
-        [field]: "",
-      });
+      setErrors(prev => ({ ...prev, [field]: "" }));
     }
   };
 
-  const validateStep1 = () => {
+  const validateForm = (step) => {
     const newErrors = {};
-
-    if (!formData.email) {
-      newErrors.email = "กรุณากรอกอีเมล";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "กรุณากรอกอีเมลให้ถูกต้อง";
+    
+    if (step === 1) {
+      if (!formData.email) {
+        newErrors.email = "กรุณากรอกอีเมล";
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
+      }
+      
+      if (!formData.firstName) newErrors.firstName = "กรุณากรอกชื่อ";
+      if (!formData.lastName) newErrors.lastName = "กรุณากรอกนามสกุล";
+      
+      // เพิ่มการตรวจสอบเบอร์โทรศัพท์เมื่อเป็น product
+      if (type === "product" && !formData.phone) {
+        newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์";
+      } else if (type === "product" && !/^[0-9]{10}$/.test(formData.phone)) {
+        newErrors.phone = "เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลัก";
+      }
     }
-
-    if (!formData.firstName) {
-      newErrors.firstName = "กรุณากรอกชื่อ";
+    
+    if (step === 2 && paymentMethod === "card") {
+      if (!formData.cardNumber) newErrors.cardNumber = "กรุณากรอกหมายเลขบัตร";
+      if (!formData.expiry) newErrors.expiry = "กรุณากรอกวันหมดอายุ";
+      if (!formData.cvc) newErrors.cvc = "กรุณากรอกรหัส CVC";
+      if (!formData.cardHolder) newErrors.cardHolder = "กรุณากรอกชื่อผู้ถือบัตร";
     }
-
-    if (!formData.lastName) {
-      newErrors.lastName = "กรุณากรอกนามสกุล";
-    }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const validateCardPayment = () => {
-    const newErrors = {};
-
-    if (!formData.cardNumber) {
-      newErrors.cardNumber = "กรุณากรอกหมายเลขบัตร";
-    }
-
-    if (!formData.expiry) {
-      newErrors.expiry = "กรุณากรอกวันหมดอายุ";
-    } else if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.expiry)) {
-      newErrors.expiry = "กรุณากรอกในรูปแบบ MM/YY";
-    }
-
-    if (!formData.cvc) {
-      newErrors.cvc = "กรุณากรอกรหัส CVC";
-    }
-
-    if (!formData.cardHolder) {
-      newErrors.cardHolder = "กรุณากรอกชื่อผู้ถือบัตร";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const createOrderData = () => {
+    return {
+      user_id: formData.user_id,
+      order_type: type,
+      items: [{
+        ref_id: DatafromOrder.product.product_id,
+        ref_model: "Product",
+        variant_id: DatafromOrder.product.variant_id,
+        price_at_order: DatafromOrder.product.price,
+        quantity: DatafromOrder.product.quantity,
+      }],
+      total_price: DatafromOrder.total,
+      shipping_address: {
+        receiver_name: `${formData.firstName} ${formData.lastName}`,
+        receiver_phone: formData.phone, // ใช้ค่า phone จาก formData
+        province: addressData.province || "",
+        district: addressData.district || "",
+        subdistrict: addressData.subdistrict || "",
+        street: addressData.information || "",
+        postal_code: addressData.postal_code || "",
+        information: addressData.information || "",
+      },
+      status: "pending"
+    };
   };
 
-  const handleContinue = () => {
-    if (validateStep1()) {
-      setFormStep(formStep + 1);
-    }
+  // ส่วนที่เหลือของฟังก์ชันไม่เปลี่ยนแปลง
+  const createPaymentData = () => {
+    return {
+      order_id: formData.order_id,
+      user_id: formData.user_id,
+      amount: formData.amount,
+      payment_method: paymentMethod,
+      payment_status: "pending",
+      paid_at: null
+    };
+  };
+
+  const saveToLocalStorage = (orderData, paymentData) => {
+    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+    const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+    
+    orders.push(orderData);
+    payments.push(paymentData);
+    
+    localStorage.setItem("orders", JSON.stringify(orders));
+    localStorage.setItem("payments", JSON.stringify(payments));
+    
+    return { orders, payments };
   };
 
   const handlePayment = () => {
-   
-    
-     
-      const form = new FormData();
-  
-      // ใช้การเข้าถึงค่าจากอ็อบเจ็กต์โดยตรงแทน .get()
-      form.append("order_id", DatafromOrder.order_id); // ดึง 'order_id'
-      form.append("user_id", DatafromOrder.user_id); // ดึง 'user_id'
-  
-      // ดึงข้อมูล JSON string จาก 'Item' แล้วแปลงเป็นวัตถุ
-      const itemData = JSON.parse(DatafromOrder.Item);
-  
-      // ดึงข้อมูลจาก JSON ที่แปลงแล้ว
-      form.append("amount", itemData.price_at_order); // ดึง 'price_at_order' จาก itemData
-      form.append("payment_method", paymentMethod);
-      form.append("payment_status", "Pending");
-      form.append("paid_at", new Date());
-  
-      console.log("Submitting payment info:", Object.fromEntries(form));
+    if (!validateForm(2)) {
+      toast.error("กรุณากรอกข้อมูลให้ถูกต้องครบถ้วน");
+      return;
+    }
 
-    if (paymentMethod === "card") {
-      if (validateCardPayment()) {
-        setFormStep(formStep + 1);
-      }
-    } else {
-      setFormStep(formStep + 1);
+    setIsProcessing(true);
+    
+    try {
+      const orderData = createOrderData();
+      const paymentData = createPaymentData();
+      
+      saveToLocalStorage(orderData, paymentData);
+      
+      setFormStep(3);
+      toast.success("บันทึกข้อมูลการสั่งซื้อเรียบร้อย");
+    } catch (error) {
+      console.error("Error saving data:", error);
+      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handlePaymentMethodChange = (method) => {
-    setPaymentMethod(method);
+  const updatePaymentStatus = (status) => {
+    try {
+      const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+      const lastPaymentIndex = payments.length - 1;
+      
+      if (lastPaymentIndex >= 0) {
+        payments[lastPaymentIndex].payment_status = status;
+        payments[lastPaymentIndex].paid_at = status === "completed" ? new Date().toISOString() : null;
+        localStorage.setItem("payments", JSON.stringify(payments));
+        
+        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+        const lastOrderIndex = orders.length - 1;
+        
+        if (lastOrderIndex >= 0) {
+          orders[lastOrderIndex].status = status;
+          localStorage.setItem("orders", JSON.stringify(orders));
+        }
+        
+        toast.success(`อัพเดทสถานะเป็น ${status === "completed" ? "สำเร็จ" : "รอดำเนินการ"} แล้ว`);
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("เกิดข้อผิดพลาดในการอัพเดทสถานะ");
+    }
   };
 
   const renderStep1 = () => (
-    <div className="w-full">
-      <div className="mb-4">
-        <label className="block mb-2 font-medium">Email</label>
+    <div className="space-y-4">
+      <div>
+        <label className="block mb-2 font-medium">อีเมล*</label>
         <input
           type="email"
-          className={`w-full border ${
-            errors.email ? "border-red-500" : "border-gray-300"
-          } p-2 h-10 rounded`}
           value={formData.email}
           onChange={(e) => handleInputChange("email", e.target.value)}
+          className={`w-full border ${errors.email ? "border-red-500" : "border-gray-300"} p-2 rounded`}
+          required
         />
-        {errors.email && (
-          <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-        )}
+        {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
       </div>
 
-      <div className="flex gap-4 mb-4">
-        <div className="w-1/2">
-          <label className="block mb-2 font-medium">ชื่อ</label>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block mb-2 font-medium">ชื่อ*</label>
           <input
             type="text"
-            className={`w-full border ${
-              errors.firstName ? "border-red-500" : "border-gray-300"
-            } p-2 h-10 rounded`}
             value={formData.firstName}
             onChange={(e) => handleInputChange("firstName", e.target.value)}
+            className={`w-full border ${errors.firstName ? "border-red-500" : "border-gray-300"} p-2 rounded`}
+            required
           />
-          {errors.firstName && (
-            <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
-          )}
+          {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
         </div>
-        <div className="w-1/2">
-          <label className="block mb-2 font-medium">นามสกุล</label>
+        <div>
+          <label className="block mb-2 font-medium">นามสกุล*</label>
           <input
             type="text"
-            className={`w-full border ${
-              errors.lastName ? "border-red-500" : "border-gray-300"
-            } p-2 h-10 rounded`}
             value={formData.lastName}
             onChange={(e) => handleInputChange("lastName", e.target.value)}
+            className={`w-full border ${errors.lastName ? "border-red-500" : "border-gray-300"} p-2 rounded`}
+            required
           />
-          {errors.lastName && (
-            <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
-          )}
+          {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
         </div>
       </div>
 
-      <div className="mb-4">
-        <label className="block mb-2 font-medium">วิธีการชำระเงิน</label>
-        <div className="border border-gray-300 rounded">
-          <div className="p-4 border-b border-gray-300 flex items-center">
+      {/* เพิ่มช่องกรอกเบอร์โทรศัพท์เมื่อเป็น product */}
+      {type === "product" && (
+        <div>
+          <label className="block mb-2 font-medium">เบอร์โทรศัพท์*</label>
+          <input
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => handleInputChange("phone", e.target.value)}
+            placeholder="0123456789"
+            className={`w-full border ${errors.phone ? "border-red-500" : "border-gray-300"} p-2 rounded`}
+            required
+          />
+          {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+        </div>
+      )}
+
+      {type === "product" && (
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold mb-2">ที่อยู่จัดส่ง</h3>
+          <AddressForm onChange={setAddressData} />
+        </div>
+      )}
+
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold mb-2">วิธีการชำระเงิน*</h3>
+        <div className="space-y-2">
+          <label className="flex items-center space-x-2 p-3 border border-gray-300 rounded hover:bg-gray-50">
             <input
-              type="checkbox"
-              id="prompt-pay"
-              className="mr-2"
+              type="radio"
               checked={paymentMethod === "promptpay"}
-              onChange={() => handlePaymentMethodChange("promptpay")}
+              onChange={() => setPaymentMethod("promptpay")}
+              className="h-4 w-4"
+              required
             />
-            <label htmlFor="prompt-pay">พร้อมเพย์</label>
-          </div>
-          <div className="p-4 flex items-center">
+            <span>พร้อมเพย์</span>
+          </label>
+          <label className="flex items-center space-x-2 p-3 border border-gray-300 rounded hover:bg-gray-50">
             <input
-              type="checkbox"
-              id="credit-card"
-              className="mr-2"
+              type="radio"
               checked={paymentMethod === "card"}
-              onChange={() => handlePaymentMethodChange("card")}
+              onChange={() => setPaymentMethod("card")}
+              className="h-4 w-4"
             />
-            <label htmlFor="credit-card">บัตรเครดิต/เดบิต</label>
-          </div>
+            <span>บัตรเครดิต/เดบิต</span>
+          </label>
         </div>
       </div>
 
       <button
-        onClick={handleContinue}
-        className="w-full bg-red-500 hover:bg-red-600 transition-colors text-white p-3 rounded font-medium"
+        onClick={() => {
+          if (validateForm(1)) {
+            setFormStep(2);
+          } else {
+            toast.error("กรุณากรอกข้อมูลให้ถูกต้องครบถ้วน");
+          }
+        }}
+        className="w-full bg-rose-500 hover:bg-rose-600 text-white py-2 px-4 rounded mt-4"
+        disabled={isProcessing}
       >
-        ดำเนินการต่อ
+        {isProcessing ? "กำลังประมวลผล..." : "ดำเนินการต่อ"}
       </button>
     </div>
   );
 
+  // ส่วนที่เหลือของโค้ด (renderCardPayment, renderPromptPay, renderSuccess) ไม่เปลี่ยนแปลง
   const renderCardPayment = () => (
-    <div className="w-full">
+    <div className="space-y-4">
       <button
         onClick={() => setFormStep(1)}
-        className="mb-4 text-black p-2 rounded flex items-center font-medium hover:bg-gray-100 transition-colors"
+        className="flex items-center text-rose-500 hover:text-rose-600"
       >
-        <span className="mr-1">←</span> วิธีการชำระเงิน
+        <span className="mr-1">←</span> ย้อนกลับ
       </button>
 
-      <div className="mb-4">
-        <label className="block mb-2 font-medium">หมายเลขบัตร</label>
+      <h2 className="text-xl font-semibold">ข้อมูลบัตรเครดิต/เดบิต</h2>
+
+      <div>
+        <label className="block mb-2 font-medium">หมายเลขบัตร*</label>
         <input
           type="text"
-          placeholder="หมายเลขบัตร"
-          className={`w-full border ${
-            errors.cardNumber ? "border-red-500" : "border-gray-300"
-          } p-2 h-10 rounded`}
+          placeholder="1234 5678 9012 3456"
           value={formData.cardNumber}
           onChange={(e) => handleInputChange("cardNumber", e.target.value)}
+          className={`w-full border ${errors.cardNumber ? "border-red-500" : "border-gray-300"} p-2 rounded`}
+          required
         />
-        {errors.cardNumber && (
-          <p className="text-red-500 text-sm mt-1">{errors.cardNumber}</p>
-        )}
+        {errors.cardNumber && <p className="text-red-500 text-sm mt-1">{errors.cardNumber}</p>}
       </div>
 
-      <div className="flex gap-4 mb-4">
-        <div className="w-1/2">
-          <label className="block mb-2 font-medium">Expiry</label>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block mb-2 font-medium">วันหมดอายุ (MM/YY)*</label>
           <input
             type="text"
             placeholder="MM/YY"
-            className={`w-full border ${
-              errors.expiry ? "border-red-500" : "border-gray-300"
-            } p-2 h-10 rounded`}
             value={formData.expiry}
             onChange={(e) => handleInputChange("expiry", e.target.value)}
+            className={`w-full border ${errors.expiry ? "border-red-500" : "border-gray-300"} p-2 rounded`}
+            required
           />
-          {errors.expiry && (
-            <p className="text-red-500 text-sm mt-1">{errors.expiry}</p>
-          )}
+          {errors.expiry && <p className="text-red-500 text-sm mt-1">{errors.expiry}</p>}
         </div>
-        <div className="w-1/2">
-          <label className="block mb-2 font-medium">Security Code</label>
-          <div className="flex">
-            <div className="w-full relative">
-              <input
-                type="text"
-                placeholder="CVC"
-                className={`w-full border ${
-                  errors.cvc ? "border-red-500" : "border-gray-300"
-                } p-2 h-10 rounded`}
-                value={formData.cvc}
-                onChange={(e) => handleInputChange("cvc", e.target.value)}
-              />
-              {errors.cvc && (
-                <p className="text-red-500 text-sm mt-1">{errors.cvc}</p>
-              )}
-            </div>
-            <button className="bg-white border border-gray-300 w-10 h-10 flex items-center justify-center ml-1 rounded">
-              ?
-            </button>
-          </div>
+        <div>
+          <label className="block mb-2 font-medium">รหัส CVC*</label>
+          <input
+            type="text"
+            placeholder="CVC"
+            value={formData.cvc}
+            onChange={(e) => handleInputChange("cvc", e.target.value)}
+            className={`w-full border ${errors.cvc ? "border-red-500" : "border-gray-300"} p-2 rounded`}
+            required
+          />
+          {errors.cvc && <p className="text-red-500 text-sm mt-1">{errors.cvc}</p>}
         </div>
       </div>
 
-      <div className="mb-4">
-        <label className="block mb-2 font-medium">ชื่อผู้ถือบัตร</label>
+      <div>
+        <label className="block mb-2 font-medium">ชื่อผู้ถือบัตร*</label>
         <input
           type="text"
-          placeholder="ชื่อผู้ถือบัตร"
-          className={`w-full border ${
-            errors.cardHolder ? "border-red-500" : "border-gray-300"
-          } p-2 h-10 rounded`}
+          placeholder="ชื่อบนบัตร"
           value={formData.cardHolder}
-          onChange={(e) => {
-            handleInputChange("cardHolder", e.target.value);
-            handleInputChange("paid_at", new Date());
-          }}
+          onChange={(e) => handleInputChange("cardHolder", e.target.value)}
+          className={`w-full border ${errors.cardHolder ? "border-red-500" : "border-gray-300"} p-2 rounded`}
+          required
         />
-        {errors.cardHolder && (
-          <p className="text-red-500 text-sm mt-1">{errors.cardHolder}</p>
-        )}
+        {errors.cardHolder && <p className="text-red-500 text-sm mt-1">{errors.cardHolder}</p>}
       </div>
 
       <button
         onClick={handlePayment}
-        className="w-full bg-red-500 hover:bg-red-600 transition-colors text-white p-3 rounded font-medium"
+        className="w-full bg-rose-500 hover:bg-rose-600 text-white py-2 px-4 rounded mt-2"
+        disabled={isProcessing}
       >
-        ชำระเงิน
+        {isProcessing ? "กำลังประมวลผล..." : "ชำระเงิน"}
       </button>
     </div>
   );
 
-  const renderQRPayment = () => (
-    <div className="w-full">
+  const renderPromptPay = () => (
+    <div className="space-y-4">
       <button
         onClick={() => setFormStep(1)}
-        className="mb-4 text-black p-2 rounded flex items-center font-medium hover:bg-gray-100 transition-colors"
+        className="flex items-center text-rose-500 hover:text-rose-600"
       >
-        <span className="mr-1">←</span> วิธีการชำระเงิน
+        <span className="mr-1">←</span> ย้อนกลับ
       </button>
-      <div className="flex justify-center mb-4">
-        <div className="w-64 h-64 bg-white border border-gray-300 rounded flex items-center justify-center">
-          {/* QR Code placeholder */}
-          <div className="w-56 h-56 bg-gray-900 text-white flex items-center justify-center">
-            QR Code
+
+      <h2 className="text-xl font-semibold">ชำระเงินด้วยพร้อมเพย์</h2>
+
+      <div className="flex justify-center">
+        <div className="border-2 border-dashed border-gray-300 p-4 rounded-lg">
+          <div className="bg-white p-4 rounded">
+            <p className="text-center mb-2">สแกน QR Code ด้านล่าง</p>
+            <div className="w-48 h-48 bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <span className="text-gray-500">QR Code</span>
+            </div>
+            <p className="text-center font-medium">จำนวนเงิน: ฿{DatafromOrder?.total?.toLocaleString()}</p>
           </div>
         </div>
       </div>
 
       <button
         onClick={handlePayment}
-        className="w-full bg-red-500 hover:bg-red-600 transition-colors text-white p-3 rounded font-medium"
+        className="w-full bg-rose-500 hover:bg-rose-600 text-white py-2 px-4 rounded mt-4"
+        disabled={isProcessing}
       >
-        ชำระเงินเสร็จสิ้น
+        {isProcessing ? "กำลังประมวลผล..." : "บันทึกการชำระเงิน"}
       </button>
     </div>
   );
 
-  const renderContent = () => {
-    if (formStep === 1) {
-      return renderStep1();
-    } else if (formStep === 2) {
-      if (paymentMethod === "card") {
-        return renderCardPayment();
-      } else {
-        return renderQRPayment();
-      }
-    } else {
-      return (
-        <div className="w-full text-center py-8">
-          <div className="text-green-500 text-6xl mb-6">✓</div>
-          <h2 className="text-2xl mb-4 font-semibold">
-            การชำระเงินเสร็จสมบูรณ์
-          </h2>
-          <p className="text-gray-600">ขอบคุณสำหรับการสั่งซื้อ</p>
-        </div>
-      );
-    }
-  };
+  const renderSuccess = () => (
+    <div className="text-center py-8 space-y-6">
+      <div className="text-green-500 text-5xl mb-4">✓</div>
+      <h2 className="text-2xl font-semibold mb-2">บันทึกการสั่งซื้อเรียบร้อย</h2>
+      <p className="text-gray-600 mb-6">สถานะปัจจุบัน: {formData.payment_status === "completed" ? "สำเร็จ" : "รอดำเนินการ"}</p>
+      
+      <div className="flex justify-center gap-4">
+        <button
+          onClick={() => updatePaymentStatus("completed")}
+          className="bg-green-500 hover:bg-green-600 text-white py-2 px-6 rounded"
+          disabled={formData.payment_status === "completed"}
+        >
+          เปลี่ยนสถานะเป็นสำเร็จ
+        </button>
+        <button
+          onClick={() => navigate("/")}
+          className="bg-rose-500 hover:bg-rose-600 text-white py-2 px-6 rounded"
+        >
+          กลับสู่หน้าหลัก
+        </button>
+      </div>
+    </div>
+  );
 
-  return renderContent();
+  return (
+    <div>
+      {formStep === 1 && renderStep1()}
+      {formStep === 2 && (
+        paymentMethod === "card" ? renderCardPayment() : renderPromptPay()
+      )}
+      {formStep === 3 && renderSuccess()}
+    </div>
+  );
 };
 
 export default PaymentForm;

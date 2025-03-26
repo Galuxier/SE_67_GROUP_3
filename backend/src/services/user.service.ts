@@ -23,6 +23,26 @@ class UserService extends BaseService<UserDocument> {
     }
   }
 
+  async getUserRoles(userId: string): Promise<UserDocument | null> {
+    try {
+      // ตรวจสอบว่า userId เป็น ObjectId ที่ถูกต้อง
+      if (!Types.ObjectId.isValid(userId)) {
+        throw new Error('Invalid user ID');
+      }
+
+      const user = await User.findById(userId).select('role'); // ดึงเฉพาะ field role
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      return user;
+    } catch (error) {
+      console.error('Error in getUserRoles:', error);
+      throw error;
+    }
+  }
+
   // ✅ เพิ่ม role ให้ user (ตรวจสอบว่า role ยังไม่มีอยู่ก่อน)
   async addUserRole(userId: Types.ObjectId, role: string): Promise<UserDocument | null> {
     const user = await User.findById(userId);
