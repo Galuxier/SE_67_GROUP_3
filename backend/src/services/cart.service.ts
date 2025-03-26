@@ -76,7 +76,7 @@ class CartService extends BaseService<CartDocument> {
         if (product) {
           const price = variant ? variant.price : product.base_price;
           totalPrice += price * item.quantity;
-        }
+        } 
       }
     }
 

@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
 import CartService from '../services/cart.service';
 
-export const createCartController = async (req: Request, res: Response) => {
+export const addToCartController = async (req: Request, res: Response) => {
+  const { user_id, shop_id, product_id, variant_id, quantity } = req.body;
+
   try {
-    const newCart = await CartService.add(req.body);
-    res.status(201).json(newCart);
-  } catch (err) {
-    res.status(400).json({ message: 'Error creating cart', error: err });
+    const cart = await CartService.addToCart(user_id, shop_id, product_id, variant_id, quantity);
+    res.status(200).json(cart);
+  } catch (error) {
+    res.status(500).json({ error: error });
   }
 };
 
