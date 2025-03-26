@@ -741,7 +741,6 @@ const handleAddWeightClass = () => {
       const formData = new FormData();
 
       // console.log(eventData);
-     
       // ใส่ค่าที่ไม่ใช่ไฟล์โดยแปลงเป็น JSON String
       formData.append("organizer_id", eventData.organizer_id);
       formData.append("location_id", eventData.location_id);

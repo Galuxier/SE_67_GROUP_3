@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import CourseService from '../services/course.service';
+import { Types } from 'mongoose';
 
 // สร้างคอร์สใหม่
 export const createCourseController = async (req: Request, res: Response) => {
@@ -30,6 +31,36 @@ export const getCoursesController = async (req: Request, res: Response) => {
     res.status(200).json(courses);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching courses', error: err });
+  }
+};
+
+export const getCoursesByGymIdController = async (req: Request, res: Response) => {
+  try {
+    const gymId = req.params.gymId;
+    
+    // Validate gym ID
+    if (!Types.ObjectId.isValid(gymId)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid gym ID format'
+      });
+      return;
+    }
+    
+    const courses = await CourseService.getCoursesByGymId(gymId);
+    
+    res.status(200).json({
+      success: true,
+      count: courses.length,
+      data: courses
+    });
+  } catch (err) {
+    console.error('Error fetching gym courses:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching gym courses', 
+      error: err 
+    });
   }
 };
 

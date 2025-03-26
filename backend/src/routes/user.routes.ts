@@ -7,6 +7,7 @@ import {
   deleteUserController,
   getUserProfileController,
   getUserRolesController,
+  getAllBoxersController,
 } from '../controllers/user.controller';
 import { userProfileUpload, tempUserUpload } from '../middlewares/uploads/user.upload';
 import verifyToken from '../middlewares/auth';
@@ -30,5 +31,7 @@ router.get('/user/profile/:username', getUserProfileController);
 router.put('/user/:id', userProfileUpload, updateUserController);
 // ลบผู้ใช้
 router.delete('/user/:id', deleteUserController);
+
+router.get('/boxers', getAllBoxersController);
 
 export default router;
