@@ -1,8 +1,8 @@
 import PropTypes from "prop-types";
 import { Plus, X, Users, Clock, Calendar, Info } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getAlltrainer } from "../../services/api/GymApi";
 import { useParams } from "react-router-dom";
+import { getTrainersInGym } from "../../services/api/TrainerApi";
 
 export default function ActivityModal({
   isOpen,
@@ -19,24 +19,77 @@ export default function ActivityModal({
   const [busyTimeSlots, setBusyTimeSlots] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [trainers, setTrainers] = useState([]); // State to hold the trainers
-  const { gym_id } = useParams();
+  const { gym_id } = useParams(); // gym_id from the route params
 
   // Load existing activities on component mount
   useEffect(() => {
     setExistingActivities(activities); // Use activities passed as props instead of localStorage
   }, [activities]); // Reload when activities change
+  const fetchImage = async (imageUrl) => {
+    try {
+      const response = await fetch(`/api/images/${imageUrl}`);
+      const blob = await response.blob();
+      const imageObjectURL = URL.createObjectURL(blob);
+      return imageObjectURL; // ส่งกลับ URL สำหรับแสดงภาพ
+    } catch (error) {
+      console.error("Error fetching image:", error);
+      return ""; // หากเกิดข้อผิดพลาด ให้คืนค่าว่าง
+    }
+  };
+  const [imageURLs, setImageURLs] = useState({}); // สร้าง state สำหรับเก็บ URLs ของภาพ
+
+  useEffect(() => {
+    const loadImages = async () => {
+      const newImageURLs = {}; // สร้างอ็อบเจ็กต์ใหม่สำหรับเก็บ URLs
+      for (const trainer of trainers) {
+        if (trainer.profile_picture_url) {
+          const imageURL = await fetchImage(trainer.profile_picture_url);
+          newImageURLs[trainer._id] = imageURL; // เก็บ URL รูปภาพในอ็อบเจ็กต์ใหม่
+        }
+      }
+      setImageURLs(newImageURLs); // อัพเดต state ด้วย URLs ของภาพทั้งหมด
+    };
+
+    if (trainers.length > 0) {
+      loadImages(); // เรียกใช้ฟังก์ชันเพื่อโหลดรูปภาพ
+    }
+  }, [trainers]); // ทำงานเมื่อ `trainers` เปลี่ยนแปลง
 
   // Fetch trainers when the modal opens
   useEffect(() => {
     async function fetchTrainers() {
-      const trainerData = await getAlltrainer();
-      setTrainers(trainerData); // Set the trainers state
+      try {
+        // Fetch all trainers in the gym
+        const response = await getTrainersInGym(gym_id);
+        const allTrainers = response.data || [];
+        console.log("Fetched Trainers:", allTrainers); // This will log the fetched trainers
+        setTrainers(allTrainers); // Update state with the fetched trainers
+      } catch (error) {
+        console.error("Error fetching trainers:", error);
+        setTrainers([]); // Ensure trainers is an array even in case of error
+      }
     }
 
     if (isOpen) {
       fetchTrainers(); // Fetch trainers only when modal is open
     }
-  }, [isOpen]);
+  }, [isOpen, gym_id]);
+
+  // Categorize trainers based on their gym_id (same gym or different gym)
+  const trainersByGym = Array.isArray(trainers)
+    ? trainers.reduce(
+        (acc, trainer) => {
+          // Check if trainer's gym_id matches the gym_id from useParams
+          if (trainer.gym_id === gym_id) {
+            acc.trainerInGym.push({ ...trainer, statuss: "ready" }); // Same gym, status = ready
+          } else {
+            acc.trainerOutGym.push({ ...trainer, statuss: "pending" }); // Different gym, status = pending
+          }
+          return acc;
+        },
+        { trainerInGym: [], trainerOutGym: [] }
+      )
+    : { trainerInGym: [], trainerOutGym: [] };
 
   // Calculate busy time slots when activities change
   useEffect(() => {
@@ -72,27 +125,41 @@ export default function ActivityModal({
   };
 
   const handleAddCoach = (trainerItem) => {
+    let statuss;  // ใช้ let แทน const เพื่อให้สามารถกำหนดค่าได้
+  
     // Check if coach is already selected
     if (
       !newActivity.trainer ||
       !newActivity.trainer.some((coach) => coach.id === trainerItem.id)
     ) {
+      // กำหนดค่า statuss ตาม gym_id
+      if (trainerItem.gym_id === gym_id) {
+        statuss = "ready";  // ไม่ต้องใช้ const ที่นี่
+      } else {
+        statuss = "pending";  // ไม่ต้องใช้ const ที่นี่
+      }
+  
+      // สร้างข้อมูลโค้ช
       const coachInfo = {
         id: trainerItem._id,
-        name: trainerItem.Nickname,
-        Nickname: trainerItem.Nickname,
-        gym: trainerItem.gym,
+        name: trainerItem.nickname,
+        Nickname: trainerItem.nickname,
+        gym_id: trainerItem.gym_id,
+        statuses: statuss,  // ใช้ค่าที่กำหนดใน statuss
       };
-
+      console.log("Coach Info:", coachInfo);  // แสดงข้อมูลโค้ช
+      // เพิ่มโค้ชเข้าไปในกิจกรรมใหม่
       setNewActivity((prev) => ({
         ...prev,
-        trainer: [...(prev.trainer || []), coachInfo],
+        trainer: [...(prev.trainer || []), coachInfo], // เพิ่มโค้ชเข้าไปใน list
       }));
     }
-
+  
+    // ปิด modal และรีเซ็ตคำค้นหา
     setIsCoachSelectOpen(false);
     setSearchQuery("");
   };
+  
 
   const handleRemoveCoach = (coachId) => {
     setNewActivity((prev) => ({
@@ -185,7 +252,7 @@ export default function ActivityModal({
       // Use full objects to prevent data loss
       trainer: newActivity.trainer.map((coach) => ({
         ...coach,
-        Nickname: coach.Nickname || coach.name, // Ensure Nickname exists
+        Nickname: coach.nickname || coach.name, // Ensure Nickname exists
       })),
     };
 
@@ -231,7 +298,8 @@ export default function ActivityModal({
 
   // Filter trainers based on search query
   const filteredTrainers = trainers.filter((t) => {
-    const nickname = t.Nickname || ""; // Default to an empty string if undefined
+    console.log("searchQuery: ", searchQuery); 
+    const nickname = t.nickname || ""; // Default to an empty string if undefined
     const firstName = t.firstName || ""; // Default to an empty string if undefined
     const lastName = t.lastName || ""; // Default to an empty string if undefined
 
@@ -455,7 +523,7 @@ export default function ActivityModal({
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="block text-sm font-medium text-gray-700">
-                Coaches <span className="text-rose-500">*</span>
+                Coaches select <span className="text-rose-500">*</span>
               </label>
               <button
                 type="button"
@@ -466,7 +534,6 @@ export default function ActivityModal({
               </button>
             </div>
 
-            {/* Display selected coaches */}
             {newActivity.trainer && newActivity.trainer.length > 0 ? (
               <div className="mt-2 flex flex-wrap gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
                 {newActivity.trainer.map((coach) => (
@@ -474,10 +541,16 @@ export default function ActivityModal({
                     key={coach.id}
                     className="flex items-center bg-white rounded-full pl-2 pr-3 py-1 shadow-sm border border-gray-200"
                   >
-                    <span className="w-6 h-6 flex items-center justify-center bg-blue-100 text-blue-700 rounded-full text-xs font-medium mr-1">
-                      {coach.name.charAt(0)}
+                    <img
+                      src={
+                        imageURLs[coach.id] || "/path/to/placeholder-image.jpg"
+                      } // ใช้ URL ที่โหลดจาก fetch หรือ placeholder
+                      alt={coach.nickname}
+                      className="w-6 h-6 rounded-full object-cover border-2 border-gray-200"
+                    />
+                    <span className="text-sm font-medium">
+                      {coach.nickname}
                     </span>
-                    <span className="text-sm font-medium">{coach.name}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveCoach(coach.id)}
@@ -549,8 +622,18 @@ export default function ActivityModal({
       {/* Search input */}
       <div className="relative mb-4">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg
+            className="h-5 w-5 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
         </div>
         <input
@@ -562,31 +645,40 @@ export default function ActivityModal({
         />
       </div>
 
-      {/* Coaches with Gym Section */}
+      {/* Coaches in Gym Section */}
       <div className="mb-4">
-        <h4 className="text-md font-medium mb-2 text-gray-800">Coaches with Gym</h4>
+        <h4 className="text-md font-medium mb-2 text-gray-800">
+          Coaches in Gym
+        </h4>
         <div className="flex overflow-x-auto pb-2 space-x-4">
           {filteredTrainers
-            .filter((trainer) => trainer.gym) // Only trainers with gym
+            .filter((trainerItem) => trainerItem.gym_id === gym_id) // แสดงเฉพาะโค้ชที่อยู่ใน gym เดียวกับ gym_id
             .map((trainerItem) => (
               <button
                 key={trainerItem._id}
                 type="button"
                 className="flex items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors text-left"
                 onClick={() => handleAddCoach(trainerItem)}
-                disabled={newActivity.trainer?.some((t) => t.id === trainerItem._id)}
+                disabled={newActivity.trainer?.some(
+                  (t) => t.id === trainerItem._id
+                )}
               >
                 <img
-                  src={trainerItem.image_url}
-                  alt={trainerItem.Nickname}
+                  src={
+                    imageURLs[trainerItem._id] ||
+                    "/path/to/placeholder-image.jpg" // Placeholder image if no image is loaded
+                  }
+                  alt={trainerItem.nickname}
                   className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
                 />
                 <div className="ml-3">
-                  <p className="font-medium text-gray-800">{trainerItem.Nickname}</p>
-                  {/* Optional: Display gym */}
-                  <p className="text-xs text-gray-500">{trainerItem.gym}</p>
+                  <p className="font-medium text-gray-800">
+                    {trainerItem.nickname}
+                  </p>
                 </div>
-                {newActivity.trainer?.some((t) => t.id === trainerItem._id) && (
+                {newActivity.trainer?.some(
+                  (t) => t.id === trainerItem._id
+                ) && (
                   <span className="ml-auto bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
                     Selected
                   </span>
@@ -596,30 +688,41 @@ export default function ActivityModal({
         </div>
       </div>
 
-      {/* Coaches without Gym Section */}
+      {/* Coaches out Gym Section */}
       <div className="mb-4">
-        <h4 className="text-md font-medium mb-2 text-gray-800">Coaches without Gym</h4>
+        <h4 className="text-md font-medium mb-2 text-gray-800">
+          Coaches out Gym
+        </h4>
         <div className="flex overflow-x-auto pb-2 space-x-4">
           {filteredTrainers
-            .filter((trainer) => !trainer.gym) // Only trainers without gym
+            .filter((trainerItem) => trainerItem.gym_id !== gym_id) // แสดงเฉพาะโค้ชที่อยู่นอก gym เดียวกับ gym_id
             .map((trainerItem) => (
               <button
                 key={trainerItem._id}
                 type="button"
                 className="flex items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors text-left"
                 onClick={() => handleAddCoach(trainerItem)}
-                disabled={newActivity.trainer?.some((t) => t.id === trainerItem._id)}
+                disabled={newActivity.trainer?.some(
+                  (t) => t.id === trainerItem._id
+                )}
               >
                 <img
-                  src={trainerItem.image_url}
-                  alt={trainerItem.Nickname}
+                  src={
+                    imageURLs[trainerItem._id] ||
+                    "/path/to/placeholder-image.jpg" // Placeholder image if no image is loaded
+                  }
+                  alt={trainerItem.nickname}
                   className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
                 />
                 <div className="ml-3">
-                  <p className="font-medium text-gray-800">{trainerItem.Nickname}</p>
+                  <p className="font-medium text-gray-800">
+                    {trainerItem.nickname}
+                  </p>
                   <p className="text-xs text-gray-500">No Gym</p>
                 </div>
-                {newActivity.trainer?.some((t) => t.id === trainerItem._id) && (
+                {newActivity.trainer?.some(
+                  (t) => t.id === trainerItem._id
+                ) && (
                   <span className="ml-auto bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
                     Selected
                   </span>
@@ -631,8 +734,6 @@ export default function ActivityModal({
     </div>
   </div>
 )}
-
-
     </div>
   );
 }
