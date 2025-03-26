@@ -506,6 +506,16 @@ const locations = [
   const [editingWeightClass, setEditingWeightClass] = useState(null);
   const [currentDate, setCurrentDate] = useState("");
   const [newMatch, setNewMatch] = useState({ boxer1_id: "", boxer2_id: "", match_time: "" });
+  const [isEditMode, setIsEditMode] = useState(false);  // เพิ่ม state นี้
+
+
+  useEffect(() => {
+    if(eventData?.event_type === "ticket_sales") {
+      setWeightClasses(Array.isArray(defaultWeightClass) ? defaultWeightClass : []);
+    } else {
+      setWeightClasses([]);
+    }
+  }, [eventData, defaultWeightClass]);
 
   const getDatesInRange = (startDate, endDate) => {
     const dates = [];
@@ -669,9 +679,11 @@ const handleAddWeightClass = () => {
     }
     
     if (!validateCurrentStep()) return;
-    console.log(eventData);
+    // console.log(eventData);
       const formData = new FormData();
 
+      console.log(eventData);
+     
       // ใส่ค่าที่ไม่ใช่ไฟล์โดยแปลงเป็น JSON String
       formData.append("organizer_id", eventData.organizer_id);
       formData.append("location_id", eventData.location_id);
@@ -682,11 +694,14 @@ const handleAddWeightClass = () => {
       formData.append("description", eventData.description);
       formData.append("event_type", eventData.event_type);
       formData.append("status", eventData.status || "preparing");
+
+      const weightClassesData = weightClasses.map(wc => {
+        // แปลง id ของ weightClass เป็น string เพื่อเปรียบเทียบกับ weight_class_id
+        const classMatches = matches.filter(match => 
+          String(match.weight_class_id) === String(wc.id)
+        );
       
-      // แปลง Array/Object ให้เป็น JSON แล้วส่งไป
-      formData.append("seat_zones", JSON.stringify(seatZones));
-      formData.append("weight_classes", JSON.stringify(
-        weightClasses.map(wc => ({
+        return {
           ...wc,
           matches: classMatches.map(match => {
             // แปลง match_time ที่เป็น string (เช่น "21:04") ให้เป็น Date
@@ -700,13 +715,15 @@ const handleAddWeightClass = () => {
               match_time: currentDate, // เปลี่ยน match_time เป็น Date
               boxer1_id: match.boxer1_id,
               boxer2_id: match.boxer2_id
-            }))
-        }))
-      ));
+            };
+          })
+        };
+      });
       
-      // ใส่ไฟล์ภาพ (ถ้ามี)
-      console.log();
       
+      formData.append("weight_classes", JSON.stringify(weightClassesData));
+      // แปลง Array/Object ให้เป็น JSON แล้วส่งไป
+      formData.append("seat_zones", JSON.stringify(seatZones));
       if (eventData.poster_url) {
         formData.append("poster_url", eventData.poster_url); // ใช้ชื่อ key "poster_url"
       }
@@ -759,55 +776,55 @@ const handleAddWeightClass = () => {
     <div className="space-y-6 ">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-2 text-gray-700">Event Name</label>
+          <label className="block text-sm font-medium mb-2 text-gray-700 text-text">Event Name</label>
           <input 
             type="text" 
             name="event_name" 
             value={eventData.event_name} 
             onChange={handleInputChange} 
-            className="w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
+            className="w-full border border-gray-300 dark:text-black rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
             placeholder="Enter event name" 
             required 
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2 text-gray-700">Location ID</label>
+          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Location ID</label>
           <select
             name="location_id"
             value={eventData.location_id}
             onChange={handleInputChange}
-            className="w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200"
+            className="w-full text-gray-900 dark:text-black border border-gray-300 dark:border-gray-600 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200"
             required
           >
-            <option value="">-- Select Location --</option>
+            <option value="" className="text-gray-900 dark:text-black">-- Select Location --</option>
             {locations.map((location, index) => (
-              <option key={index} value={location.location_id}>
+              <option className="text-gray-900 dark:text-black" key={index} value={location.location_id}>
                 {location.name}
               </option>
             ))}
           </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-2 text-gray-700">Level</label>
+        <div >
+          <label className="block text-sm font-medium mb-2 text-gray-700 text-text">Level</label>
           <select 
             name="level" 
             value={eventData.level} 
             onChange={handleInputChange} 
-            className="w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
+            className="w-full border border-gray-300 dark:text-black rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
             required
           >
-            <option value="">-- Select Level --</option>
-            <option value="beginner">Beginner</option>
-            <option value="fighter">Fighter</option>
+            <option value="" className="text-gray-900 dark:text-black">-- Select Level --</option>
+            <option value="beginner" className="text-gray-900 dark:text-black">Beginner</option>
+            <option value="fighter" className="text-gray-900 dark:text-black">Fighter</option>
           </select>
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-2 text-gray-700">Description</label>
+          <label className="block text-sm font-medium mb-2 text-gray-700 text-text">Description</label>
           <textarea 
             name="description" 
             value={eventData.description} 
             onChange={handleInputChange} 
-            className="w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
+            className="w-full border border-gray-300 rounded-lg dark:text-black py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
             rows="4" 
             placeholder="Enter event description" 
           />
@@ -870,10 +887,10 @@ const handleAddWeightClass = () => {
         </div>
         <div className="md:col-span-2">
           <label className="block text-sm font-medium mb-1">Event Type</label>
-          <select name="event_type" value={eventData.event_type} onChange={handleInputChange} className="w-full border rounded-lg py-2 px-3">
-            <option value="">-- Select Event Type --</option>
-            <option value="registration">Open for Registration</option>
-            <option value="ticket_sales">Ticket Sale</option>
+          <select name="event_type" value={eventData.event_type} onChange={handleInputChange} className="w-full border rounded-lg py-2 px-3  dark:text-gray-900">
+            <option value="" className=" dark:text-gray-900">-- Select Event Type --</option>
+            <option value="registration" className=" dark:text-gray-900">Open for Registration</option>
+            <option value="ticket_sales" className=" dark:text-gray-900">Ticket Sale</option>
           </select>
         </div>
       </div>
