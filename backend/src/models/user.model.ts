@@ -2,7 +2,7 @@ import { Schema, model, Document } from 'mongoose';
 
 export interface License {
   license_type: string;
-  license: string;
+  license_url: string[];
 }
 
 export interface UserDocument extends Document {
@@ -36,7 +36,7 @@ const UserSchema = new Schema<UserDocument>({
   bio: { type: String },
   licenses: [{
     license_type: { type: String, required: true },
-    license: { type: String, required: true },
+    license_urls: [{ type: String, required: true }],
   }],
   gym_id: { type: Schema.Types.ObjectId },
   contact_info: { type: Schema.Types.Mixed }, // รับ key-value ที่ไม่กำหนดโครงสร้าง

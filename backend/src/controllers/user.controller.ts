@@ -5,13 +5,22 @@ import { Types } from 'mongoose';
 // สร้างผู้ใช้ใหม่
 export const createTempUserController = async (req: Request, res: Response) => {
   try {
+    console.log(req.body);
+    req.body.licenses = [{
+      license_type: req.body.role,
+      license_urls: req.body.license_urls
+    }];
     const newUser = await UserService.add(req.body);
+    console.log(newUser);
+    
     res.status(201).json({
       success: true,
       message: 'Temp User Created',
       data: newUser
     });
   } catch (err) {
+    console.log(err);
+    
     res.status(400).json({ message: 'Error creating user', error: err });
   }
 };
