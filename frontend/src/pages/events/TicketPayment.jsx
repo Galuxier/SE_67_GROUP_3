@@ -65,5 +65,4 @@ const TicketPayment = () => {
     </div>
   );
 };
-
 export default TicketPayment;

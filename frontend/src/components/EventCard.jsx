@@ -94,21 +94,16 @@ function EventCard({ events }) {
           </div>
   
           {/* Event Date */}
-          <div className="flex flex-row justify-center items-center font-base text-sm text-gray-600 dark:text-gray-400 mb-2">
+          <div className="flex flex-row justify-center items-center font-base text-sm text-gray-600 dark:text-gray-400 mb-2 text-text">
             <span className="mr-2">{formatDate(event.start_date)}</span>
             <span className="mr-2">-</span>
             <span className="mr-2">{formatDate(event.end_date)}</span>
           </div>
   
-          {/* Event Status */}
-          <div className="text-sm text-gray-700 dark:text-gray-400 mb-2">
-            Status: <span className="font-semibold">{event.status}</span>
-          </div>
-  
           {/* Event Price */}
           {event.seat_zones?.length > 0 && (
             <div className="text-sm text-gray-700 dark:text-gray-400 mt-1">
-              Starting at: à¸¿{Math.min(...event.seat_zones.map(zone => zone.price)).toLocaleString()}
+              Starting at: ฿{Math.min(...event.seat_zones.map(zone => zone.price)).toLocaleString()}
             </div>
           )}
         </div>

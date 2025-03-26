@@ -45,8 +45,6 @@ function BuyTicket() {
       return;
     }
     console.log(event);
-    
-  
     // สร้าง orderData
     const items = ticketCounts.map(ticket => {
       const zone = event.seat_zones.find(zone => zone._id === ticket.zone_id);
@@ -58,11 +56,10 @@ function BuyTicket() {
         quantity: ticket.amount, // จำนวนบัตรที่เลือก
         price_at_order: price_at_order, // ราคา ณ เวลาการสั่งซื้อ
         date: selectedDate, // วันที่เลือก
-        zone_name: zone ? zone.zone_name: "" // ชื่อโซนที่นั่ง
+        zone_name: zone ? zone.zone_name : "" // ชื่อโซนที่นั่ง
       };
     });
     
-  
     // คำนวณ total_price โดยการรวมราคาทั้งหมด
     const total_price = items.reduce((total, item) => total + item.price_at_order, 0);
   
@@ -79,8 +76,6 @@ function BuyTicket() {
     // นำข้อมูล orderData ไปส่งไปยังหน้าชำระเงิน
     navigate(`/event/ticket/payment`, { state: { orderData,event } });
   };
-  
-  
 
   const incrementCount = (zoneId) => {
     const zone = event.seat_zones.find(z => z._id === zoneId);
@@ -241,6 +236,20 @@ function BuyTicket() {
           </div>
         </div>
       </div>
+      {isImageModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+          onClick={() => setIsImageModalOpen(false)}
+        >
+          <div className="relative rounded-lg p-6" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={seatZoneUrl}
+              alt="seat zone"
+              className="max-w-2xl max-h-screen object-contain"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

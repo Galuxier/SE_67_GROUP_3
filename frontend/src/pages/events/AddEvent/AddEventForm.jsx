@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { createEvent } from "../../../services/api/EventApi";
 import { useAuth } from "../../../context/AuthContext";
 import { PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { boxers } from "./MockBoxer";
+import { boxers } from "./mockBoxer";
 import { defaultWeightClass } from "./DefaultWeightClass";
 
 const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) => {
@@ -683,7 +683,6 @@ const handleAddWeightClass = () => {
       const formData = new FormData();
 
       console.log(eventData);
-      
       // ใส่ค่าที่ไม่ใช่ไฟล์โดยแปลงเป็น JSON String
       formData.append("organizer_id", eventData.organizer_id);
       formData.append("location_id", eventData.location_id);
@@ -804,7 +803,6 @@ const handleAddWeightClass = () => {
             ))}
           </select>
         </div>
-
         <div >
           <label className="block text-sm font-medium mb-2 text-gray-700 text-text">Level</label>
           <select 
