@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { getShopProducts, getShopOrders } from "../../../services/api/ShopApi";
 import { getImage } from "../../../services/api/ImageApi";
+import ProductCard from "../../../components/ProductCard";
 
 const ShopManageDashboard = () => {
   const { shopData, userShops } = useOutletContext() || {};
@@ -48,23 +49,26 @@ const ShopManageDashboard = () => {
       setError(null);
       
       try {
-        console.log("Fetching data for shop:", shopData._id);
-        
-        // Fetch products, orders, and logo in parallel
-        const [productsData, ordersData, logoData] = await Promise.all([
+        // เรียก API แบบขนาน
+        const [productsResponse, ordersData, logoData] = await Promise.all([
           getShopProducts(shopData._id),
           getShopOrders(shopData._id),
           shopData.logo_url ? getImage(shopData.logo_url) : Promise.resolve(null)
         ]);
-
+    
+        // ตรวจสอบและตั้งค่า products
+        const productList = Array.isArray(productsResponse?.data) 
+          ? productsResponse.data 
+          : Array.isArray(productsResponse) 
+            ? productsResponse 
+            : [];
+        
+        console.log("Products loaded:", productList); // Debug log
+        setProducts(productList);
         // Set logo preview
         if (logoData) {
-          setLogoPreview(logoData); // Assuming getImage returns a Blob
+          setLogoPreview(logoData);
         }
-
-        // Set products data
-        const productList = Array.isArray(productsData) ? productsData : [];
-        setProducts(productList);
         
         // Set orders data and calculate statistics
         const ordersList = Array.isArray(ordersData) ? ordersData : [];
@@ -266,54 +270,51 @@ const ShopManageDashboard = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Products Summary */}
-        <div className="bg-card rounded-lg shadow border border-border/20">
-          <div className="p-4 border-b border-border flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-text">Products</h2>
-            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-              {products.length} Total
-            </span>
-          </div>
-          
-          <div className="p-4">
-            {products.length > 0 ? (
-              <div className="space-y-4">
-                {products.slice(0, 3).map((product) => (
-                  <div key={product._id || product.id} className="flex items-center">
-                    <div className="w-12 h-12 rounded overflow-hidden mr-3">
-                      <img 
-                        src={product.image_url || "/api/placeholder/100/100"} 
-                        alt={product.product_name} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-grow">
-                      <p className="text-text font-medium line-clamp-1">{product.product_name}</p>
-                      <p className="text-text/70 text-sm">{formatCurrency(product.price)}</p>
-                    </div>
-                    <div className="text-sm text-text/70 font-medium">
-                      Stock: {product.stock}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 text-text/70">
-                <p>No products yet</p>
-                <p className="text-sm">Add your first product to get started.</p>
-              </div>
-            )}
-          </div>
-          
-          <div className="p-4 border-t border-border">
-            <Link
-              to={`/shop/management/${shopData._id}/addProduct`}
-              className="flex items-center justify-center w-full py-2 bg-primary hover:bg-secondary text-white rounded-lg transition-colors text-center font-medium"
+<div className="bg-card rounded-lg shadow border border-border/20">
+  <div className="p-4 border-b border-border flex justify-between items-center">
+    <h2 className="text-lg font-semibold text-text">Products</h2>
+    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+      {products.length} {products.length === 1 ? "Product" : "Products"}
+    </span>
+  </div>
+  
+  <div className="p-4">
+    {products.length > 0 ? (
+      <div className="space-y-4">
+        <ProductCard 
+          products={products.slice(0, 4)} 
+          size="small" 
+        />
+        {products.length > 4 && (
+          <div className="text-center pt-2">
+            <Link 
+              to={`/shop/management/${shopData._id}/products`}
+              className="text-primary hover:text-secondary text-sm"
             >
-              <PlusCircleIcon className="w-5 h-5 mr-2" />
-              Add New Product
+              View all products →
             </Link>
           </div>
-        </div>
+        )}
+      </div>
+    ) : (
+      <div className="text-center py-6 text-text/70">
+        <ShoppingBagIcon className="mx-auto h-10 w-10 text-text/50 mb-2" />
+        <p>No products yet</p>
+        <p className="text-sm">Add your first product to get started.</p>
+      </div>
+    )}
+  </div>
+  
+  <div className="p-4 border-t border-border">
+    <Link
+      to={`/shop/management/${shopData._id}/addProduct`}
+      className="flex items-center justify-center w-full py-2 bg-primary hover:bg-secondary text-white rounded-lg transition-colors text-center font-medium"
+    >
+      <PlusCircleIcon className="w-5 h-5 mr-2" />
+      Add New Product
+    </Link>
+  </div>
+</div>
 
         {/* Recent Orders */}
         <div className="bg-card rounded-lg shadow border border-border/20">
