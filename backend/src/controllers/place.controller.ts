@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import PlaceService from '../services/place.service';
+import { Types } from 'mongoose';
 
 export const createPlaceController = async (req: Request, res: Response) => {
   try {
@@ -28,14 +29,38 @@ export const getPlacesController = async (req: Request, res: Response) => {
 
 export const getPlaceByIdController = async (req: Request, res: Response) => {
   try {
-    const Place = await PlaceService.getById(req.params.id);
-    if (!Place) {
-      res.status(404).json({ message: 'Place not found' });
+    const placeId = req.params.id;
+    
+    // Validate place ID
+    if (!Types.ObjectId.isValid(placeId)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid place ID format'
+      });
       return;
     }
-    res.status(200).json(Place);
+    
+    const place = await PlaceService.getById(placeId);
+    
+    if (!place) {
+      res.status(404).json({
+        success: false,
+        message: 'Place not found'
+      });
+      return;
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: place
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching Place', error: err });
+    console.error('Error fetching place:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching place', 
+      error: err 
+    });
   }
 };
 
@@ -54,5 +79,35 @@ export const deletePlaceController = async (req: Request, res: Response) => {
     res.status(200).json(deletedPlace);
   } catch (err) {
     res.status(500).json({ message: 'Error deleting Place', error: err });
+  }
+};
+
+export const getPlacesByOwnerIdController = async (req: Request, res: Response) => {
+  try {
+    const ownerId = req.params.ownerId;
+    
+    // Validate owner ID
+    if (!Types.ObjectId.isValid(ownerId)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid owner ID format'
+      });
+      return;
+    }
+    
+    const places = await PlaceService.getPlacesByOwnerId(ownerId);
+    
+    res.status(200).json({
+      success: true,
+      count: places.length,
+      data: places
+    });
+  } catch (err) {
+    console.error('Error fetching owner places:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching places by owner', 
+      error: err 
+    });
   }
 };

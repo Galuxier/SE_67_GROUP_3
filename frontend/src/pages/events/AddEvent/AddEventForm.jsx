@@ -9,6 +9,7 @@ import { PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { defaultWeightClass } from "./DefaultWeightClass";
 import { getBoxers } from "../../../services/api/BoxerApi";
 import { getImage } from "../../../services/api/ImageApi";
+import { getPlaces } from "../../../services/api/PlaceApi";
 
 const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -530,11 +531,23 @@ const AddEventForm = () => {
   const { organizer_id } = useParams();
   const user = useAuth();
 //   console.log("organize id = ",organizer_id);
-  
-const locations = [
-    { location_id: "66123abc1234567890abcde2", name: "Lumpinee Thai Boxing Stadium" },
-    { location_id: "66123abc1234567890abcde0", name: "Rajadamnern Stadium" },
-  ];
+
+const [places, setPlaces] = useState([]); // ✅ เก็บข้อมูลสถานที่
+
+useEffect(() => {
+  const fetchPlaces = async () => {
+    try {
+      const response = await getPlaces(); // ✅ เรียก API
+      console.log(response);
+      
+      setPlaces(response);
+    } catch (error) {
+      console.error("Error fetching places:", error);
+    }
+  };
+
+  fetchPlaces(); // ✅ เรียกใช้ฟังก์ชันเมื่อ component ถูกโหลดครั้งแรก
+}, []); // ✅ ทำงานครั้งเดียวเมื่อ component ถูก mount
 
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
@@ -854,8 +867,8 @@ const handleAddWeightClass = () => {
             required
           >
             <option value="" className="text-gray-900 dark:text-black">-- Select Location --</option>
-            {locations.map((location, index) => (
-              <option className="text-gray-900 dark:text-black" key={index} value={location.location_id}>
+            {places.map((location, index) => (
+              <option className="text-gray-900 dark:text-black" key={index} value={location._id}>
                 {location.name}
               </option>
             ))}
@@ -1201,8 +1214,8 @@ const handleAddWeightClass = () => {
       <h4 className="text-lg font-medium mb-3">Basic Information</h4>
       <p>Event Name: {eventData.event_name}</p>
       <p>
-        Location: {
-          locations.find(loc => loc.location_id === eventData.location_id)?.name || 
+        Location: { 
+          places.find(loc => loc.location_id === eventData.location_id)?.name || 
           "Unknown Location"
         }
       </p>

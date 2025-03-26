@@ -7,7 +7,7 @@ import CourseDetail from "../pages/courses/CourseDetail";
 import CourseBuyFrom from "../pages/courses/CourseBuyFrom";
 import MuayThaiCourses from "../pages/courses/CourseHome";
 import  Checkout from "../pages/courses/CourseCheck"; //หน้าก่อนการซื้อ
-import EditCourseForm from "../pages/courses/editCourseForm";
+import EditCourseForm from "../pages/courses/EditCourseFrom";
 // import EditCourse from "../pages/courses/EditCourse";
 // import EditCourseFrom from "../pages/courses/EditCourseFrom";
 // import CreateCourse from "../pages/courses/CreateCourse";

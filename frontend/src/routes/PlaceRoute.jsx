@@ -7,7 +7,8 @@ import { PlaceManagementRouteGuard } from "./guards/RouteGuard";
 import PlaceManageDashboard from "../pages/places/managements/PlaceManageDashboard";
 import AddPlace from "../pages/places/managements/AddPlace";
 import PlaceList from "../pages/places/managements/PlaceList";
-// import PlaceDetail from "../pages/places/PlaceDetail";
+import PlaceDetail from "../pages/places/managements/PlaceDetail";
+import EditPlace from "../pages/places/managements/EditPlace";
 
 function PlaceRoutes() {
   return (
@@ -30,6 +31,8 @@ function PlaceRoutes() {
         <Route index element={<PlaceManageDashboard />} />
         <Route path="create" element={<AddPlace />} />
         <Route path="list" element={<PlaceList />} />
+        <Route path=":place_id/detail" element={<PlaceDetail />} />
+        <Route path=":place_id/edit" element={<EditPlace />} />
       </Route>
     </Routes>
   );

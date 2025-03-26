@@ -5,13 +5,15 @@ import { validateOrderItems } from '../middlewares/order.middleware';
 export enum OrderType {
   Product = 'product',
   Course = 'course',
-  Ticket = 'ticket'
+  Ticket = 'ticket',
+  AdsPackage = 'ads_package',
 }
 
 enum OrderStatus {
   Pending = 'pending',
   Completed = 'completed',
   Cancelled = 'cancelled',
+  Failed = 'failed'
 }
 
 interface OrderItem {
