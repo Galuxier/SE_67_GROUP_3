@@ -53,6 +53,7 @@ const OrderSchema = new Schema<OrderDocument>({
       seat_zone_id: { type : Types.ObjectId },
       price_at_order: { type: Number, required: true },
       quantity: { type: Number, required: true },
+      date:{type: Date},
     }],
     total_price: { type: Number, required: true },
     shipping_address: {
