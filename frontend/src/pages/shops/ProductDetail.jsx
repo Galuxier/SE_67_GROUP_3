@@ -339,19 +339,6 @@ export default function ProductDetail() {
       return;
     }
   
-    // ตรวจสอบและเตรียม URL รูปภาพให้ถูกต้อง
-    let productImageUrl = '';
-    
-    // ลองดึงจาก variant image ก่อน
-    if (selectedVariant.variant_image_url) {
-      productImageUrl = variantImageMapping[selectedVariant._id] || '';
-    }
-    
-    // ถ้าไม่มี variant image ให้ใช้รูปแรกจาก product images
-    if (!productImageUrl && imageUrls.length > 0) {
-      productImageUrl = imageUrls[0];
-    }
-  
     const orderData = {
       type: "product",
       product: {
@@ -360,7 +347,6 @@ export default function ProductDetail() {
         product_name: product.product_name,
         price: selectedVariant.price,
         quantity: quantity,
-        image_url: productImageUrl, // ใช้ URL ที่เตรียมไว้
         attributes: selectedVariant.attributes || {},
         shop_id: product.shop_id,
         shop_name: shopData?.shop_name || "Shop"
@@ -370,6 +356,7 @@ export default function ProductDetail() {
       total: (selectedVariant.price * quantity) + 50
     };
   
+    console.log("Order Data:", orderData);
     navigate("/shop/productPayment", { state: orderData });
   };
   
@@ -720,12 +707,17 @@ export default function ProductDetail() {
         {/* Product Description */}
         <div className="mt-8 border-t border-border/30 pt-6">
           <h2 className="text-xl font-semibold text-text mb-4">Product Description</h2>
-          <div className="prose prose-sm max-w-none text-text dark:prose-invert">
+          <div className="prose prose-sm max-w-none text-text dark:prose-invert overflow-hidden">
             {/* Check if description is HTML */}
             {product.description && product.description.trim().startsWith('<') ? (
-              <div dangerouslySetInnerHTML={{ __html: product.description }} />
+              <div 
+                className="break-words whitespace-pre-wrap" 
+                dangerouslySetInnerHTML={{ __html: product.description }} 
+              />
             ) : (
-              <p>{product.description || "No description available"}</p>
+              <p className="break-words whitespace-pre-wrap">
+                {product.description || "No description available"}
+              </p>
             )}
           </div>
         </div>

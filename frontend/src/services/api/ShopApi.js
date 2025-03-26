@@ -74,7 +74,7 @@ export async function getUserShops(user_id) {
 }
 
 // Get all products for a specific shop
-export async function getShopProducts(shopId) {
+export const getShopProducts = async (shopId) => {
   try {
     const response = await api.get(`/shops/${shopId}/products`);
     return response.data;
@@ -82,7 +82,7 @@ export async function getShopProducts(shopId) {
     console.error("Error fetching shop products:", error);
     throw error;
   }
-}
+};
 
 // Get shop orders
 export async function getShopOrders(shopId, status = '') {
