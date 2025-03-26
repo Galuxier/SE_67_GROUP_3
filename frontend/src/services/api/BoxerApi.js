@@ -1,3 +1,4 @@
+
 import { api } from "../Axios";
 
 export async function getBoxerInGym(gym_id) {
