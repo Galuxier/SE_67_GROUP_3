@@ -11,7 +11,7 @@ function UserRoutes() {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<UserProfile />} />
         <Route path="/:username" element={<UserProfile />} />
-        <Route path="/:username/setting" element={<Setting/>}/>
+        <Route path="settings" element={<Setting/>}/>
       </Route>
 
       {/* ไม่มี Layout(Navbar) */}
