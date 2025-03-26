@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
   // ฟังก์ชัน login
   const login = async (token) => {
     try {
-      console.log(token);
+      // console.log(token);
       const userData = jwtDecode(token);
 
       if (userData.exp * 1000 < Date.now()) {
@@ -60,9 +60,12 @@ export function AuthProvider({ children }) {
         ...userData,
         profile_picture: profilePicture // เปลี่ยนชื่อเป็น profile_picture แทน profile_picture_url
       };
-
+      console.log(updatedUserData);
+      
+      
       setIsLoggedIn(true);
       setUser(updatedUserData);
+      // console.log(user._id);
 
       // เก็บ token และ user ใน localStorage
       localStorage.setItem("token", token);

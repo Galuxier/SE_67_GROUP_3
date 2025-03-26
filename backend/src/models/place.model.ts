@@ -18,7 +18,7 @@ export interface PlaceDocument extends Document {
   price: number;
   address: Address;
   google_map_link?: string;
-  images: string[];
+  place_image_urls: string[];
 }
 
 // Create the Place schema with embedded address
@@ -30,14 +30,14 @@ const PlaceSchema = new Schema<PlaceDocument>({
     province: { type: String, required: true },
     district: { type: String, required: true },
     subdistrict: { type: String, required: true },
-    street: { type: String, required: true },
+    street: { type: String, required: false },
     postal_code: { type: String, required: true },
     latitude: { type: Number, required: false },
     longitude: { type: Number, required: false },
     information: { type: String, required: false },
   },
   google_map_link: { type: String, required: false },
-  images: { type: [String], required: true },
+  place_image_urls: { type: [String], required: true },
 });
 
 // Create the Place model

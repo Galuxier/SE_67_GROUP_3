@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { getUserProfile, updateUser } from "../../services/api/UserApi";
+import { getUserProfile, updateUser, getUser } from "../../services/api/UserApi";
+import { useAuth } from "../../context/AuthContext";
 import { useParams } from "react-router-dom";
 import Authenticator from "../../components/users/Authenticator";
 import Cropper from "react-easy-crop";
@@ -39,8 +40,9 @@ function Setting() {
     weight: false,
   });
   const [currentField, setCurrentField] = useState(null);
-  const { username } = useParams();
-
+  const { user } = useParams();
+  // console.log("_id", JSON.parse(user._id));
+  
   const birthdayInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -57,7 +59,9 @@ function Setting() {
   useEffect(() => {
     const fetchSettingData = async () => {
       try {
-        const settingData = await getUserProfile(username);
+        // console.log(user.username);
+        
+        const settingData = await getUser(user._id);
         setSetting(settingData);
         setImage(settingData.profile_picture_url || defaultAvatar);
         setLoading(false);
@@ -68,7 +72,7 @@ function Setting() {
     };
 
     fetchSettingData();
-  }, [username]);
+  }, []);
 
   useEffect(() => {
     if (verifiedFields.birthday && birthdayInputRef.current) {
