@@ -26,6 +26,12 @@ const AdminSidebar = () => {
           >
             Approval
           </Link>
+          <Link
+            to="/admin/addPackage"
+            className="p-2 rounded-md hover:bg-primary hover:text-white text-text"
+          >
+            Add Package
+          </Link>
         </nav>
       </div>
     </div>
