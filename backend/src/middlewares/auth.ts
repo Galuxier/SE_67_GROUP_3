@@ -15,21 +15,22 @@ declare global {
     }
 }
 
-const verifyToken = (req: Request, res: Response, next: NextFunction) => {
+const verifyToken = (req: Request, res: Response, next: NextFunction): void => {
     const token = req.body.token || req.query.token || req.headers['x-access-token'];
 
     if (!token) {
         res.status(403).send('Need token for verify');
+        return;
     }
 
     try {
         const decode = jwt.verify(token, process.env.TOKEN_KEY!) as UserPayload;
         req.user = decode;
+        next();
     } catch (err) {
         res.status(401).send("Invalid Token");
+        return;
     }
-
-    return next();
 };
 
 export default verifyToken;

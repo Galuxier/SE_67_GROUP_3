@@ -25,7 +25,8 @@ enum PackageStatus {
 interface Activity {
   description: string;
   date: Date;
-  time: string;
+  start_time: string;
+  end_time: string;
   trainer: Schema.Types.ObjectId[];
 }
 
@@ -62,11 +63,12 @@ const CourseSchema = new Schema<CourseDocument>({
   price: { type: Number, required: true },
   description: { type: String },
   course_image_url: { type: [String], required: true },
-  status: { type: String, enum: Object.values(CourseStatus), required: true },
+  status: { type: String, enum: Object.values(CourseStatus), required: true, default: CourseStatus.Preparing },
   activities: [{
     description: { type: String, required: true },
     date: { type: Date, required: true },
-    time: { type: String, required: true },
+    start_time: { type: String, required: true },
+    end_time: { type: String, required: true },
     trainer: { type: [Schema.Types.ObjectId], ref: "User", required: true },
   }],
   packages: [{

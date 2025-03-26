@@ -5,6 +5,7 @@ import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { BellIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import NotificationBell from "../NotificationBell";
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -93,13 +94,7 @@ function Navbar() {
               {/* แยกกรณี guest และ authenticated user */}
               {user ? (
                 <>
-                  <button
-                    type="button"
-                    className="relative rounded-full p-2 text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <BellIcon className="size-5" />
-                  </button>
-
+                  <NotificationBell />
                   <Menu as="div" className="relative">
                     <MenuButton className="flex rounded-full text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                       <BsPersonCircle className="size-6" />
