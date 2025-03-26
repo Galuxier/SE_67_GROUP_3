@@ -1,17 +1,41 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { BsList, BsPersonCircle, BsSearch, BsMoon, BsSun } from "react-icons/bs";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
-import { BellIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import NotificationBell from "./NotificationBell";
+import { getImage } from "../../services/api/ImageApi";
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [profilePicture, setProfilePicture] = useState("");
+  const [isProfilePictureLoading, setIsProfilePictureLoading] = useState(false);
   const { user, logout, loading } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const loadProfilePicture = async () => {
+      if (user?.profile_picture_url) {
+        setIsProfilePictureLoading(true);
+        try {
+          const imageData = await getImage(user.profile_picture_url);
+          setProfilePicture(imageData);
+        } catch (error) {
+          console.error("Failed to load profile picture:", error);
+          setProfilePicture("");
+        } finally {
+          setIsProfilePictureLoading(false);
+        }
+      } else {
+        setProfilePicture("");
+      }
+    };
+
+    loadProfilePicture();
+  }, [user]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -52,7 +76,6 @@ function Navbar() {
           </Link>
 
           <div className="flex flex-1 items-center justify-end md:justify-between">
-            {/* Navigation Links - แสดงให้ทั้ง guest และ authenticated user */}
             <nav aria-label="Global" className="hidden md:block">
               <ul className="flex items-center gap-6 text-medium">
                 {path.map((item) => (
@@ -71,14 +94,12 @@ function Navbar() {
             </nav>
 
             <div className="flex items-center gap-4">
-              {/* Search Bar */}
               <div className="flex items-center">
                 <button className="md:hidden p-2 rounded-full text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                   <BsSearch className="size-5" />
                 </button>
               </div>
 
-              {/* Dark Mode Toggle */}
               <button
                 onClick={toggleDarkMode}
                 className="p-2 rounded-full text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -90,19 +111,22 @@ function Navbar() {
                 )}
               </button>
 
-              {/* แยกกรณี guest และ authenticated user */}
               {user ? (
                 <>
-                  <button
-                    type="button"
-                    className="relative rounded-full p-2 text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <BellIcon className="size-5" />
-                  </button>
-
+                  <NotificationBell />
                   <Menu as="div" className="relative">
                     <MenuButton className="flex rounded-full text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                      <BsPersonCircle className="size-6" />
+                      {isProfilePictureLoading ? (
+                        <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
+                      ) : profilePicture ? (
+                        <img
+                          src={profilePicture}
+                          alt="Profile"
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <BsPersonCircle className="size-8" />
+                      )}
                     </MenuButton>
                     <MenuItems className="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-card py-1 shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-gray-800 dark:text-white">
                       <MenuItem>
@@ -115,7 +139,7 @@ function Navbar() {
                       </MenuItem>
                       <MenuItem>
                         <Link
-                          to="/settings"
+                          to="/user/settings"
                           className="block px-4 py-1 text-sm text-text hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                         >
                           Settings
@@ -138,7 +162,6 @@ function Navbar() {
                         </Link>
                       </MenuItem>
 
-                      {/* Role-specific menu items */}
                       {user?.role && (
                         <>
                           {(user.role.includes('gym_owner') || user.role.includes('organizer') || user.role.includes('shop_owner') || user.role.includes('lessor') || user.role.includes('admin')) && (
@@ -231,7 +254,6 @@ function Navbar() {
                 </div>
               )}
 
-              {/* Mobile Menu Button */}
               <button
                 onClick={toggleMenu}
                 className="block rounded-sm bg-secondary p-2.5 text-text hover:bg-gray-100 md:hidden dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
@@ -243,7 +265,6 @@ function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         <ul className={`flex-col md:hidden ${isMenuOpen ? "block" : "hidden"}`}>
           {path.map((item) => (
             <li key={item.path} className="py-1">
@@ -255,7 +276,6 @@ function Navbar() {
               </Link>
             </li>
           ))}
-          {/* เพิ่มเมนูสำหรับ authenticated user ใน mobile */}
           {user && (
             <>
               <li className="py-1">
@@ -299,7 +319,6 @@ function Navbar() {
         </ul>
       </header>
 
-      {/* Breadcrumbs */}
       {!isHomePage && (
         <div className="absolute w-full z-10 left-0 py-4">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,19 +1,29 @@
 import React, { useState } from "react";
 import CropImageModal from "../../../components/shops/CropImageModal";
-
+import { createTempUser } from "../../../services/api/UserApi"; // เพิ่มการ import createTempUser
+import {
+  XMarkIcon,
+  PhotoIcon,
+} from "@heroicons/react/24/outline";
+import { useParams } from "react-router-dom";
 function AddTrainer() {
   const [trainerData, setTrainerData] = useState({
     first_name: "",
     last_name: "",
     nickname: "",
     role: "trainer",
+    licence: [],
   });
-
+  const { gym_id } = useParams();
   // State for cropped profile picture and preview
   const [profile, setProfile] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [tempFile, setTempFile] = useState(null);
   const [showCropper, setShowCropper] = useState(false);
+
+  // State สำหรับจัดการรูปภาพใบอนุญาต (ไม่ต้อง crop)
+  const [licenceFiles, setLicenceFiles] = useState([]); // เก็บไฟล์ที่เลือก
+  const [licencePreviews, setLicencePreviews] = useState([]); // เก็บ URL สำหรับ preview
 
   // Handle Input Changes
   const handleInputChange = (e) => {
@@ -24,14 +34,13 @@ function AddTrainer() {
     }));
   };
 
-  // Handle File Selection
+  // Handle File Selection for Profile Picture
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
       setTempFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        // Set preview image before crop
         setPreviewImage(reader.result);
         setShowCropper(true);
       };
@@ -39,7 +48,7 @@ function AddTrainer() {
     }
   };
 
-  // Handle the completion of the crop
+  // Handle the completion of the crop for Profile Picture
   const handleCropDone = (croppedBlob) => {
     setShowCropper(false);
     const croppedFile = new File([croppedBlob], "profile_cropped.png", {
@@ -48,6 +57,27 @@ function AddTrainer() {
     setProfile(croppedFile);
     const previewUrl = URL.createObjectURL(croppedFile);
     setPreviewImage(previewUrl);
+  };
+
+  // จัดการเมื่อมีการเลือกไฟล์สำหรับใบอนุญาต (รองรับการเลือกหลายไฟล์)
+  const handleLicenceFileSelect = (e) => {
+    const files = Array.from(e.target.files); // แปลง FileList เป็น Array
+    if (files.length > 0) {
+      const remainingSlots = 5 - licenceFiles.length; // คำนวณจำนวนที่ยังสามารถเพิ่มได้
+      if (files.length > remainingSlots) {
+        alert(`คุณสามารถอัปโหลดรูปภาพใบอนุญาตได้สูงสุด 5 รูปเท่านั้น (เพิ่มได้อีก ${remainingSlots} รูป)`);
+        files.splice(remainingSlots); // ตัดไฟล์ส่วนเกินออก
+      }
+      const newPreviews = files.map((file) => URL.createObjectURL(file));
+      setLicenceFiles((prev) => [...prev, ...files]);
+      setLicencePreviews((prev) => [...prev, ...newPreviews]);
+    }
+  };
+
+  // ลบรูปภาพใบอนุญาต
+  const handleRemoveLicence = (index) => {
+    setLicenceFiles((prev) => prev.filter((_, i) => i !== index));
+    setLicencePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Handle Form Submit
@@ -59,15 +89,30 @@ function AddTrainer() {
     formData.append("last_name", trainerData.last_name);
     formData.append("nickname", trainerData.nickname);
     formData.append("role", trainerData.role);
+    formData.append("gym_id",gym_id);
+    formData.append("status", "inActive"); // เพิ่ม status คล้ายกับ AddBoxer
 
     // Append cropped profile picture
     if (profile) {
       formData.append("profile_picture_url", profile);
     }
 
+    // Append รูปภาพใบอนุญาต (licence)
+    licenceFiles.forEach((file) => {
+      formData.append("license_urls", file);
+    });
+
     // Log formData for debugging
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
+    }
+
+    try {
+      const response = await createTempUser(formData);
+      console.log("Response from createTempUser:", response);
+    } catch (error) {
+      console.error("Error creating temp user:", error);
+      throw new Error(error);
     }
   };
 
@@ -85,7 +130,7 @@ function AddTrainer() {
                 htmlFor="profile-upload"
                 className="cursor-pointer w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300 hover:border-rose-400 transition-all"
               >
-                {profile ? (
+                {previewImage ? (
                   <img
                     src={previewImage}
                     alt="Cropped Profile"
@@ -166,6 +211,85 @@ function AddTrainer() {
               readOnly
               className="w-full p-3 border rounded-lg"
             />
+          </div>
+
+          {/* Licence Images */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Licence Photo
+            </label>
+            <div className="space-y-4">
+              {/* ถ้ายังไม่มีรูปภาพ ให้แสดงช่องอัปโหลดแบบในรูป */}
+              {licenceFiles.length === 0 ? (
+                <label
+                  htmlFor="licence-upload"
+                  className="cursor-pointer w-full h-40 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-rose-400 transition-all"
+                >
+                  <PhotoIcon className="w-8 h-8 text-gray-500 mb-2" />
+                  <span className="text-gray-500 text-sm">
+                    Click to upload licence photos
+                  </span>
+                  <span className="text-gray-400 text-xs">
+                    PNG, JPG up to 5 files
+                  </span>
+                  <input
+                    id="licence-upload"
+                    type="file"
+                    accept="image/*"
+                    multiple // รองรับการเลือกหลายไฟล์
+                    onChange={handleLicenceFileSelect}
+                    className="hidden"
+                  />
+                </label>
+              ) : (
+                <>
+                  {/* แสดงรูปภาพที่อัปโหลดแล้วในกรอบ */}
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                    <div className="flex flex-wrap gap-4 mb-4">
+                      {licencePreviews.map((preview, index) => (
+                        <div key={index} className="relative w-24 h-24">
+                          <img
+                            src={preview}
+                            alt={`Licence ${index + 1}`}
+                            className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveLicence(index)}
+                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                          >
+                            <XMarkIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    {/* ถ้ายังอัปโหลดไม่ครบ 5 รูป ให้แสดงช่องอัปโหลดเพิ่ม */}
+                    {licenceFiles.length < 5 && (
+                      <label
+                        htmlFor="licence-upload"
+                        className="cursor-pointer w-full h-24 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-rose-400 transition-all"
+                      >
+                        <PhotoIcon className="w-6 h-6 text-gray-500 mb-1" />
+                        <span className="text-gray-500 text-sm">
+                          Add more licence photos
+                        </span>
+                        <span className="text-gray-400 text-xs">
+                          PNG, JPG up to {5 - licenceFiles.length} more files
+                        </span>
+                        <input
+                          id="licence-upload"
+                          type="file"
+                          accept="image/*"
+                          multiple // รองรับการเลือกหลายไฟล์
+                          onChange={handleLicenceFileSelect}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Submit Button */}

@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  createCartController,
+  addToCartController,
   getCartsController,
   getCartByIdController,
   updateCartController,
@@ -9,7 +9,7 @@ import {
 
 const router = express.Router();
 
-router.post('/carts', createCartController);
+router.post('/carts', addToCartController);
 router.get('/carts', getCartsController);
 router.get('/cart/:id', getCartByIdController);
 router.put('/cart/:id', updateCartController);

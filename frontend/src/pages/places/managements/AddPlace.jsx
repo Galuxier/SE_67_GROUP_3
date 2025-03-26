@@ -10,6 +10,7 @@ import {
   ChevronRightIcon
 } from "@heroicons/react/24/outline";
 import AddressForm from "../../../components/forms/AddressForm";
+import { createPlace } from "../../../services/api/PlaceApi";
 
 const AddPlace = () => {
   const navigate = useNavigate();
@@ -88,9 +89,9 @@ const AddPlace = () => {
       placeFormData.append("owner_id", user._id);
       placeFormData.append("name", formData.name);
       placeFormData.append("price", formData.price);
-      placeFormData.append("googleMapsLink", formData.googleMapsLink);
+      placeFormData.append("google_map_link", formData.googleMapsLink);
       placeFormData.append("address", JSON.stringify(formData.address));
-      images.forEach((image) => placeFormData.append("images", image));
+      images.forEach((image) => placeFormData.append("place_image_urls", image));
       
       // Simulated API call
       console.log("Form data to be submitted:", {
@@ -101,7 +102,10 @@ const AddPlace = () => {
         address: formData.address,
         images: images.map(img => img.name)
       });
+      const response = await createPlace(placeFormData);
+      console.log(response);
       
+
       toast.success("Place created successfully!");
       navigate("/place/management/list");
     } catch (error) {

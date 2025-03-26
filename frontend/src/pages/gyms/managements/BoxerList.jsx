@@ -1,85 +1,53 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MagnifyingGlassIcon, FunnelIcon, PlusIcon, PencilSquareIcon, UserCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, FunnelIcon, PlusIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
+import { getBoxerInGym } from "../../../services/api/BoxerApi";
 
 function BoxerList() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  // We no longer need status filtering
   const [filterWeight, setFilterWeight] = useState("all");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedBoxer, setSelectedBoxer] = useState(null);
-  
-  // Mock data - in a real app, you would fetch this from an API
-  const [boxers, setBoxers] = useState([
-    {
-      id: 1,
-      image: new URL("../assets/images/boxer9.jpg", import.meta.url).href,
-      name: "Nakarach Thupbok",
-      nickname: "NakaPhonFire",
-      age: 24,
-      weight: 62,
-      wins: 12,
-      losses: 3,
-      draws: 1
-    },
-    {
-      id: 2,
-      image: new URL("../assets/images/boxer10.jpg", import.meta.url).href,
-      name: "Pach Dum",
-      nickname: "YingYai",
-      age: 22,
-      weight: 58,
-      wins: 8,
-      losses: 2,
-      draws: 0
-    },
-    {
-      id: 3,
-      image: new URL("../assets/images/boxer11.jpg", import.meta.url).href,
-      name: "Diamond Jab",
-      nickname: "YaiYing",
-      age: 26,
-      weight: 70,
-      wins: 15,
-      losses: 5,
-      draws: 2
-    },
-    {
-      id: 4,
-      image: "/api/placeholder/400/320",
-      name: "Somchai Jaidee",
-      nickname: "The Thunder",
-      age: 23,
-      weight: 65,
-      wins: 7,
-      losses: 2,
-      draws: 1
-    },
-    {
-      id: 5,
-      image: "/api/placeholder/400/320",
-      name: "Tanawat Kongpol",
-      nickname: "Iron Fist",
-      age: 25,
-      weight: 72,
-      wins: 11,
-      losses: 4,
-      draws: 0
-    },
-    {
-      id: 6,
-      image: "/api/placeholder/400/320",
-      name: "Preecha Sukkasem",
-      nickname: "The Hawk",
-      age: 21,
-      weight: 59,
-      wins: 5,
-      losses: 1,
-      draws: 3
-    }
-  ]);
+  const [boxers, setBoxers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBoxers = async () => {
+      try {
+        const data = await getBoxerInGym("gym_id_here");
+        const formattedBoxers = data.map(boxer => ({
+          id: boxer._id,
+          image: boxer.image_url || boxer.profile_picture_url || "/api/placeholder/400/320",
+          name: `${boxer.firstName || boxer.first_name} ${boxer.lastName || boxer.last_name}`,
+          nickname: boxer.Nickname || boxer.nickname,
+          age: boxer.age, 
+          weight: boxer.weight, 
+          wins: boxer.wins,
+          losses: boxer.losses,
+          draws: boxer.draws,
+          fightHistory: boxer.fightHistory,
+          detail: boxer.detail
+        }));
+        setBoxers(formattedBoxers);
+      } catch (error) {
+        console.error("Failed to fetch boxers:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBoxers();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen p-8 bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-rose-600"></div>
+      </div>
+    );
+  }
 
   // Filter and search logic
   const filteredBoxers = boxers.filter(boxer => {
@@ -195,7 +163,7 @@ function BoxerList() {
         </div>
 
         {/* Stats Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-white p-4 rounded-lg shadow-md flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Total Boxers</p>
@@ -234,7 +202,7 @@ function BoxerList() {
               <div className="h-6 w-6 text-amber-600">🏆</div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Boxers List */}
         {filteredBoxers.length > 0 ? (
@@ -273,9 +241,6 @@ function BoxerList() {
                       <TrashIcon className="h-4 w-4 text-red-600" />
                     </button>
                   </div>
-                  {/* <div className="absolute bottom-0 left-0 m-2 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {boxer.weight} kg
-                  </div> */}
                 </div>
                 
                 <div className="p-4">
@@ -284,29 +249,55 @@ function BoxerList() {
                       <h2 className="text-lg font-semibold text-gray-800">{boxer.name}</h2>
                       <p className="text-rose-600 font-medium">{boxer.nickname}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600">{boxer.age} yrs, {boxer.weight} kg</p>
-                    </div>
                   </div>
                   
-                  <div className="flex justify-between mt-4 pt-2 border-t border-gray-100">
-                    <div className="text-center">
-                      <p className="text-xs text-gray-500">WINS</p>
-                      <p className="font-bold text-green-600">{boxer.wins}</p>
+                  {/* แสดงข้อมูล fightHistory ถ้ามี */}
+                  {boxer.fightHistory && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Fight History:</span> {boxer.fightHistory}
+                      </p>
                     </div>
-                    <div className="text-center">
-                      <p className="text-xs text-gray-500">LOSSES</p>
-                      <p className="font-bold text-red-600">{boxer.losses}</p>
+                  )}
+
+                  {/* แสดงข้อมูล detail ถ้ามี */}
+                  {boxer.detail && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Details:</span> {boxer.detail}
+                      </p>
                     </div>
-                    <div className="text-center">
-                      <p className="text-xs text-gray-500">DRAWS</p>
-                      <p className="font-bold text-gray-600">{boxer.draws}</p>
+                  )}
+
+                  {/* แสดงสถิติเฉพาะที่มีค่า */}
+                  {(boxer.wins !== undefined || boxer.losses !== undefined || boxer.draws !== undefined || boxer.age !== undefined) && (
+                    <div className="flex justify-between mt-4 pt-2 border-t border-gray-100">
+                      {boxer.wins !== undefined && (
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500">WINS</p>
+                          <p className="font-bold text-green-600">{boxer.wins}</p>
+                        </div>
+                      )}
+                      {boxer.losses !== undefined && (
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500">LOSSES</p>
+                          <p className="font-bold text-red-600">{boxer.losses}</p>
+                        </div>
+                      )}
+                      {boxer.draws !== undefined && (
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500">DRAWS</p>
+                          <p className="font-bold text-gray-600">{boxer.draws}</p>
+                        </div>
+                      )}
+                      {boxer.age !== undefined && (
+                        <div className="text-center">
+                          <p className="text-xs text-gray-500">AGE</p>
+                          <p className="font-bold text-gray-600">{boxer.age}</p>
+                        </div>
+                      )}
                     </div>
-                    {/* <div className="text-center">
-                      <p className="text-xs text-gray-500">AGE</p>
-                      <p className="font-bold text-gray-600">{boxer.age}</p>
-                    </div> */}
-                  </div>
+                  )}
                 </div>
               </motion.div>
             ))}

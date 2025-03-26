@@ -25,7 +25,8 @@ enum PackageStatus {
 interface Activity {
   description: string;
   date: Date;
-  time: string;
+  start_time: string;
+  end_time: string;
   trainer: Schema.Types.ObjectId[];
 }
 
@@ -35,6 +36,17 @@ interface Package {
   package_id: Schema.Types.ObjectId;
   used_at: Date;
   status: PackageStatus;
+}
+
+enum TrainerStatus {
+  Pending = 'pending',
+  Ready = 'ready',
+  Reject = 'reject',
+}
+
+interface Trainer {
+  traier_id: Schema.Types.ObjectId;
+  status: TrainerStatus;
 }
 
 // กำหนด interface สำหรับ Course document
@@ -62,12 +74,16 @@ const CourseSchema = new Schema<CourseDocument>({
   price: { type: Number, required: true },
   description: { type: String },
   course_image_url: { type: [String], required: true },
-  status: { type: String, enum: Object.values(CourseStatus), required: true },
+  status: { type: String, enum: Object.values(CourseStatus), required: true, default: CourseStatus.Preparing },
   activities: [{
     description: { type: String, required: true },
     date: { type: Date, required: true },
-    time: { type: String, required: true },
-    trainer: { type: [Schema.Types.ObjectId], ref: "User", required: true },
+    start_time: { type: String, required: true },
+    end_time: { type: String, required: true },
+    trainer_list: [{
+      trainer_id: { type: Schema.Types.ObjectId, required: true},
+      status: { type : String, enum: TrainerStatus, required: true }
+    }],
   }],
   packages: [{
     order_id: { type: Schema.Types.ObjectId, required: true },

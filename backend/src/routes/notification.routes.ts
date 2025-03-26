@@ -1,22 +1,24 @@
 import express from 'express';
 import {
-    createNotificationController,
-    getNotificationsController,
-    getNotificationByIdController,
-    updateNotificationController,
-    deleteNotificationController
-} from '../controllers/notification.controller'
+  getUserNotificationsController,
+  createNotificationController,
+  markNotificationAsReadController,
+  markAllAsReadController,
+  deleteNotificationsController,
+  getUnreadCountController,
+  cleanupExpiredNotificationsController
+} from '../controllers/notification.controller';
+import verifyToken from '../middlewares/auth';
 
-const route = express.Router();
+const router = express.Router();
 
-route.get('/notifications', getNotificationsController);
+// Apply the middleware to each route individually for better control
+router.get('/notifications', verifyToken, getUserNotificationsController);
+router.get('/notifications/unread-count/:user_id', verifyToken, getUnreadCountController);
+router.post('/notifications', verifyToken, createNotificationController);
+router.put('/notification/:id/read', verifyToken, markNotificationAsReadController);
+router.put('/notifications/mark-all-read', verifyToken, markAllAsReadController);
+router.delete('/notifications', verifyToken, deleteNotificationsController);
 
-route.get('/notification/:id', getNotificationByIdController);
-
-route.post('/notifications', createNotificationController);
-
-route.put('/notification/:id', updateNotificationController);
-
-route.delete('/notifocation', deleteNotificationController);
-
-export default route;
+// Export the router
+export default router;

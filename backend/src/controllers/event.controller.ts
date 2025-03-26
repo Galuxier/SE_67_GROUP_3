@@ -5,7 +5,6 @@ export const createEventController = async (req: Request, res: Response) => {
   try {
     req.body.seat_zones = JSON.parse(req.body.seat_zones);
     req.body.weight_classes = JSON.parse(req.body.weight_classes);
-    
     const newEvent = await EventsService.add(req.body);
     res.status(201).json(newEvent);
   } catch (err) {

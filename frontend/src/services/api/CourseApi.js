@@ -13,3 +13,14 @@ export async function createCourse(CourseData){
         throw error;
     }
 }
+
+export async function getAllCourses() {
+    try{
+        const response = await api.get('/courses');
+        return response.data;
+    }catch (error){
+        console.error(error);
+        throw new error;
+        
+    }
+}

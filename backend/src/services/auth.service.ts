@@ -76,7 +76,8 @@ export const loginUser = async (credentials: { identifier: string; password: str
       _id: user._id,
       role: user.role,
       first_name: user.first_name,
-      last_name: user.last_name
+      last_name: user.last_name,
+      profile_picture_url: user.profile_picture_url? user.profile_picture_url : null
     };
     const token = jwt.sign(payload, `${process.env.TOKEN_KEY}`, { expiresIn: "2h" });
     return { token };
