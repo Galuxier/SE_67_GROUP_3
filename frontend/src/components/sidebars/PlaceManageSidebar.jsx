@@ -70,7 +70,7 @@ const PlaceManageSidebar = () => {
             {expandedMenus.places && (
               <div className="pl-10 space-y-1">
                 <Link
-                  to="/place/management/placelist"
+                  to="/place/management/list"
                   className={`block p-2 rounded-md hover:bg-primary/10 ${
                     location.pathname === "/place/manage/places" ? "text-primary" : "text-text"
                   } text-sm transition-colors`}

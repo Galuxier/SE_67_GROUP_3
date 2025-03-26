@@ -39,11 +39,9 @@ import EventRoutes from "./routes/EventRoute";
 import ShopRoutes from "./routes/ShopRoute";
 import UserRoutes from "./routes/UserRoute";
 import AdminRoutes from "./routes/AdminRoute";
+import PlaceRoutes from "./routes/PlaceRoute";
 // import AdminRouteGuard from "./routes/guards/AdminRouteGuard";
-import { PlaceManagementRouteGuard, AdminRouteGuard } from "./routes/guards/RouteGuard";
-
-import PlaceManageLayout from "./layouts/PlaceManageLayout";
-import PlaceManageDashboard from "./pages/places/managements/PlaceManageDashboard";
+import { AdminRouteGuard } from "./routes/guards/RouteGuard";
 
 const App = () => {
   return (
@@ -73,6 +71,7 @@ const App = () => {
               <Route path="/event/*" element={<EventRoutes />} />
               <Route path="/user/*" element={<UserRoutes />} />
               <Route path="/shop/*" element={<ShopRoutes />} />
+              <Route path="/place/*" element={<PlaceRoutes />} />
               {/* <Route path="/admin/*" element={<AdminRoutes />} /> */}
 
               {/* ใช้ AdminRouteGuard เพื่อป้องกันหน้า Admin */}
@@ -84,17 +83,6 @@ const App = () => {
                   </AdminRouteGuard>
                 }
               />
-              <Route
-                path="/place/management/*"
-                element={
-                  <PlaceManagementRouteGuard>
-                    <PlaceManageLayout />
-                  </PlaceManagementRouteGuard>
-                }
-              >
-                <Route index element={<PlaceManageDashboard />} />
-                {/* Add other place management routes here */}
-              </Route>
             </Routes>
           </Suspense>
         </AuthProvider>

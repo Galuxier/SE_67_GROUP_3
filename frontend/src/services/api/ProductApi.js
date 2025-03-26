@@ -1,5 +1,17 @@
 import { api } from "../Axios";
 
+export const getProducts = async (params = {}) => {
+  try {
+    console.log("params: ",params);
+    
+    const response = await api.get('/products', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Get Products Failed: ', error);
+    throw error;
+  }
+};
+
 // Product-related API functions
 export const createProduct = async (productData) => {
   try {
@@ -15,17 +27,7 @@ export const createProduct = async (productData) => {
   }
 };
 
-export const getProducts = async (params = {}) => {
-  try {
-    console.log("params: ",params);
-    
-    const response = await api.get('/products', { params });
-    return response.data;
-  } catch (error) {
-    console.error('Get Products Failed: ', error);
-    throw error;
-  }
-};
+
 
 export const getProductById = async (id) => {
   try {

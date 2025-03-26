@@ -8,7 +8,7 @@ export default {
     extend: {
       colors: {
         primary: 'var(--color-primary)',
-        secondary: 'var(--color-secondary)',
+        secondary: 'var(--color-secondary)', 
         background: 'var(--color-background)',
         bar: 'var(--color-bar-background)',
         card: 'var(--color-card-background)', // เพิ่มสีสำหรับ Card
