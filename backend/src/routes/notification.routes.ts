@@ -1,22 +1,37 @@
+// src/routes/notification.routes.ts
 import express from 'express';
 import {
-    createNotificationController,
-    getNotificationsController,
-    getNotificationByIdController,
-    updateNotificationController,
-    deleteNotificationController
-} from '../controllers/notification.controller'
+  getUserNotificationsController,
+  createNotificationController,
+  markNotificationAsReadController,
+  markAllAsReadController,
+  deleteNotificationsController,
+  getUnreadCountController,
+  cleanupExpiredNotificationsController
+} from '../controllers/notification.controller';
+import verifyToken from '../middlewares/auth';
 
-const route = express.Router();
+const router = express.Router();
 
-route.get('/notifications', getNotificationsController);
+// Routes that require authentication
+router.use(verifyToken);
 
-route.get('/notification/:id', getNotificationByIdController);
+// Get notifications for a user with optional filters
+router.get('/notifications', getUserNotificationsController);
 
-route.post('/notifications', createNotificationController);
+// Get unread notification count for a user
+router.get('/notifications/unread-count/:user_id', getUnreadCountController);
 
-route.put('/notification/:id', updateNotificationController);
+// Create a new notification
+router.post('/notifications', createNotificationController);
 
-route.delete('/notifocation', deleteNotificationController);
+// Mark a notification as read
+router.put('/notification/:id/read', markNotificationAsReadController);
 
-export default route;
+// Mark all notifications for a user as read
+router.put('/notifications/mark-all-read', markAllAsReadController);
+
+// Delete notifications
+router.delete('/notifications', deleteNotificationsController);
+
+export default router;

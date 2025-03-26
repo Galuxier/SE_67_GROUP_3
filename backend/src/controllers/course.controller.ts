@@ -7,7 +7,7 @@ export const createCourseController = async (req: Request, res: Response) => {
     if (req.body.activities) {
       req.body.activities = JSON.parse(req.body.activities);
     }
-    console.log(req.body.activities);
+    console.log(req.body);
     
     const newCourse = await CourseService.add(req.body);
 
