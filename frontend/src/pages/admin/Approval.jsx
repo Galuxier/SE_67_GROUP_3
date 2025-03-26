@@ -425,7 +425,7 @@ export default function AdminApproval() {
                             <img
                               src={profileImages[enrollment.user_id._id]}
                               alt={enrollment.user_id.username}
-                              className="h-10 w-10 rounded-full object-cover border border-border group-hover:border-primary transition-colors"
+                              className="h-10 w-10 rounded-full z=10 object-cover border border-border group-hover:border-primary transition-colors"
                             />
                           ) : (
                             <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-text/70 border border-border group-hover:border-primary transition-colors">

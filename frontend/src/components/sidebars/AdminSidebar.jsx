@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 const AdminSidebar = () => {
   return (
-    <div className="fixed top-0 left-0 h-screen w-64 p-4 bg-bar border-r border-border">
+    <div className="fixed top-0 left-0 h-screen z-20 w-64 p-4 bg-bar border-r border-border">
       <div className="flex flex-col space-y-4">
         {/* Logo or Home Button */}
         <Link
