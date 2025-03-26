@@ -7,7 +7,7 @@ import { getImage } from "../../services/api/ImageApi";
 
 const ProductPayment = () => {
   const location = useLocation();
-  const orderData = location.state || {};
+  const { formData } = location.state || {}; // Destructure formData จาก state
   const [productImage, setProductImage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,11 +18,14 @@ const ProductPayment = () => {
         setIsLoading(true);
         setError(null);
         
-        // 1. ดึงข้อมูล variant ก่อน
-        const variantResponse = await getVariantById(orderData.product?.variant_id);
-        const variant = variantResponse.data; // ตามโครงสร้าง API ที่มี
+        if (!formData?.product) {
+          throw new Error("No product data available");
+        }
+
+        // ใช้ formData.product แทน orderData.product
+        const variantResponse = await getVariantById(formData.product.variant_id);
+        const variant = variantResponse.data;
         
-        // 2. ตรวจสอบว่ามี variant_image_url หรือไม่
         if (variant?.variant_image_url) {
           try {
             const imageUrl = await getImage(variant.variant_image_url);
@@ -33,8 +36,7 @@ const ProductPayment = () => {
           }
         }
         
-        // 3. ถ้า variant ไม่มีรูปหรือโหลดไม่สำเร็จ ให้ดึงรูปจาก product
-        const productResponse = await getProductById(orderData.product?.product_id);
+        const productResponse = await getProductById(formData.product.product_id);
         const product = productResponse.data;
         
         if (product?.product_image_urls?.length > 0) {
@@ -49,12 +51,12 @@ const ProductPayment = () => {
       }
     };
 
-    if (orderData.product?.product_id && orderData.product?.variant_id) {
+    if (formData?.product?.product_id && formData?.product?.variant_id) {
       fetchProductImage();
     } else {
       setIsLoading(false);
     }
-  }, [orderData]);
+  }, [formData]);
 
   // ฟังก์ชันทำความสะอาด URL เมื่อคอมโพเนนต์ถูกยกเลิก
   useEffect(() => {
@@ -81,28 +83,31 @@ const ProductPayment = () => {
             <div className="md:w-2/3 p-6 border-r border-gray-200">
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-4">ข้อมูลการชำระเงิน</h2>
-                <PaymentForm type={orderData.type} DatafromOrder={orderData} />
+                <PaymentForm 
+                  type={formData?.type || "product"} 
+                  DatafromOrder={formData} 
+                />
               </div>
             </div>
 
             {/* Right Section - Order Summary */}
             <div className="md:w-1/3 p-6 bg-gray-50">
-          <h2 className="text-xl font-semibold mb-4">สรุปรายการสั่งซื้อ</h2>
-          
-          {orderData.product && (
-            <>
-              <div className="mb-4">
-                <h3 className="font-medium text-gray-700">
-                  {orderData.product.shop_name}
-                </h3>
-                <div className="mt-2 p-3 bg-white rounded-lg border border-gray-200">
+              <h2 className="text-xl font-semibold mb-4">สรุปรายการสั่งซื้อ</h2>
+              
+              {formData?.product && (
+                <>
+                  <div className="mb-4">
+                    <h3 className="font-medium text-gray-700">
+                      {formData.product.shop_name}
+                    </h3>
+                    <div className="mt-2 p-3 bg-white rounded-lg border border-gray-200">
                 <div className="flex items-start space-x-3">
                   {isLoading ? (
                     <div className="w-16 h-16 bg-gray-200 rounded animate-pulse"></div>
                   ) : productImage ? (
                     <img
                       src={productImage}
-                      alt={orderData.product?.product_name || "Product"}
+                      alt={formData.product?.product_name || "Product"}
                       className="w-16 h-16 object-cover rounded"
                       onError={(e) => {
                         e.target.onerror = null;
@@ -116,15 +121,15 @@ const ProductPayment = () => {
                   )}
                     <div>
                       <p className="font-medium text-gray-800">
-                        {orderData.product.product_name}
+                        {formData.product.product_name}
                       </p>
-                          {orderData.product.attributes && Object.entries(orderData.product.attributes).map(([key, val]) => (
+                          {formData.product.attributes && Object.entries(formData.product.attributes).map(([key, val]) => (
                             <p key={key} className="text-sm text-gray-600">
                               {key}: {val}
                             </p>
                           ))}
                           <p className="text-gray-800">
-                            ฿{orderData.product.price?.toLocaleString()} x {orderData.product.quantity}
+                            ฿{formData.product.price?.toLocaleString()} x {formData.product.quantity}
                           </p>
                         </div>
                       </div>
@@ -133,16 +138,16 @@ const ProductPayment = () => {
                   <div className="space-y-2 mt-6">
                     <div className="flex justify-between">
                       <span className="text-gray-600">ยอดรวมสินค้า</span>
-                      <span>฿{orderData.subTotal?.toLocaleString()}</span>
+                      <span>฿{formData.subTotal?.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">ค่าจัดส่ง</span>
-                      <span>฿{orderData.shipping?.toLocaleString()}</span>
+                      <span>฿{formData.shipping?.toLocaleString()}</span>
                     </div>
                     <div className="border-t border-gray-200 my-2"></div>
                     <div className="flex justify-between font-semibold text-lg">
                       <span>รวมทั้งหมด</span>
-                      <span>฿{orderData.total?.toLocaleString()}</span>
+                      <span>฿{formData.total?.toLocaleString()}</span>
                     </div>
                   </div>
                 </>

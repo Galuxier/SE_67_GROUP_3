@@ -339,7 +339,8 @@ export default function ProductDetail() {
       return;
     }
   
-    const orderData = {
+    // สร้าง formData object ที่ชัดเจน
+    const formData = {
       type: "product",
       product: {
         product_id: product._id,
@@ -356,8 +357,10 @@ export default function ProductDetail() {
       total: (selectedVariant.price * quantity) + 50
     };
   
-    console.log("Order Data:", orderData);
-    navigate("/shop/productPayment", { state: orderData });
+    console.log("Form Data:", formData);
+    navigate("/shop/productPayment", { 
+      state: { formData } // ส่งเป็น object ที่มี property ชัดเจน
+    });
   };
   
   // Open image viewer

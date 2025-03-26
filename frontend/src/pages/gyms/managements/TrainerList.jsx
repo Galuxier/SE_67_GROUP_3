@@ -1,53 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MagnifyingGlassIcon, PlusIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
+import { getTrainersInGym } from "../../../services/api/TrainerApi";
 
 function TrainerList() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedTrainer, setSelectedTrainer] = useState(null);
-  
-  // Mock data - in a real app, you would fetch this from an API
-  const [trainers, setTrainers] = useState([
-    {
-      id: 1,
-      image: new URL("../assets/images/trainer2.jpg", import.meta.url).href,
-      name: "Bagna tard",
-      nickname: "Coach nai"
-    },
-    {
-      id: 2,
-      image: new URL("../assets/images/trainer5.jpg", import.meta.url).href,
-      name: "Dum num",
-      nickname: "Coach num"
-    },
-    {
-      id: 3,
-      image: new URL("../assets/images/trainer13.jpg", import.meta.url).href,
-      name: "Daneil Whang",
-      nickname: "Coach Deneil"
-    },
-    {
-      id: 4,
-      image: "/api/placeholder/400/320",
-      name: "Somsak Rattanachai",
-      nickname: "Coach Som"
-    },
-    {
-      id: 5,
-      image: "/api/placeholder/400/320",
-      name: "Kitti Saengsawang",
-      nickname: "Coach Kit"
-    },
-    {
-      id: 6,
-      image: "/api/placeholder/400/320",
-      name: "Pradit Nopparat",
-      nickname: "Coach Pra"
-    }
-  ]);
+  const [trainers, setTrainers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTrainers = async () => {
+      try {
+        const data = await getTrainersInGym("gym_id_here");
+        const formattedTrainers = data.map(trainer => ({
+          id: trainer._id,
+          image: trainer.image_url || trainer.profile_picture_url || "/api/placeholder/400/320",
+          name: `${trainer.firstName || trainer.first_name} ${trainer.lastName || trainer.last_name}`,
+          nickname: trainer.Nickname || trainer.nickname,
+          contact: trainer.contact,
+          fightHistory: trainer.fightHistory,
+          detail: trainer.detail
+        }));
+        setTrainers(formattedTrainers);
+      } catch (error) {
+        console.error("Failed to fetch trainers:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTrainers();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen p-8 bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-rose-600"></div>
+      </div>
+    );
+  }
 
   // Filter and search logic
   const filteredTrainers = trainers.filter(trainer => {
@@ -71,7 +66,6 @@ function TrainerList() {
   };
 
   const handleDeleteConfirm = () => {
-    // In a real app, you would call an API to delete the trainer
     setTrainers(trainers.filter(trainer => trainer.id !== selectedTrainer.id));
     setIsDeleteModalOpen(false);
     setSelectedTrainer(null);
@@ -81,7 +75,7 @@ function TrainerList() {
     navigate(`/gym/management/trainers/${trainer.id}`);
   };
 
-  // Animation variants for list items
+  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -107,29 +101,26 @@ function TrainerList() {
         {/* Header and Actions */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Trainer Management</h1>
-          
-          <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={handleAddTrainer}
-              className="inline-flex items-center px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors"
-            >
-              <PlusIcon className="w-5 h-5 mr-2" />
-              Add New Trainer
-            </button>
-          </div>
+          <button
+            onClick={handleAddTrainer}
+            className="mt-4 md:mt-0 inline-flex items-center px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors"
+          >
+            <PlusIcon className="w-5 h-5 mr-2" />
+            Add New Trainer
+          </button>
         </div>
 
         {/* Search Bar */}
-        <div className="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="bg-white p-4 rounded-lg shadow-md mb-6">
           <div className="relative w-full sm:w-64">
+            <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search trainers..."
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
-            <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
           </div>
         </div>
 
@@ -177,15 +168,33 @@ function TrainerList() {
                     <h2 className="text-lg font-semibold text-gray-800">{trainer.name}</h2>
                     <p className="text-rose-600 font-medium">{trainer.nickname}</p>
                   </div>
-                  
-                  <div className="mt-4 pt-2 border-t border-gray-100 flex justify-end">
-                    <button 
-                      className="text-sm text-rose-600 hover:text-rose-800 font-medium"
-                      onClick={() => handleViewProfile(trainer)}
-                    >
-                      View Profile →
-                    </button>
-                  </div>
+                
+                  {/* แสดงข้อมูล contact ถ้ามี */}
+                  {trainer.contact && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Contact:</span> {trainer.contact}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* แสดงข้อมูล fightHistory ถ้ามี */}
+                  {trainer.fightHistory && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Fight History:</span> {trainer.fightHistory}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* แสดงข้อมูล detail ถ้ามี */}
+                  {trainer.detail && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Details:</span> {trainer.detail}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}
