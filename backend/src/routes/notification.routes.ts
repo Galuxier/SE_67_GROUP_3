@@ -1,4 +1,3 @@
-// src/routes/notification.routes.ts
 import express from 'express';
 import {
   getUserNotificationsController,
@@ -13,25 +12,13 @@ import verifyToken from '../middlewares/auth';
 
 const router = express.Router();
 
-// Routes that require authentication
-router.use(verifyToken);
+// Apply the middleware to each route individually for better control
+router.get('/notifications', verifyToken, getUserNotificationsController);
+router.get('/notifications/unread-count/:user_id', verifyToken, getUnreadCountController);
+router.post('/notifications', verifyToken, createNotificationController);
+router.put('/notification/:id/read', verifyToken, markNotificationAsReadController);
+router.put('/notifications/mark-all-read', verifyToken, markAllAsReadController);
+router.delete('/notifications', verifyToken, deleteNotificationsController);
 
-// Get notifications for a user with optional filters
-router.get('/notifications', getUserNotificationsController);
-
-// Get unread notification count for a user
-router.get('/notifications/unread-count/:user_id', getUnreadCountController);
-
-// Create a new notification
-router.post('/notifications', createNotificationController);
-
-// Mark a notification as read
-router.put('/notification/:id/read', markNotificationAsReadController);
-
-// Mark all notifications for a user as read
-router.put('/notifications/mark-all-read', markAllAsReadController);
-
-// Delete notifications
-router.delete('/notifications', deleteNotificationsController);
-
+// Export the router
 export default router;

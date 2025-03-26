@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { getNotifications } from "../services/api/NotificationApi";
 import { useAuth } from "../context/AuthContext";
 
-export const useNotificationPolling = (interval = 5000) => {
+export const useNotificationPolling = (interval = 10000) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
