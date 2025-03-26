@@ -27,7 +27,6 @@ const PaymentForm = ({ type, DatafromOrder }) => {
     paid_at: null,
   });
 
-
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -68,30 +67,60 @@ const PaymentForm = ({ type, DatafromOrder }) => {
   };
 
   const createOrderData = () => {
-    return {
-      user_id: formData.user_id,
-      order_type: type,
-      items: [{
-        ref_id: DatafromOrder.product.product_id,
-        ref_model: "Product",
-        variant_id: DatafromOrder.product.variant_id,
-        price_at_order: DatafromOrder.product.price,
-        quantity: DatafromOrder.product.quantity,
-      }],
-      total_price: DatafromOrder.total,
-      shipping_address: {
-        receiver_name: `${formData.firstName} ${formData.lastName}`,
-        receiver_phone: formData.phone, // ใช้ค่า phone จาก formData
-        province: addressData.province || "",
-        district: addressData.district || "",
-        subdistrict: addressData.subdistrict || "",
-        street: addressData.information || "",
-        postal_code: addressData.postal_code || "",
-        information: addressData.information || "",
-      },
-      status: "pending"
-    };
+    // เช็ค event_type ว่าเป็น ticket หรือไม่
+    if (type === 'ticket') {
+      return {
+        user_id: formData.user_id,
+        order_type: 'ticket',
+        items: DatafromOrder.items.map(item => ({
+          ref_id: item.ref_id,
+          ref_model: item.refModel,
+          seat_zone_id: item.seat_zone_id,
+          price_at_order: item.price_at_order,
+          quantity: item.quantity,
+          date: item.date
+        })),
+        total_price: DatafromOrder.total_price,
+        shipping_address: {
+          receiver_name: `${formData.firstName} ${formData.lastName}`,
+          receiver_phone: formData.phone,
+          province: addressData.province || "",
+          district: addressData.district || "",
+          subdistrict: addressData.subdistrict || "",
+          street: addressData.information || "",
+          postal_code: addressData.postal_code || "",
+          information: addressData.information || "",
+        },
+        status: "pending"
+      };
+    } else {
+      // สำหรับกรณีอื่นๆ ที่ไม่ใช่ ticket (เช่น Product)
+      return {
+        user_id: formData.user_id,
+        order_type: type,
+        items: [{
+          ref_id: DatafromOrder.product.product_id,
+          ref_model: "Product",
+          variant_id: DatafromOrder.product.variant_id,
+          price_at_order: DatafromOrder.product.price,
+          quantity: DatafromOrder.product.quantity,
+        }],
+        total_price: DatafromOrder.total,
+        shipping_address: {
+          receiver_name: `${formData.firstName} ${formData.lastName}`,
+          receiver_phone: formData.phone, // ใช้ค่า phone จาก formData
+          province: addressData.province || "",
+          district: addressData.district || "",
+          subdistrict: addressData.subdistrict || "",
+          street: addressData.information || "",
+          postal_code: addressData.postal_code || "",
+          information: addressData.information || "",
+        },
+        status: "pending"
+      };
+    }
   };
+  
 
   // ส่วนที่เหลือของฟังก์ชันไม่เปลี่ยนแปลง
   const createPaymentData = () => {
@@ -123,51 +152,19 @@ const PaymentForm = ({ type, DatafromOrder }) => {
       toast.error("กรุณากรอกข้อมูลให้ถูกต้องครบถ้วน");
       return;
     }
-  
+
     setIsProcessing(true);
     
     try {
       const orderData = createOrderData();
       const paymentData = createPaymentData();
       
-      // เพิ่ม logging สำหรับข้อมูลก่อนบันทึก
-      console.groupCollapsed('Data Before Saving');
-      console.log('Order Data:', orderData);
-      console.log('Payment Data:', paymentData);
-      console.groupEnd();
-  
-      // แสดงข้อมูลคำสั่งซื้อแบบจัดรูปแบบ
-      console.groupCollapsed('🛒 Order Details');
-      console.log('Order:');
-      orderData.items.forEach((item, index) => {
-        console.log(`${index + 1}. ${item.ref_model} ID: ${item.ref_id}`);
-        console.log(`Price: ฿${item.price_at_order} x ${item.quantity} = ฿${item.price_at_order * item.quantity}`);
-      });
-      console.log(`receiver_name: ${orderData.shipping_address.receiver_name}`);
-      console.log(`receiver_phone: ${orderData.shipping_address.receiver_phone}`);
-      console.log(`Address: ${orderData.shipping_address.street}, ${orderData.shipping_address.subdistrict}, ${orderData.shipping_address.district}, ${orderData.shipping_address.province} ${orderData.shipping_address.postal_code}`);
-      console.log('Summary:');
-      console.log(`Product price: ฿${orderData.total_price - 50}`);
-      console.log(`Shipping: ฿50`);
-      console.log(`Total price: ฿${orderData.total_price}`);
-      console.log(`Status: ฿${orderData.status}`);
-      console.groupEnd();
-  
       saveToLocalStorage(orderData, paymentData);
-      
-      // เพิ่ม logging หลังบันทึกข้อมูล
-      const savedOrders = JSON.parse(localStorage.getItem("orders") || "[]");
-      const savedPayments = JSON.parse(localStorage.getItem("payments") || "[]");
-      
-      console.groupCollapsed('Saved Data');
-      console.log('Last Saved Order:', savedOrders[savedOrders.length - 1]);
-      console.log('Last Saved Payment:', savedPayments[savedPayments.length - 1]);
-      console.groupEnd();
       
       setFormStep(3);
       toast.success("บันทึกข้อมูลการสั่งซื้อเรียบร้อย");
     } catch (error) {
-      console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
+      console.error("Error saving data:", error);
       toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     } finally {
       setIsProcessing(false);
@@ -177,45 +174,25 @@ const PaymentForm = ({ type, DatafromOrder }) => {
   const updatePaymentStatus = (status) => {
     try {
       const payments = JSON.parse(localStorage.getItem("payments") || "[]");
-      const orders = JSON.parse(localStorage.getItem("orders") || "[]");
       const lastPaymentIndex = payments.length - 1;
-      
-      // Log ข้อมูลก่อนอัปเดต
-      console.groupCollapsed('Before Status Update');
-      console.log('Current Order:', orders[lastPaymentIndex]);
-      console.log('Current Payment:', payments[lastPaymentIndex]);
-      console.groupEnd();
       
       if (lastPaymentIndex >= 0) {
         payments[lastPaymentIndex].payment_status = status;
         payments[lastPaymentIndex].paid_at = status === "completed" ? new Date().toISOString() : null;
         localStorage.setItem("payments", JSON.stringify(payments));
         
-        // Log การอัปเดตสถานะ
-        console.groupCollapsed(`Status Updated: ${status === "completed" ? "สำเร็จ" : "รอดำเนินการ"}`);
-        console.log(`Time: ${new Date().toLocaleString()}`);
-        console.log('Order Status:', status);
-        console.log('Updated Payment:', payments[lastPaymentIndex]);
-        console.groupEnd();
-  
         const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-        
         const lastOrderIndex = orders.length - 1;
         
         if (lastOrderIndex >= 0) {
           orders[lastOrderIndex].status = status;
           localStorage.setItem("orders", JSON.stringify(orders));
-          
-          // Log ข้อมูล order หลังอัปเดต
-          console.groupCollapsed('Updated Order Data');
-          console.log('Updated Order:', orders[lastOrderIndex]);
-          console.groupEnd();
         }
         
         toast.success(`อัพเดทสถานะเป็น ${status === "completed" ? "สำเร็จ" : "รอดำเนินการ"} แล้ว`);
       }
     } catch (error) {
-      console.error("เกิดข้อผิดพลาดในการอัพเดทสถานะ:", error);
+      console.error("Error updating status:", error);
       toast.error("เกิดข้อผิดพลาดในการอัพเดทสถานะ");
     }
   };
@@ -437,7 +414,7 @@ const PaymentForm = ({ type, DatafromOrder }) => {
       <h2 className="text-2xl font-semibold mb-2">บันทึกการสั่งซื้อเรียบร้อย</h2>
       <p className="text-gray-600 mb-6">สถานะปัจจุบัน: {formData.payment_status === "completed" ? "สำเร็จ" : "รอดำเนินการ"}</p>
       
-      <div className="flex justify-center gap-4 flex-wrap">
+      <div className="flex justify-center gap-4">
         <button
           onClick={() => updatePaymentStatus("completed")}
           className="bg-green-500 hover:bg-green-600 text-white py-2 px-6 rounded"
@@ -445,7 +422,6 @@ const PaymentForm = ({ type, DatafromOrder }) => {
         >
           เปลี่ยนสถานะเป็นสำเร็จ
         </button>
-        
         <button
           onClick={() => navigate("/")}
           className="bg-rose-500 hover:bg-rose-600 text-white py-2 px-6 rounded"

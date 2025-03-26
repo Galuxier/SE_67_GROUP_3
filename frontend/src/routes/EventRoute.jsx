@@ -14,6 +14,8 @@ import EventDetail from "../pages/events/EventDetail";
 import RegistrationForm from "../pages/events/RegistrationForm";
 import EventManageDashboard from "../pages/events/managements/EventManageDashboard";
 import EventList from "../pages/events/managements/EventList";
+import BuyTicket from "../pages/events/BuyTicket";
+import TicketPayment from "../pages/events/TicketPayment";
 
 
 function EventRoutes() {
@@ -24,6 +26,9 @@ function EventRoutes() {
           <Route index element={<EventHome />} />
           <Route path="/:id" element={<EventDetail />} />
           <Route path="/register/:eventId" element={<RegistrationForm />} />
+          <Route path="/ticket/:eventId" element={<BuyTicket />} />
+          <Route path="/ticket/payment" element={<TicketPayment />} />
+
 
         </Route>
 
@@ -35,6 +40,7 @@ function EventRoutes() {
             </EventManagementRouteGuard>
           }
         >
+          <Route index element={<EventManageDashboard />} />
           <Route index element={<EventManageDashboard />} />
           <Route path="/management/create" element={<FormAddEvent/>}/>
           <Route path="/management/eventList" element={<EventList/>}/>

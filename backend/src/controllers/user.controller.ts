@@ -25,6 +25,24 @@ export const createTempUserController = async (req: Request, res: Response) => {
   }
 };
 
+export const getAllBoxersController = async (req: Request, res: Response) => {
+  try {
+    const boxers = await UserService.getUsersByRole('boxer');
+    res.status(200).json({
+      success: true,
+      count: boxers.length,
+      data: boxers
+    });
+  } catch (err) {
+    console.error('Error fetching boxers:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching boxers', 
+      error: err 
+    });
+  }
+};
+
 export const getUserRolesController = async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;

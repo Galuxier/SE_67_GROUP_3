@@ -4,7 +4,8 @@ import{
     getCoursesController,
     getCourseByIdController,
     updateCourseController,
-    deleteCourseController
+    deleteCourseController,
+    getCoursesByGymIdController
 } from '../controllers/course.controller';
 import { courseImagesUpload } from '../middlewares/uploads/course.upload';
 
@@ -19,5 +20,7 @@ route.post('/course',courseImagesUpload ,createCourseController);
 route.put('/course/:id', updateCourseController);
 
 route.delete('/course/:id', deleteCourseController);
+
+route.get('/gym/:gymId/courses', getCoursesByGymIdController);
 
 export default route;
