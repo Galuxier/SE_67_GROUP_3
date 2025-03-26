@@ -1,125 +1,91 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-function CourseList() {
-    const navigate = useNavigate();
-    
-    const courses = [
-        { id: 1, 
-            image_url: new URL("../assets/images/muaythai-001.jpg", import.meta.url).href, 
-            course_name: "Muaythai",
-            gym: "Phuket Fight Club",
-            level: "Forkids",
-            price: 2000,
-            start_date: "2025-01-01",
-            end_date: "2025-03-01",
-            description: "Learn the basics of Muaythai for kids.",
-            activities: [
-                { description: "Introduction to Muaythai", date: "2025-01-01", time: "10:00 AM", trainer: ["Trainer A"] },
-                { description: "Basic Muaythai techniques", date: "2025-01-02", time: "10:00 AM", trainer: ["Trainer A"] }
-            ]
-        },
-        { id: 2, 
-            image_url: new URL("../assets/images/muaythai-002.jpg", import.meta.url).href, 
-            course_name: "Muaythai Training", 
-            gym: "Phuket Fight Club",
-            level: "Beginner",
-            price: 2000,
-            start_date: "2025-02-01",
-            end_date: "2025-04-01",
-            description: "A beginner course to learn the fundamentals of Muaythai.",
-            activities: [
-                { description: "Basic punches and kicks", date: "2025-02-01", time: "10:00 AM", trainer: ["Trainer B"] },
-                { description: "Footwork and balance", date: "2025-02-03", time: "10:00 AM", trainer: ["Trainer B"] }
-            ]
-        },
-        { id: 3, 
-            image_url: new URL("../assets/images/muaythai-003.png", import.meta.url).href, 
-            course_name: "Fighter's Journey", 
-            gym: "Phuket Fight Club",
-            level: "Advance",
-            price: 2500,
-            start_date: "2025-03-01",
-            end_date: "2025-05-01",
-            description: "For experienced fighters who want to take their skills to the next level.",
-            activities: [
-                { description: "Advanced striking techniques", date: "2025-03-01", time: "09:00 AM", trainer: ["Trainer C"] }
-            ]
-        },
-        { id: 4, 
-            image_url: new URL("../assets/images/muaythai-003.png", import.meta.url).href, 
-            course_name: "Elite Muaythai", 
-            gym: "Bangkok Fight Lab",
-            level: "Advance",
-            price: 2500,
-            start_date: "2025-04-01",
-            end_date: "2025-06-01",
-            description: "An intermediate course to refine Muaythai skills.",
-            activities: [
-                { description: "Muaythai combination drills", date: "2025-04-01", startTime: "11:00 ",endTime: "12:00 ", trainer: [["Trainer D"]] }
-            ]
-        },
-        { id: 5, 
-            image_url: new URL("../assets/images/muaythai-003.png", import.meta.url).href, 
-            course_name: "Pro Fighter Course", 
-            gym: "Tiger Muay Thai",
-            level: "Advance",
-            price: 3000,
-            start_date: "2025-05-01",
-            end_date: "2025-07-01",
-            description: "Designed for professional fighters looking to improve their technique.",
-            activities: [ 
-                { description: "Professional-level fight strategies", date: "2025-05-01", startTime: "11:00",endTime: "12:00", trainer: ["Trainer E"] }
-            ]
-        },
-        
-    ];
+function CourseList({ courses }) {
+  const navigate = useNavigate();
+  const [imageURLs, setImageURLs] = useState({}); // เก็บ URL ของภาพที่โหลด
+  console.log(courses);
+  // ฟังก์ชันสำหรับการเลือกสีของระดับคอร์ส
+  const getLevelColor = (level) => {
+    switch (level) {
+      case "ForKids":
+        return "text-green-500 dark:text-green-400";
+      case "Beginner":
+        return "text-orange-400 dark:text-orange-300";
+      case "Advance":
+        return "text-red-500 dark:text-red-400";
+      default:
+        return "text-text";
+    }
+  };
 
-    const getLevelColor = (level) => {
-        switch(level) {
-          case "ForKids": return "text-green-500 dark:text-green-400";
-          case "Beginner": return "text-orange-400 dark:text-orange-300";
-          case "Advance": return "text-red-500 dark:text-red-400";
-          default: return "text-text";
-        }
-      };
+  // ฟังก์ชันที่จะถูกเรียกเมื่อคลิกที่คอร์ส
+  const handleCourseClick = (course) => {
+    navigate(`/course/courseDetail`, { state: { course } }); // ส่งข้อมูลคอร์สไปยัง CourseDetail
+  };
 
-    const handleCourseClick = (course) => {
-        // console.log("Navigating to course: ", course);
-        navigate(`/course/courseDetail`, { state: { course } }); // ส่งข้อมูลไปยัง CourseDetail
-    };
+  // ฟังก์ชันที่ใช้ในการโหลดภาพ
+  const fetchImage = async (imageUrl, courseId) => {
+    try {
+      const response = await fetch(`/api/images/${imageUrl}`);
+      const blob = await response.blob();
+      const imageObjectURL = URL.createObjectURL(blob);
+      setImageURLs((prevURLs) => ({ ...prevURLs, [courseId]: imageObjectURL }));
+    } catch (error) {
+      console.error("Error fetching image:", error);
+    }
+  };
 
-    return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {courses.map((course) => (
-                <button 
-                key={course.id} 
-                className="max-w-xs rounded-lg overflow-hidden shadow-lg bg-card text-text cursor-pointer transition transform hover:scale-105 border border-border"
-                onClick={() => handleCourseClick(course)}
-                >
-                <img 
-                    className="w-full aspect-[4/3] object-cover" 
-                    src={course.image_url} 
-                    alt={course.course_name} 
-                />
-                <div className="px-6 py-4">
-                    {/* Course Name */}
-                    <div className="font-semibold text-xl mb-2 text-text">{course.course_name}</div>
-                    
-                    {/* Level */}
-                    <div className={`font-medium mb-2 ${getLevelColor(course.level)}`}>
-                    {course.level}
-                    </div>
-                    
-                    {/* Price */}
-                    <div className="flex items-center font-normal text-sm text-text">
-                    <span>{course.price.toLocaleString()}</span>
-                    <span className="text-text text-sm ml-1 font-normal">฿/Person</span>
-                    </div>
-                </div>
-                </button>
-            ))}
-        </div>
-    );
+  // ใช้ useEffect เพื่อโหลดภาพเมื่อคอร์สถูก render
+  useEffect(() => {
+    courses.forEach((course) => {
+      if (course.course_image_url && course.course_image_url.length > 0) {
+        fetchImage(course.course_image_url[0], course._id);
+      }
+    });
+  }, [courses]);
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      {courses.map((course) => (
+        <button
+          key={course._id}
+          className="max-w-xs rounded-lg overflow-hidden shadow-lg bg-card text-text cursor-pointer transition transform hover:scale-105 border border-border"
+          onClick={() => handleCourseClick(course)} // เมื่อคลิกคอร์สจะไปที่หน้า CourseDetail
+        >
+          {/* แสดงภาพที่โหลดจาก Blob URL */}
+          {imageURLs[course._id] ? (
+            <img
+              className="w-full aspect-[4/3] object-cover"
+              src={imageURLs[course._id]} // ใช้ URL ของภาพที่ได้จาก Blob
+              alt={course.course_name}
+            />
+          ) : (
+            <div className="w-full h-40 bg-gray-200 flex items-center justify-center">
+              <span>Loading image...</span>
+            </div>
+          )}
+          <div className="px-6 py-4">
+            {/* Course Name */}
+            <div className="font-semibold text-xl mb-2 text-text">
+              {course.course_name}
+            </div>
+
+            {/* Level */}
+            <div className={`font-medium mb-2 ${getLevelColor(course.level)}`}>
+              {course.level}
+            </div>
+
+            {/* Price */}
+            <div className="flex items-center font-normal text-sm text-text">
+              <span>{course.price.toLocaleString()}</span>
+              <span className="text-text text-sm ml-1 font-normal">฿/Person</span>
+            </div>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export default CourseList;
