@@ -90,6 +90,7 @@ function AddBoxer() {
     formData.append("nickname", boxerData.nickname);
     formData.append("role", boxerData.role);
     formData.append("status", "inActive");
+    formData.append("gym_id", "inActive");
 
     // Append cropped profile picture ถ้ามี
     if (profile) {

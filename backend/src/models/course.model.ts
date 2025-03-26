@@ -38,6 +38,17 @@ interface Package {
   status: PackageStatus;
 }
 
+enum TrainerStatus {
+  Pending = 'pending',
+  Ready = 'ready',
+  Reject = 'reject',
+}
+
+interface Trainer {
+  traier_id: Schema.Types.ObjectId;
+  status: TrainerStatus;
+}
+
 // กำหนด interface สำหรับ Course document
 export interface CourseDocument extends Document {
   gym_id: Schema.Types.ObjectId;
@@ -69,7 +80,10 @@ const CourseSchema = new Schema<CourseDocument>({
     date: { type: Date, required: true },
     start_time: { type: String, required: true },
     end_time: { type: String, required: true },
-    trainer: { type: [Schema.Types.ObjectId], ref: "User", required: true },
+    trainer_list: [{
+      trainer_id: { type: Schema.Types.ObjectId, required: true},
+      status: { type : String, enum: TrainerStatus, required: true }
+    }],
   }],
   packages: [{
     order_id: { type: Schema.Types.ObjectId, required: true },
