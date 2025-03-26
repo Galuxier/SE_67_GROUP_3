@@ -54,9 +54,7 @@ const TicketSale = ({ event, navigate }) => {
       </div>
 
       {/* Buy Button */}
-      <button 
-       onClick={() => navigate(`/event/ticket/${event._id}`, { state: { event } })}
-       className="w-full mt-6 bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-6 rounded-lg">
+      <button className="w-full mt-6 bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-6 rounded-lg">
         Buy Tickets
       </button>
     </div>
@@ -160,8 +158,6 @@ function EventDetail() {
     fetchImage();
   }, [event.poster_url]); // Run when poster_url changes
 
-  console.log(event);
-  
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 ">
       {/* Event Header */}
@@ -198,7 +194,7 @@ function EventDetail() {
           </div>
 
           {/* Location Section */}
-          {/* <div className="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+          <div className="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
             <div className="flex items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Location</h2>
               <LucideMapPin className="ml-2 h-6 w-6 text-gray-500 dark:text-gray-400" />
@@ -225,7 +221,7 @@ function EventDetail() {
           {/* Pricing or Registration Section */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             {event.event_type === "ticket_sales" ? (
-              <TicketSale event={event} navigate={navigate} />
+              <TicketSale event={event} />
             ) : (
               <Registration event={event} navigate={navigate} />
             )}

@@ -1,39 +1,47 @@
-import { Schema, model, Document } from 'mongoose';
+// src/models/notification.model.ts
+import { Schema, model, Document, Types } from 'mongoose';
 
-enum NotificationType {
-  Course = "course",
+export enum NotificationType {
+  Order = "order",
   Event = "event",
+  Course = "course",
   Shop = "shop",
   Enrollment = "enrollment",
-  General = "general" // ✅ เพิ่ม General สำหรับการแจ้งเตือนทั่วไป
+  General = "general"
 }
 
 export interface NotificationDocument extends Document {
-  user_id: Schema.Types.ObjectId;
+  user_id: Types.ObjectId;
   type: NotificationType;
   title: string;
   message: string;
-  relate_id?: Schema.Types.ObjectId;
-  order_id?: Schema.Types.ObjectId;
+  relate_id?: Types.ObjectId;
   is_read: boolean;
   create_at: Date;
-  data?: Record<string, any>; // ✅ ข้อมูลเพิ่มเติมในรูป JSON
-  icon?: string; // ✅ Icon ที่จะแสดงใน UI
-  action_url?: string; // ✅ URL สำหรับ redirect
+  data?: Record<string, any>;
+  icon?: string;
+  action_url?: string;
+  priority?: 'low' | 'normal' | 'high';
+  expiry_date?: Date;
 }
 
 const NotificationSchema = new Schema<NotificationDocument>({
-  user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  type: { type: String, enum: Object.values(NotificationType), required: true },
+  user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  type: { type: String, enum: Object.values(NotificationType), required: true, index: true },
   title: { type: String, required: true },
   message: { type: String, required: true },
-  relate_id: { type: Schema.Types.ObjectId, refPath: 'type' }, // ✅ รองรับหลาย collection ผ่าน refPath
-  order_id: { type: Schema.Types.ObjectId, ref: 'Order' },
-  is_read: { type: Boolean, default: false },
-  create_at: { type: Date, default: Date.now },
-  data: { type: Schema.Types.Mixed }, // ✅ รองรับ JSON object
-  icon: { type: String }, // ✅ รองรับไอคอน เช่น "bell", "event", "shop"
-  action_url: { type: String } // ✅ รองรับ redirect URL
+  relate_id: { type: Schema.Types.ObjectId, refPath: 'type', index: true },
+  is_read: { type: Boolean, default: false, index: true },
+  create_at: { type: Date, default: Date.now, index: true },
+  data: { type: Schema.Types.Mixed },
+  icon: { type: String },
+  action_url: { type: String },
+  priority: { type: String, enum: ['low', 'normal', 'high'], default: 'normal' },
+  expiry_date: { type: Date }
 });
+
+// Create indexes for better query performance
+NotificationSchema.index({ user_id: 1, create_at: -1 });
+NotificationSchema.index({ user_id: 1, is_read: 1 });
 
 export const Notification = model<NotificationDocument>('Notification', NotificationSchema);
