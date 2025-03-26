@@ -11,6 +11,17 @@ export async function CreateGym(gymData) {
     } catch (error) {
       console.error("Create Gym Failed: ", error);
       throw error;
+    } 
+  }
+
+
+  export async function checkGymNameExists(gymName) {
+    try {
+      const response = await api.get(`/gym/check-name/${encodeURIComponent(gymName)}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error checking gym name:", error);
+      throw error;
     }
   }
 

@@ -77,3 +77,5 @@ export async function submitEnrollment(formData) {
       throw new Error(error.response?.data?.message || 'Failed to submit enrollment request');
     }
   }
+
+  

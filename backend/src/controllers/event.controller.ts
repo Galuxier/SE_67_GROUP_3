@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import EventsService from '../services/event.service';
+import { Types } from 'mongoose';
 
 export const createEventController = async (req: Request, res: Response) => {
   try {
+    req.body.seat_zones = JSON.parse(req.body.seat_zones);
+    req.body.weight_classes = JSON.parse(req.body.weight_classes);
     const newEvent = await EventsService.add(req.body);
     res.status(201).json(newEvent);
   } catch (err) {
@@ -16,6 +19,36 @@ export const getEventsController = async (req: Request, res: Response) => {
     res.status(200).json(events);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching events', error: err });
+  }
+};
+
+export const getEventsByOrganizerIdController = async (req: Request, res: Response) => {
+  try {
+    const organizer_id = req.params.organizer_id;
+    
+    // Validate gym ID
+    if (!Types.ObjectId.isValid(organizer_id)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid organizer ID format'
+      });
+      return;
+    }
+    
+    const events = await EventsService.getEventByOrganizerId(organizer_id);
+    
+    res.status(200).json({
+      success: true,
+      count: events.length,
+      data: events
+    });
+  } catch (err) {
+    console.error('Error fetching event from org id:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching event from org id', 
+      error: err 
+    });
   }
 };
 

@@ -5,18 +5,27 @@ enum AdsPackageType {
   Event = 'event'
 }
 
+enum Status {
+  Active = 'active',
+  InActive = 'in_active',
+}
+
 export interface AdsPackageDocument extends Document {
   type: AdsPackageType;
   name: string;
+  detail: string;
   duration: number;
   price: number;
+  status: Status; 
 }
 
 const AdsPackageSchema = new Schema<AdsPackageDocument>({
   type: { type: String, enum: Object.values(AdsPackageType), required: true },
   name: { type: String, required: true },
+  detail: { type: String, required: true },
   duration: { type: Number, required: true },
   price: { type: Number, required: true },
+  status: { type: String, required: true },
 });
 
 

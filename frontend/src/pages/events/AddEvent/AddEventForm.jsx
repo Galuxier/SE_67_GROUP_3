@@ -1,31 +1,66 @@
 /* eslint-disable react/prop-types */
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect,useRef,useMemo  } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeftIcon, ChevronRightIcon, CheckIcon, TrashIcon, PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-toastify";
 import { createEvent } from "../../../services/api/EventApi";
 import { useAuth } from "../../../context/AuthContext";
 import { PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { boxers } from "./MockBoxer";
 import { defaultWeightClass } from "./DefaultWeightClass";
+import { getBoxers } from "../../../services/api/BoxerApi";
+import { getImage } from "../../../services/api/ImageApi";
 
 const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [imageUrls, setImageUrls] = useState({});
 
-  const filteredBoxers = boxers.filter(
-    (boxer) =>
-      boxer.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      boxer.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      boxer.nickname.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // console.log(selectedBoxer);
+  
+  const filteredBoxers = (boxers || []).filter((boxer) => {
+    const firstName = boxer.first_name || "";
+    const lastName = boxer.last_name || "";
+    const nickname = boxer.nickname || "";
+    
+    return (
+      firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      nickname.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
+  const fetchImage = async (url) => {
+    try {
+      const imageUrl = await getImage(url); // รับค่า imageUrl
+      console.log(imageUrl); // ดูผลลัพธ์ที่ได้
+  
+      // ถ้า imageUrl เป็น Blob (ตรวจสอบประเภทข้อมูล)
+      if (imageUrl && imageUrl instanceof Blob) {
+        const objectUrl = URL.createObjectURL(imageUrl); // สร้าง URL จาก Blob
+        return objectUrl;
+      }
+      
+      // ถ้าเป็น URL ที่ใช้ได้เลย (เช่น URL ภายนอก)
+      if (imageUrl && typeof imageUrl === 'string') {
+        return imageUrl; // ใช้ URL ที่ได้เลย
+      }
+  
+      return "/default-event-image.jpg"; // ใช้ default ถ้าไม่มีการคืนค่า
+    } catch (error) {
+      console.error("Error fetching image:", error);
+      return "/default-event-image.jpg"; // ใช้ default ในกรณีเกิดข้อผิดพลาด
+    }
+  };
+  
+  
+  
+  
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">{label}</label>
       <input
         type="text"
         placeholder="ค้นหา Boxer..."
-        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-gray-900"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
@@ -34,15 +69,16 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
         <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg bg-white shadow-md">
           {filteredBoxers.map((boxer) => (
             <div
-              key={boxer.id}
+              key={boxer._id}
               className="flex items-center gap-3 p-3 hover:bg-gray-100 cursor-pointer transition duration-200"
               onClick={() => {
                 setSelectedBoxer(boxer);
-                setSearchTerm(""); // clear the search term after selection
+                setSearchTerm(""); // ล้างค่าค้นหาหลังจากเลือก
               }}
             >
               <img
-                src={boxer.profile_picture_url}
+                src={fetchImage(boxer.profile_picture_url)}
+                alt={`${boxer.first_name} ${boxer.last_name}`}
                 className="w-12 h-12 rounded-full object-cover border-2 border-gray-300"
               />
               <p className="text-gray-800 font-medium">
@@ -56,7 +92,8 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
       {selectedBoxer && (
         <div className="mt-2 flex items-center bg-gray-100 rounded-full px-4 py-2 shadow-md">
           <img
-            src={selectedBoxer.profile_picture_url}
+            src={fetchImage(selectedBoxer.profile_picture_url) || "/default-event-image.jpg"}
+            alt={`${selectedBoxer.first_name} ${selectedBoxer.last_name}`}
             className="w-14 h-14 rounded-full object-cover border-2 border-gray-300"
           />
           <p className="ml-3 text-lg font-semibold text-gray-800">
@@ -65,8 +102,8 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
           <button
             type="button"
             onClick={() => {
-              setSelectedBoxer(null); // Clear the selected boxer
-              setSearchTerm(""); // Reset the search term
+              setSelectedBoxer(null);
+              setSearchTerm("");
             }}
             className="ml-auto text-gray-500 hover:text-red-500 transition duration-200"
           >
@@ -106,7 +143,7 @@ const MatchModal = ({
       toast.error("A boxer cannot be matched against themselves");
       return;
     }
-    setWeightClasses(defaultWeightClass);
+    
     setMatches(prev => [...prev, { ...newMatch, match_date: currentDate }]);
     // Reset form and close modal
     setNewMatch({ 
@@ -119,85 +156,115 @@ const MatchModal = ({
     setIsOpen(false);
   };
 
+  const [boxers, setBoxers] = useState([]); // ✅ ใช้ useState เก็บข้อมูลนักมวย
+
+  // เรียก API โหลดรายชื่อนักมวย
+  useEffect(() => {
+    const fetchBoxers = async () => {
+      try {
+        const response = await getBoxers();
+        // console.log("boxers:", response);
+        if (response.success) {
+          setBoxers(response.data); // ✅ กำหนดค่า boxers ให้เป็นอาร์เรย์ที่ได้จาก API
+        } else {
+          console.error("Failed to fetch boxers");
+        }
+      } catch (error) {
+        console.error("Error fetching boxers:", error);
+      }
+    };
+
+    fetchBoxers();
+  }, []); // ✅ ทำงานครั้งเดียวตอน component mount
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg max-w-md w-full">
-        <h3 className="text-lg font-medium mb-4">Add Match for {new Date(currentDate).toLocaleDateString()}</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Weight Class
-            </label>
-            <select
-              name="weight_class_id"
-              value={newMatch.weight_class_id || ""}
-              onChange={handleMatchInputChange}
-              className="w-full border rounded-lg py-2 px-3"
-              required
-            >
-              <option value="">-- Select Weight Class --</option>
-              {defaultWeightClass.map((wc) => (
-                <option key={wc.id} value={wc.id}>
-                  {wc.weigh_name} ({wc.min_weight} kg - {wc.max_weight} kg)
-                </option>
-              ))}
-            </select>
-          </div>
+  <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full">
+    <h3 className="text-lg font-medium mb-4 text-white">Add Match for {new Date(currentDate).toLocaleDateString()}</h3>
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-300">
+          Weight Class
+        </label>
+        <select
+          name="weight_class_id"
+          value={newMatch.weight_class_id || ""}
+          onChange={handleMatchInputChange}
+          className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg py-2 px-3"
+          required
+        >
+          <option value="">-- Select Weight Class --</option>
+          {defaultWeightClass.map((wc) => (
+            <option key={wc.id} value={wc.id}>
+              {wc.weigh_name} ({wc.min_weight} kg - {wc.max_weight} kg)
+            </option>
+          ))}
+        </select>
+      </div>
 
-          <SearchableSelect
-            label="Boxer 1"
-            boxers={boxers}
-            selectedBoxer={boxers.find(b => b.id === newMatch.boxer1_id) || null}
-            setSelectedBoxer={(boxer) => {
-              setNewMatch({ ...newMatch, boxer1_id: boxer?.id || null });
-            }}
-          />
+      <SearchableSelect
+        label="Boxer 1"
+        boxers={boxers}
+        selectedBoxer={boxers.find(b => b._id === newMatch.boxer1_id) || null}
+        setSelectedBoxer={(boxer) => {
+          setNewMatch({ ...newMatch, boxer1_id: boxer?._id || null });
+        }}
+      />
 
-          <SearchableSelect
-            label="Boxer 2"
-            boxers={boxers}
-            selectedBoxer={boxers.find(b => b.id === newMatch.boxer2_id) || null}
-            setSelectedBoxer={(boxer) => {
-              setNewMatch({ ...newMatch, boxer2_id: boxer?.id || null });
-            }}
-          />
+      <SearchableSelect
+        label="Boxer 2"
+        boxers={boxers}
+        selectedBoxer={boxers.find(b => b._id === newMatch.boxer2_id) || null}
+        setSelectedBoxer={(boxer) => {
+          setNewMatch({ ...newMatch, boxer2_id: boxer?._id || null });
+        }}
+      />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Match Time
-            </label>
-            <input
-              type="time"
-              name="match_time"
-              value={newMatch.match_time}
-              onChange={handleMatchInputChange}
-              className="w-full border rounded-lg py-2 px-3"
-              required
-            />
-          </div>
-        </div>
-        <div className="flex justify-end mt-4">
-          <button 
-            onClick={() => setIsOpen(false)} 
-            className="px-4 py-2 mr-2 border rounded-lg"
-          >
-            Cancel
-          </button>
-          <button 
-            onClick={saveMatch} 
-            className="px-4 py-2 bg-primary text-white rounded-lg"
-          >
-            Save
-          </button>
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-300">
+          Match Time
+        </label>
+        <input
+          type="time"
+          name="match_time"
+          value={newMatch.match_time}
+          onChange={handleMatchInputChange}
+          className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg py-2 px-3"
+          required
+        />
       </div>
     </div>
+    <div className="flex justify-end mt-4">
+      <button 
+        onClick={() => setIsOpen(false)} 
+        className="px-4 py-2 mr-2 border border-gray-600 rounded-lg text-gray-300"
+      >
+        Cancel
+      </button>
+      <button 
+        onClick={saveMatch} 
+        className="px-4 py-2 bg-primary text-white rounded-lg"
+      >
+        Save
+      </button>
+    </div>
+  </div>
+</div>
+
   );
 };
 
-const SeatZoneModal = ({ isOpen, setIsOpen, seatZones, setSeatZones, editingSeat, setEditingSeat }) => {
+const SeatZoneModal = ({
+  isOpen,
+  setIsOpen,
+  seatZones,
+  setSeatZones,
+  editingSeat,
+  setEditingSeat,
+  isEditMode,
+}) => {
   const [zone_name, setZoneName] = useState(editingSeat?.zone_name || "");
   const [number_of_seat, setNumberOfSeat] = useState(editingSeat?.number_of_seat || "");
   const [price, setPrice] = useState(editingSeat?.price || "");
@@ -216,7 +283,7 @@ const SeatZoneModal = ({ isOpen, setIsOpen, seatZones, setSeatZones, editingSeat
     if (!validateSeat()) return;
   
     const newSeatZone = {
-      id: editingSeat ? editingSeat.id : Date.now(),
+      id: editingSeat ? editingSeat.id : Date.now(), // Use existing ID for editing, else generate new ID
       zone_name,
       number_of_seat: parseInt(number_of_seat),
       price: parseInt(price),
@@ -252,35 +319,70 @@ const SeatZoneModal = ({ isOpen, setIsOpen, seatZones, setSeatZones, editingSeat
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg max-w-md w-full">
-        <h3 className="text-lg font-medium mb-4">{editingSeat ? "Edit Seat Zone" : "Add Seat Zone"}</h3>
+      <div className="bg-white p-6 rounded-lg max-w-md w-full dark:bg-gray-800">
+        <h3 className="text-lg font-medium mb-4 text-text">
+          {isEditMode ? "Edit Seat Zone" : "Add Seat Zone"}
+        </h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium">Zone Name</label>
-            <input type="text" value={zone_name} onChange={(e) => setZoneName(e.target.value)} className="w-full border rounded-lg py-2 px-3" />
+            <label className="block text-sm font-medium dark:text-gray-300">Zone Name</label>
+            <input 
+              type="text" 
+              value={zone_name} 
+              onChange={(e) => setZoneName(e.target.value)} 
+              className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-100"
+            />
             {errors.zone_name && <p className="text-red-500 text-sm">{errors.zone_name}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium">Quantity</label>
-            <input type="number" value={number_of_seat} onChange={(e) => setNumberOfSeat(e.target.value)} className="w-full border rounded-lg py-2 px-3" />
+            <label className="block text-sm font-medium dark:text-gray-300">Quantity</label>
+            <input 
+              type="number" 
+              value={number_of_seat} 
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^[0-9\b]+$/.test(value)) {
+                  setNumberOfSeat(value);
+                }
+              }} 
+              className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-100"
+              step="1"
+              min="0"
+            />
             {errors.number_of_seat && <p className="text-red-500 text-sm">{errors.number_of_seat}</p>}
           </div>
+
           <div>
-            <label className="block text-sm font-medium">Price</label>
-            <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full border rounded-lg py-2 px-3" />
+            <label className="block text-sm font-medium dark:text-gray-300">Price</label>
+            <input 
+              type="number" 
+              value={price} 
+              onChange={(e) => setPrice(e.target.value)} 
+              className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-100"
+            />
             {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
           </div>
         </div>
         <div className="flex justify-end mt-4">
-          <button onClick={() => setIsOpen(false)} className="px-4 py-2 mr-2 border rounded-lg">Cancel</button>
-          <button onClick={handleSaveSeat} className="px-4 py-2 bg-primary text-white rounded-lg">{editingSeat ? "Update" : "Save"}</button>
+          <button onClick={() => setIsOpen(false)} className="px-4 py-2 mr-2 border rounded-lg dark:text-gray-300">Cancel</button>
+          <button onClick={handleSaveSeat} className="px-4 py-2 bg-primary text-white rounded-lg">
+            {isEditMode ? "Update" : "Save"}
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-const WeightClassModal = ({ isOpen, setIsOpen, weightClasses, setWeightClasses, editingWeightClass, setEditingWeightClass }) => {
+
+const WeightClassModal = ({
+  isOpen,
+  setIsOpen,
+  weightClasses,
+  setWeightClasses,
+  editingWeightClass,
+  setEditingWeightClass
+}) => {
   const [type, setType] = useState(editingWeightClass?.type || "");
   const [weigh_name, setWeighName] = useState(editingWeightClass?.weigh_name || "");
   const [min_weight, setMinWeight] = useState(editingWeightClass?.min_weight || "");
@@ -312,11 +414,11 @@ const WeightClassModal = ({ isOpen, setIsOpen, weightClasses, setWeightClasses, 
       max_weight: parseFloat(max_weight),
       max_enrollment: parseInt(max_enrollment),
       price: price ? parseFloat(price) : "",
-      matches: editingWeightClass 
-        ? [...editingWeightClass.matches] 
-        : [] // เริ่มต้นด้วย array ว่างหากสร้างใหม่
+      matches: editingWeightClass
+        ? [...editingWeightClass.matches]
+        : [] // start with an empty array if creating new
     };
-    
+
     const updatedWeightClasses = editingWeightClass
       ? weightClasses.map(wc => wc.id === editingWeightClass.id ? newWeightClass : wc)
       : [...weightClasses, newWeightClass];
@@ -337,48 +439,91 @@ const WeightClassModal = ({ isOpen, setIsOpen, weightClasses, setWeightClasses, 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg max-w-md w-full">
-        <h3 className="text-lg font-medium mb-4">{editingWeightClass ? "Edit Weight Class" : "Add Weight Class"}</h3>
+      <div className="bg-white p-6 rounded-lg max-w-md w-full dark:bg-gray-800">
+        <h3 className="text-lg font-medium mb-4 dark:text-gray-200">
+          {editingWeightClass ? "Edit Weight Class" : "Add Weight Class"}
+        </h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium">Type</label>
-            <input type="text" value={type} onChange={(e) => setType(e.target.value)} className="w-full border rounded-lg py-2 px-3" />
+            <label className="block text-sm font-medium dark:text-gray-200">Type</label>
+            <input
+              type="text"
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-200"
+            />
             {errors.type && <p className="text-red-500 text-sm">{errors.type}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium">Weight Name</label>
-            <input type="text" value={weigh_name} onChange={(e) => setWeighName(e.target.value)} className="w-full border rounded-lg py-2 px-3" />
+            <label className="block text-sm font-medium dark:text-gray-200">Weight Name</label>
+            <input
+              type="text"
+              value={weigh_name}
+              onChange={(e) => setWeighName(e.target.value)}
+              className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-200"
+            />
             {errors.weigh_name && <p className="text-red-500 text-sm">{errors.weigh_name}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium">Min Weight (kg)</label>
-            <input type="number" value={min_weight} onChange={(e) => setMinWeight(e.target.value)} className="w-full border rounded-lg py-2 px-3" />
+            <label className="block text-sm font-medium dark:text-gray-200">Min Weight (kg)</label>
+            <input
+              type="number"
+              value={min_weight}
+              onChange={(e) => setMinWeight(e.target.value)}
+              className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-200"
+            />
             {errors.min_weight && <p className="text-red-500 text-sm">{errors.min_weight}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium">Max Weight (kg)</label>
-            <input type="number" value={max_weight} onChange={(e) => setMaxWeight(e.target.value)} className="w-full border rounded-lg py-2 px-3" />
+            <label className="block text-sm font-medium dark:text-gray-200">Max Weight (kg)</label>
+            <input
+              type="number"
+              value={max_weight}
+              onChange={(e) => setMaxWeight(e.target.value)}
+              className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-200"
+            />
             {errors.max_weight && <p className="text-red-500 text-sm">{errors.max_weight}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium">Max Enrollment</label>
-            <input type="number" value={max_enrollment} onChange={(e) => setMaxEnrollment(e.target.value)} className="w-full border rounded-lg py-2 px-3" />
+            <label className="block text-sm font-medium dark:text-gray-200">Max Enrollment</label>
+            <input
+              type="number"
+              value={max_enrollment}
+              onChange={(e) => setMaxEnrollment(e.target.value)}
+              className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-200"
+            />
             {errors.max_enrollment && <p className="text-red-500 text-sm">{errors.max_enrollment}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium">Price (optional)</label>
-            <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full border rounded-lg py-2 px-3" />
+            <label className="block text-sm font-medium dark:text-gray-200">Price (optional)</label>
+            <input
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-200"
+            />
             {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
           </div>
         </div>
         <div className="flex justify-end mt-4">
-          <button onClick={() => setIsOpen(false)} className="px-4 py-2 mr-2 border rounded-lg">Cancel</button>
-          <button onClick={handleSaveWeightClass} className="px-4 py-2 bg-primary text-white rounded-lg">{editingWeightClass ? "Update" : "Save"}</button>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="px-4 py-2 mr-2 border rounded-lg dark:bg-gray-600 dark:text-gray-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSaveWeightClass}
+            className="px-4 py-2 bg-primary text-white rounded-lg"
+          >
+            {editingWeightClass ? "Update" : "Save"}
+          </button>
         </div>
       </div>
     </div>
   );
 };
+
 
 const AddEventForm = () => {
   const navigate = useNavigate();
@@ -398,14 +543,14 @@ const locations = [
     organizer_id: user.user._id || "",
     location_id: "",
     event_name: "",
-    level: "beginner",
+    level: "",
     description: "",
     poster_url: null,
     seatZone_url: null,
     previewPoster: null,
     start_date: "",
     end_date: "",
-    event_type: "open_register",
+    event_type: "",
     status: "preparing"
   });
 
@@ -419,11 +564,16 @@ const locations = [
   const [editingWeightClass, setEditingWeightClass] = useState(null);
   const [currentDate, setCurrentDate] = useState("");
   const [newMatch, setNewMatch] = useState({ boxer1_id: "", boxer2_id: "", match_time: "" });
+  const [isEditMode, setIsEditMode] = useState(false);  // เพิ่ม state นี้
 
-  console.log("new",newMatch);
-  console.log("match",matches);
-  console.log("weight",weightClasses);
-  
+
+  useEffect(() => {
+    if(eventData?.event_type === "ticket_sales") {
+      setWeightClasses(Array.isArray(defaultWeightClass) ? defaultWeightClass : []);
+    } else {
+      setWeightClasses([]);
+    }
+  }, [eventData, defaultWeightClass]);
 
   const getDatesInRange = (startDate, endDate) => {
     const dates = [];
@@ -459,19 +609,39 @@ const locations = [
     }
   };
 
-  const handleEditSeat = (seat) => {
-    setEditingSeat(seat);
-    setIsSeatModalOpen(true);
-  };
+const handleEditSeat = (seat) => {
+  setEditingSeat(seat);  // ตั้งค่าข้อมูลที่จะแก้ไข
+  setIsEditMode(true);   // ตั้งค่าเป็น Edit Mode
+  setIsSeatModalOpen(true);  // เปิด Modal
+};
 
-  const handleDeleteSeat = (seatId) => {
-    setSeatZones(seatZones.filter(s => s.id !== seatId));
-  };
+const handleAddSeat = () => {
+  setEditingSeat(null);  // ตั้งค่าเป็น null สำหรับการเพิ่มข้อมูลใหม่
+  setIsEditMode(false);  // ตั้งค่าเป็น Add Mode
+  setIsSeatModalOpen(true);  // เปิด Modal
+};
 
-  const handleEditWeightClass = (weightClass) => {
-    setEditingWeightClass(weightClass);
-    setIsWeightClassModalOpen(true);
-  };
+const handleDeleteSeat = (seatId) => {
+  // ลบข้อมูล seat ที่มี id ตรงกับ seatId
+  const updatedSeatZones = seatZones.filter(seat => seat.id !== seatId);
+  
+  // อัปเดต seatZones ด้วยอาเรย์ใหม่ที่ไม่มี seat ที่ถูกลบ
+  setSeatZones(updatedSeatZones);
+};
+
+
+const handleEditWeightClass = (weightClass) => {
+  setEditingWeightClass(weightClass);  // ตั้งค่าข้อมูลที่จะแก้ไข
+  setIsEditMode(true);   // ตั้งค่าเป็น Edit Mode
+  setIsWeightClassModalOpen(true);  // เปิด Modal
+};
+
+const handleAddWeightClass = () => {
+  setEditingWeightClass(null);  // ตั้งค่าเป็น null สำหรับการเพิ่มข้อมูลใหม่
+  setIsEditMode(false);  // ตั้งค่าเป็น Add Mode
+  setIsWeightClassModalOpen(true);  // เปิด Modal
+};
+
 
   const handleDeleteWeightClass = (weightClassId) => {
     setWeightClasses(weightClasses.filter(wc => wc.id !== weightClassId));
@@ -520,6 +690,9 @@ const locations = [
     setSeatImg(null); // ลบ posterURL
     setEventData({ ...eventData, seatZone_url: null });
   };
+  const handleRemovePoster = (index) => {
+    setEventData({ ...eventData, poster_url: null, previewPoster: null });
+  };
 
 
   const validateCurrentStep = () => {
@@ -535,17 +708,17 @@ const locations = [
           toast.error("Please set start and end dates");
           return false;
         }
-        if (eventData.event_type === "open_register" && weightClasses.length === 0) {
+        if (eventData.event_type === "registration" && weightClasses.length === 0) {
           toast.error("Please add at least one weight class");
           return false;
         }
-        if (eventData.event_type === "ticket_sale" && seatZones.length === 0) {
+        if (eventData.event_type === "ticket_sales" && seatZones.length === 0) {
           toast.error("Please add at least one seat zone");
           return false;
         }
         return true;
       case 3:
-        if (eventData.event_type === "ticket_sale" && matches.length === 0) {
+        if (eventData.event_type === "ticket_sales" && matches.length === 0) {
           toast.error("Please add at least one match");
           return false;
         }
@@ -564,41 +737,65 @@ const locations = [
     }
     
     if (!validateCurrentStep()) return;
-    console.log("Before JSON.stringify:", weightClasses);
-    console.log("After JSON.stringify:", JSON.stringify(weightClasses));
-    console.log(eventData);
-    const eventDataToSend = {
-        organizer_id: eventData.organizer_id,
-        location_id: eventData.location_id, // ใส่ ObjectId จริง
-        event_name: eventData.event_name,
-        level: eventData.level.toLowerCase(), // ✅ ใช้พิมพ์เล็ก
-        start_date: eventData.start_date,
-        end_date: eventData.end_date,
-        description: eventData.description,
-        poster_url: eventData.poster_url, // ✅ ถ้ามีการอัปโหลด ต้องใช้ FormData
-        seatZone_url: eventData.seatZone_url, // ✅ ถ้ามีการอัปโหลด ต้องใช้ FormData
-        status: eventData.status || "preparing", // ✅ ค่าเริ่มต้น
-        seat_zones: seatZones, // ✅ ส่งเป็น Object/Array โดยตรง
-        weight_classes: weightClasses.map(wc => ({
+    // console.log(eventData);
+      const formData = new FormData();
+
+      // console.log(eventData);
+      // ใส่ค่าที่ไม่ใช่ไฟล์โดยแปลงเป็น JSON String
+      formData.append("organizer_id", eventData.organizer_id);
+      formData.append("location_id", eventData.location_id);
+      formData.append("event_name", eventData.event_name);
+      formData.append("level", eventData.level.toLowerCase());
+      formData.append("start_date", eventData.start_date);
+      formData.append("end_date", eventData.end_date);
+      formData.append("description", eventData.description);
+      formData.append("event_type", eventData.event_type);
+      formData.append("status", eventData.status || "preparing");
+
+      const weightClassesData = weightClasses.map(wc => {
+        // แปลง id ของ weightClass เป็น string เพื่อเปรียบเทียบกับ weight_class_id
+        const classMatches = matches.filter(match => 
+          String(match.weight_class_id) === String(wc.id)
+        );
+      
+        return {
           ...wc,
-          matches: matches
-            .filter(match => match.weight_class_id === wc.id)
-            .map(match => ({
-              match_date: match.match_date,
-              match_time: match.match_time,
+          matches: classMatches.map(match => {
+            // แปลง match_time ที่เป็น string (เช่น "21:04") ให้เป็น Date
+            const timeString = match.match_time; // สมมุติว่า match_time เป็น "HH:mm"
+            const currentDate = new Date(); // ใช้วันที่ปัจจุบัน
+            const [hours, minutes] = timeString.split(':');
+            currentDate.setHours(hours, minutes, 0, 0); // ตั้งเวลาเป็น match_time
+      
+            return {
+              match_date: match.match_date, // ไม่เปลี่ยนแปลง match_date
+              match_time: currentDate, // เปลี่ยน match_time เป็น Date
               boxer1_id: match.boxer1_id,
               boxer2_id: match.boxer2_id
-              // สามารถเพิ่มข้อมูลอื่นๆ ของแมตช์ได้ตามต้องการ
-            }))
-        }))
-      };
+            };
+          })
+        };
+      });
+      
+      
+      formData.append("weight_classes", JSON.stringify(weightClassesData));
+      // แปลง Array/Object ให้เป็น JSON แล้วส่งไป
+      formData.append("seat_zones", JSON.stringify(seatZones));
+      if (eventData.poster_url) {
+        formData.append("poster_url", eventData.poster_url); // ใช้ชื่อ key "poster_url"
+      }
+      
+      if (eventData.seatZone_url) {
+        formData.append("seatZone_url", eventData.seatZone_url); // ใช้ชื่อ key "seatZone_url"
+      }
 
     try {
-      const response = await createEvent(eventDataToSend);
+      const response = await createEvent(formData);
       toast.success("Event created successfully!");
       console.log(response);
       
-      navigate(`/organizer/events/${organizer_id}`);
+      // navigate(`/organizer/events/${organizer_id}`);
+      navigate('/event/management/eventList');
     } catch (error) {
       toast.error("Failed to create event");
       console.error(error);
@@ -633,81 +830,139 @@ const locations = [
   };
 
   const renderBasicInfo = () => (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-1">Event Name</label>
-          <input type="text" name="event_name" value={eventData.event_name} onChange={handleInputChange} className="w-full border rounded-lg py-2 px-3" placeholder="Enter event name" required />
+          <label className="block text-sm font-medium mb-2 text-gray-700 text-text">Event Name</label>
+          <input 
+            type="text" 
+            name="event_name" 
+            value={eventData.event_name} 
+            onChange={handleInputChange} 
+            className="w-full border border-gray-300 dark:text-black rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
+            placeholder="Enter event name" 
+            required 
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Location ID</label>
+          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Location ID</label>
           <select
-          name="location_id"
-          value={eventData.location_id}
-          onChange={handleInputChange}
-          className="border px-3 py-2 w-full rounded-lg shadow-sm focus:ring-primary focus:border-primary transition"
-          required
-        >
-            <option value="">-- Select Location --</option>
-          {locations.map((location, index) => (
-            <option key={index} value={location.location_id}>
-              {location.name}
-            </option>
-          ))}
-        </select>
+            name="location_id"
+            value={eventData.location_id}
+            onChange={handleInputChange}
+            className="w-full text-gray-900 dark:text-black border border-gray-300 dark:border-gray-600 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200"
+            required
+          >
+            <option value="" className="text-gray-900 dark:text-black">-- Select Location --</option>
+            {locations.map((location, index) => (
+              <option className="text-gray-900 dark:text-black" key={index} value={location.location_id}>
+                {location.name}
+              </option>
+            ))}
+          </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Level</label>
-          <select name="level" value={eventData.level} onChange={handleInputChange} className="w-full border rounded-lg py-2 px-3" required>
-            <option value="">-- Select Level --</option>
-            <option value="beginner">Beginner</option>
-            <option value="fighter">Fighter</option>
+        <div >
+          <label className="block text-sm font-medium mb-2 text-gray-700 text-text">Level</label>
+          <select 
+            name="level" 
+            value={eventData.level} 
+            onChange={handleInputChange} 
+            className="w-full border border-gray-300 dark:text-black rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
+            required
+          >
+            <option value="" className="text-gray-900 dark:text-black">-- Select Level --</option>
+            <option value="beginner" className="text-gray-900 dark:text-black">Beginner</option>
+            <option value="fighter" className="text-gray-900 dark:text-black">Fighter</option>
           </select>
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <textarea name="description" value={eventData.description} onChange={handleInputChange} className="w-full border rounded-lg py-2 px-3" rows="4" placeholder="Enter event description" />
+          <label className="block text-sm font-medium mb-2 text-gray-700 text-text">Description</label>
+          <textarea 
+            name="description" 
+            value={eventData.description} 
+            onChange={handleInputChange} 
+            className="w-full border border-gray-300 rounded-lg dark:text-black py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
+            rows="4" 
+            placeholder="Enter event description" 
+          />
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Poster</label>
-          <input type="file" accept="image/*" onChange={handleFileChange} className="w-full border rounded-lg py-2 px-3" required/>
-          {eventData.previewPoster && <img src={eventData.previewPoster} alt="Preview" className="mt-2 h-24 object-cover rounded-md" />}
+  
+        <div className="md:col-span-2">
+          <label className="block mb-1">Poster</label>
+          <input
+            type="file"
+            ref={fileSeatInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*"
+          />
+          <div className="mt-4 flex justify-center">
+            {eventData.previewPoster ? (
+              <div className="relative w-full max-w-2xl">
+                <img
+                  src={eventData.previewPoster}
+                  alt="Preview"
+                  className="w-full h-80 object-cover rounded-lg border border-border/50 mx-auto"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemovePoster(0)}
+                  className="absolute top-1 right-1 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+                >
+                  <XMarkIcon className="h-3 w-3 text-white" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileSeatInputRef.current.click()}
+                className="flex flex-col items-center justify-center w-full max-w-2xl h-80 border-2 border-gray-300 border-dashed border-border/50 rounded-lg hover:border-primary/50 transition-colors mx-auto"
+              >
+                <PhotoIcon className="h-8 w-8 text-text/40" />
+                <p className="mt-2 text-sm text-text/60">Click to upload a photo</p>
+              </button>
+            )}
+          </div>
         </div>
+
+
       </div>
     </div>
   );
+  
 
   const renderDetails = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium mb-1">Start Date</label>
-          <input type="date" name="start_date" value={eventData.start_date} onChange={handleInputChange} className="w-full border rounded-lg py-2 px-3" required />
+          <input type="date" name="start_date" value={eventData.start_date} onChange={handleInputChange} className="w-full border rounded-lg py-2 px-3 dark:text-gray-900" required />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">End Date</label>
-          <input type="date" name="end_date" value={eventData.end_date} onChange={handleInputChange}disabled={!eventData.start_date} min={eventData.start_date} className="w-full border rounded-lg py-2 px-3" required />
+          <input type="date" name="end_date" value={eventData.end_date} onChange={handleInputChange}disabled={!eventData.start_date} min={eventData.start_date} className="w-full border rounded-lg py-2 px-3  dark:text-gray-900" required />
         </div>
         <div className="md:col-span-2">
           <label className="block text-sm font-medium mb-1">Event Type</label>
-          <select name="event_type" value={eventData.event_type} onChange={handleInputChange} className="w-full border rounded-lg py-2 px-3">
-            <option value="open_register">Open for Registration</option>
-            <option value="ticket_sale">Ticket Sale</option>
+          <select name="event_type" value={eventData.event_type} onChange={handleInputChange} className="w-full border rounded-lg py-2 px-3  dark:text-gray-900">
+            <option value="" className=" dark:text-gray-900">-- Select Event Type --</option>
+            <option value="registration" className=" dark:text-gray-900">Open for Registration</option>
+            <option value="ticket_sales" className=" dark:text-gray-900">Ticket Sale</option>
           </select>
         </div>
       </div>
 
-      {eventData.event_type === "open_register" ? (
+      {eventData.event_type === "registration" ? (
         <div>
           <div className="flex items-center gap-2 mb-3">
             <h3 className="text-lg font-medium">Weight Classes</h3>
-            <button onClick={() => setIsWeightClassModalOpen(true)} className="p-1 rounded-full bg-rose-500 text-white">
+            <button onClick={() => handleAddWeightClass()} className="p-1 rounded-full bg-rose-500 text-white">
               <PlusIcon className="h-5 w-5" />
             </button>
           </div>
           <table className="w-full border-collapse border rounded-lg text-sm">
             <thead>
-              <tr className="bg-gray-200">
+              <tr className="bg-gray-200  dark:text-gray-900">
                 <th className="p-2 border">Type</th>
                 <th className="p-2 border">Weight Name</th>
                 <th className="p-2 border">Min Weight</th>
@@ -726,13 +981,13 @@ const locations = [
                 </tr>
               ) : (
                 weightClasses.map((wc) => (
-                  <tr key={wc.id} className="text-center">
+                  <tr key={wc.id} className="text-center ">
                     <td className="p-2 border">{wc.type}</td>
                     <td className="p-2 border">{wc.weigh_name}</td>
                     <td className="p-2 border">{wc.min_weight}</td>
                     <td className="p-2 border">{wc.max_weight}</td>
                     <td className="p-2 border">{wc.max_enrollment}</td>
-                    <td className="p-2 border">{wc.price || "Free"}</td>
+                    <td className="p-2 border">{wc.price ? new Intl.NumberFormat().format(wc.price) : "Free"}</td>
                     <td className="p-2 border">
                       <button className="text-blue-500 mr-2" onClick={() => handleEditWeightClass(wc)}>
                         <PencilIcon className="h-4 w-4" />
@@ -751,13 +1006,13 @@ const locations = [
         <div>
           <div className="flex items-center gap-2 mb-3">
             <h3 className="text-lg font-medium">Seat Zones</h3>
-            <button onClick={() => setIsSeatModalOpen(true)} className="p-1 rounded-full bg-rose-500 text-white">
+            <button onClick={() => handleAddSeat()} className="p-1 rounded-full bg-rose-500 text-white">
               <PlusIcon className="h-5 w-5" />
             </button>
           </div>
           <table className="w-full border-collapse border rounded-lg text-sm">
             <thead>
-              <tr className="bg-gray-200">
+              <tr className="bg-gray-200  dark:text-gray-900">
                 <th className="p-2 border">Zone</th>
                 <th className="p-2 border">Quantity</th>
                 <th className="p-2 border">Price</th>
@@ -769,7 +1024,7 @@ const locations = [
                 <tr key={seat.id} className="text-center">
                   <td className="p-2 border">{seat.zone_name}</td>
                   <td className="p-2 border">{seat.number_of_seat}</td>
-                  <td className="p-2 border">{seat.price}</td>
+                  <td className="p-2 border">{seat.price ? new Intl.NumberFormat().format(seat.price) : "Free"}</td>
                   <td className="p-2 border">
                     <button className="text-blue-500 mr-2" onClick={() => handleEditSeat(seat)}>
                       <PencilIcon className="h-4 w-4" />
@@ -811,7 +1066,7 @@ const locations = [
                 <button
                   type="button"
                   onClick={() => fileSeatInputRef.current.click()}
-                  className="flex flex-col items-center justify-center w-4/5 h-80 border-2 border-dashed border-border/50 rounded-lg hover:border-primary/50 transition-colors mx-auto"
+                  className="flex flex-col items-center justify-center w-4/5 h-80 border-2 border-gray-300 border-dashed border-border/50 rounded-lg hover:border-primary/50 transition-colors mx-auto"
                 >
                   <PhotoIcon className="h-8 w-8 text-text/40" />
                   <p className="mt-2 text-sm text-text/60">Click to upload a photo</p>
@@ -833,9 +1088,30 @@ const locations = [
       setMatches(updatedFighters);
     }
   };
+
+  const [boxers, setBoxers] = useState([]); // ✅ ใช้ useState เก็บข้อมูลนักมวย
+
+  // เรียก API โหลดรายชื่อนักมวย
+  useEffect(() => {
+    const fetchBoxers = async () => {
+      try {
+        const response = await getBoxers();
+        // console.log("boxers:", response);
+        if (response.success) {
+          setBoxers(response.data); // ✅ กำหนดค่า boxers ให้เป็นอาร์เรย์ที่ได้จาก API
+        } else {
+          console.error("Failed to fetch boxers");
+        }
+      } catch (error) {
+        console.error("Error fetching boxers:", error);
+      }
+    };
+
+    fetchBoxers();
+  }, []); // ✅ ทำงานครั้งเดียวตอน component mount
   
   const renderMatches = () => (
-    eventData.event_type === "ticket_sale" ? (
+    eventData.event_type === "ticket_sales" ? (
       <div className="space-y-6">
         <h3 className="text-lg font-medium mb-3">Event Matches</h3>
         {matches.length === 0 ? (
@@ -857,10 +1133,10 @@ const locations = [
                   </h4>
                   <div className="space-y-2">
                     {dayMatches.map((match, matchIndex) => {
-                      const boxer1 = boxers.find(boxer => boxer.id === match.boxer1_id);
-                      const boxer2 = boxers.find(boxer => boxer.id === match.boxer2_id);
+                      const boxer1 = boxers.find(boxer => boxer._id === match.boxer1_id);
+                      const boxer2 = boxers.find(boxer => boxer._id === match.boxer2_id);
                       return (
-                        <div key={matchIndex} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                        <div key={matchIndex} className="flex items-center justify-between p-3 bg-white rounded-lg border dark:bg-gray-800">
                           <div>
                             <p className="font-medium">{boxer1?.first_name} {boxer1?.last_name} vs {boxer2?.first_name} {boxer2?.last_name}</p>
                             <p className="text-sm">{match.match_time}</p>
@@ -931,7 +1207,7 @@ const locations = [
         }
       </p>
       <p>Level: {eventData.level}</p>
-      <p>Type: {eventData.event_type === "open_register" ? "Open for Registration" : "Ticket Sale"}</p>
+      <p>Type: {eventData.event_type === "registration" ? "Open for Registration" : "Ticket Sale"}</p>
     </div>
     
     <div className="border p-4 rounded-lg">
@@ -940,7 +1216,7 @@ const locations = [
       <p>End: {new Date(eventData.end_date).toLocaleDateString()}</p>
     </div>
 
-    {eventData.event_type === "open_register" ? (
+    {eventData.event_type === "registration" ? (
       <div className="border p-4 rounded-lg md:col-span-2">
         <h4 className="text-lg font-medium mb-3">Weight Classes</h4>
         {weightClasses.map((wc, index) => (
@@ -961,8 +1237,8 @@ const locations = [
         <div className="border p-4 rounded-lg">
           <h4 className="text-lg font-medium mb-3">Matches</h4>
           {matches.map((m, index) => {
-            const boxer1 = boxers.find(b => b.id === m.boxer1_id);
-            const boxer2 = boxers.find(b => b.id === m.boxer2_id);
+            const boxer1 = boxers.find(b => b._id === m.boxer1_id);
+            const boxer2 = boxers.find(b => b._id === m.boxer2_id);
             
             return (
               <div key={index} className="mb-2">
@@ -994,6 +1270,8 @@ const locations = [
       <img src={fileSeatPreviews[0]} alt="Zone" className="h-40 object-cover rounded-md" />
     </div>
   )}
+
+  
 
 </div>
   );
@@ -1047,14 +1325,6 @@ const locations = [
         newMatch={newMatch}
         setNewMatch={setNewMatch}
       />
-      <SeatZoneModal
-        isOpen={isSeatModalOpen}
-        setIsOpen={setIsSeatModalOpen}
-        seatZones={seatZones}
-        setSeatZones={setSeatZones}
-        editingSeat={editingSeat}
-        setEditingSeat={setEditingSeat}
-      />
       <WeightClassModal
         isOpen={isWeightClassModalOpen}
         setIsOpen={setIsWeightClassModalOpen}
@@ -1062,7 +1332,19 @@ const locations = [
         setWeightClasses={setWeightClasses}
         editingWeightClass={editingWeightClass}
         setEditingWeightClass={setEditingWeightClass}
+        isEditMode={isEditMode}  // ส่ง isEditMode ไป
       />
+
+      <SeatZoneModal
+        isOpen={isSeatModalOpen}
+        setIsOpen={setIsSeatModalOpen}
+        seatZones={seatZones}
+        setSeatZones={setSeatZones}
+        editingSeat={editingSeat}
+        setEditingSeat={setEditingSeat}
+        isEditMode={isEditMode}  // ส่ง isEditMode ไป
+      />
+
     </div>
   );
 };

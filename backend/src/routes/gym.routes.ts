@@ -4,7 +4,10 @@ import {
     getGymsController,
     getGymByIdController,
     updateGymController,
-    deleteGymController
+    deleteGymController,
+    getTrainersByGymIdController,
+    getBoxersByGymIdController,
+    checkGymNameController
 } from '../controllers/gym.controller';
 import { gymImagesUpload } from '../middlewares/uploads/gym.upload';
 
@@ -19,7 +22,11 @@ router.get('/gym/:id', getGymByIdController);
 // router.put('/gym/:id', uploadMiddleware, updateGymController);
 router.put('/gym/:id', updateGymController);
 
-
 router.delete('/gym/:id', deleteGymController);
+
+router.get('/gym/:id/trainers', getTrainersByGymIdController);
+router.get('/gym/:id/boxers', getBoxersByGymIdController);
+router.get('/gym/check-name/:gymName', checkGymNameController);
+
 
 export default router;

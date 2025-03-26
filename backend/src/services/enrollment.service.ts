@@ -1,14 +1,29 @@
-import { Enrollment, EnrollmentDocument } from '../models/enrollment.model';
+import { Enrollment, EnrollmentDocument, RoleType, EnrollmentStatus } from '../models/enrollment.model';
+import { Notification, NotificationType } from '../models/notification.model';
 import { BaseService } from './base.service';
-import UserService from './user.service'; // เพิ่ม import เข้ามา
-import { Types } from 'mongoose';
+import UserService from './user.service';
+
+const ROLE_DISPLAY: Record<RoleType, string> = {
+  boxer: "นักมวย",
+  trainer: "โค้ชมวย",
+  gym_owner: "เจ้าของค่ายมวย",
+  organizer: "ผู้จัดการแข่งขัน",
+  shop_owner: "เจ้าของร้านค้า",
+  lessor: "ผู้ให้เช่าสถานที่",
+};
+
+interface UpdateEnrollmentData {
+  status: EnrollmentStatus;
+  reviewer_id: string;
+  reject_reason?: string;
+}
 
 class EnrollmentService extends BaseService<EnrollmentDocument> {
   constructor() {
     super(Enrollment);
   }
 
-  async getAllEnrollment() {
+  async getAllEnrollment(): Promise<EnrollmentDocument[]> {
     return await Enrollment.find()
       .populate('user_id', 'username first_name last_name email profile_picture_url')
       .populate('reviewer_id')
@@ -19,9 +34,7 @@ class EnrollmentService extends BaseService<EnrollmentDocument> {
     return await Enrollment.find({ user_id: userId });
   }
 
-  // ✅ เพิ่ม method สำหรับอัปเดต Enrollment และ Role ของ User
-  async updateEnrollment(id: string, data: any): Promise<EnrollmentDocument | null> {
-    console.log(data);
+  async updateEnrollment(id: string, data: UpdateEnrollmentData): Promise<EnrollmentDocument | null> {
     const updatedEnrollment = await Enrollment.findByIdAndUpdate(
       id,
       { 
@@ -31,16 +44,37 @@ class EnrollmentService extends BaseService<EnrollmentDocument> {
       },
       { new: true }
     )
-    .populate('user_id', 'username first_name last_name email profile_picture_url')  // เพิ่ม populate user_id
-    .populate('reviewer_id')  // เพิ่ม populate reviewer_id
+    .populate('user_id', 'username first_name last_name email profile_picture_url')
+    .populate('reviewer_id')
     .exec();
-    
-    // ถ้าอัปเดตสถานะเป็น approved → ให้ไปอัปเดต role ด้วย
-    if (updatedEnrollment && data.status === 'approved') {
+
+    if (!updatedEnrollment) return null;
+
+    if (data.status === EnrollmentStatus.Approved) {
       await UserService.addUserRole(updatedEnrollment.user_id, updatedEnrollment.role);
+      await Notification.create({
+        user_id: updatedEnrollment.user_id._id,
+        type: NotificationType.Enrollment,
+        title: 'คำขอของคุณได้รับการอนุมัติ',
+        message: `คำขอสำหรับบทบาท "${ROLE_DISPLAY[updatedEnrollment.role]}" ได้รับการอนุมัติแล้ว`,
+        relate_id: updatedEnrollment._id,
+        is_read: false,
+        create_at: new Date(),
+        // action_url: `/enrollment/${updatedEnrollment._id}`,
+      });
+    } else if (data.status === EnrollmentStatus.Rejected) {
+      await Notification.create({
+        user_id: updatedEnrollment.user_id._id,
+        type: NotificationType.Enrollment,
+        title: 'คำขอของคุณถูกปฏิเสธ',
+        message: `คำขอสำหรับบทบาท "${ROLE_DISPLAY[updatedEnrollment.role]}" ถูกปฏิเสธ: ${data.reject_reason || 'ไม่ระบุเหตุผล'}`,
+        relate_id: updatedEnrollment._id,
+        is_read: false,
+        create_at: new Date(),
+        // action_url: `/enrollment/${updatedEnrollment._id}`,
+      });
     }
-    console.log(updatedEnrollment);
-    
+
     return updatedEnrollment;
   }
 }

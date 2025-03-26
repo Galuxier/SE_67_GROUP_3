@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
-import { getUserRoles } from "../services/api/UserApi"; // นำเข้า getUserRoles จาก UserApi
+import { getUserRoles } from "../services/api/UserApi";
+import { getImage } from "../services/api/ImageApi";
 
 const AuthContext = createContext();
 
@@ -9,29 +10,39 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null); // null หมายถึง guest
   const [roles, setRoles] = useState([]);
   const [isSessionExpired, setIsSessionExpired] = useState(false);
-  const [loading, setLoading] = useState(true); // เพิ่ม loading state
+  const [loading, setLoading] = useState(true);
 
   // ฟังก์ชัน sync roles กับ API
   const syncRoles = async (userId) => {
     try {
       const response = await getUserRoles(userId);
-      const fetchedRoles = response.data.data.roles || []; // ปรับตามโครงสร้าง response
-      
+      const fetchedRoles = response.data.data.roles || [];
       setRoles(fetchedRoles);
       return fetchedRoles;
     } catch (error) {
       console.error("Failed to sync roles:", error);
-      setRoles([]); // ถ้า sync ไม่ได้ ตั้ง roles เป็น array ว่าง
+      setRoles([]);
       return [];
+    }
+  };
+
+  // ฟังก์ชันโหลด profile picture
+  const loadProfilePicture = async (profilePictureUrl) => {
+    if (!profilePictureUrl) return null;
+    try {
+      const imageData = await getImage(profilePictureUrl);
+      return imageData; // สมมติว่าเป็น URL หรือ base64 string
+    } catch (error) {
+      console.error("Failed to load profile picture:", error);
+      return null;
     }
   };
 
   // ฟังก์ชัน login
   const login = async (token) => {
     try {
-      console.log(token);
+      // console.log(token);
       const userData = jwtDecode(token);
-      // console.log("Auth Context Decode Data: ", userData);
 
       if (userData.exp * 1000 < Date.now()) {
         console.log("Token หมดอายุแล้ว");
@@ -39,16 +50,30 @@ export function AuthProvider({ children }) {
         return;
       }
 
+      // โหลด profile picture ถ้ามี URL
+      const profilePicture = userData.profile_picture_url 
+        ? await loadProfilePicture(userData.profile_picture_url)
+        : null;
+
+      // เพิ่ม profilePicture เข้าไปใน userData
+      const updatedUserData = {
+        ...userData,
+        profile_picture: profilePicture // เปลี่ยนชื่อเป็น profile_picture แทน profile_picture_url
+      };
+      console.log(updatedUserData);
+      
+      
       setIsLoggedIn(true);
-      setUser(userData);
+      setUser(updatedUserData);
+      // console.log(user._id);
 
       // เก็บ token และ user ใน localStorage
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("user", JSON.stringify(updatedUserData));
       localStorage.setItem("isLoggedIn", "true");
 
-      // Sync roles กับ API แทนการใช้จาก JWT
-      const userRoles = await syncRoles(userData._id); // สมมติว่า _id อยู่ใน JWT
+      // Sync roles กับ API
+      const userRoles = await syncRoles(userData._id);
       return userRoles;
     } catch (error) {
       console.error("Invalid token:", error);
@@ -91,18 +116,29 @@ export function AuthProvider({ children }) {
             return;
           }
 
-          setUser(userData);
+          // ถ้าไม่มี profile_picture ใน stored data แต่มี profile_picture_url ให้โหลดใหม่
+          let updatedUserData = userData;
+          if (!userData.profile_picture && userData.profile_picture_url) {
+            const profilePicture = await loadProfilePicture(userData.profile_picture_url);
+            updatedUserData = {
+              ...userData,
+              profile_picture_url: profilePicture
+            };
+            localStorage.setItem("user", JSON.stringify(updatedUserData));
+          }
+
+          setUser(updatedUserData);
           setIsLoggedIn(true);
 
           // Sync roles กับ API
-          const userRoles = await syncRoles(userData._id); // ใช้ _id จาก JWT
+          const userRoles = await syncRoles(userData._id);
           setRoles(userRoles);
         } catch (error) {
           console.error("Failed to load user:", error);
           logout(true);
         }
       }
-      setLoading(false); // เสร็จสิ้นการโหลด
+      setLoading(false);
     };
 
     initializeAuth();

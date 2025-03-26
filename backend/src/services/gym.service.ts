@@ -1,5 +1,7 @@
 import { Gym, GymDocument } from '../models/gym.model';
 import { BaseService } from './base.service';
+import { Types } from 'mongoose';
+import { User } from '../models/user.model';
 
 class GymService extends BaseService<GymDocument> {
   constructor() {
@@ -35,42 +37,47 @@ class GymService extends BaseService<GymDocument> {
     }
   }
 
-  // อัปเดตโรงยิม
-  // async updateGym(gymId: string, gymData: any, filePaths: string[]) {
-  //   console.log(gymData);
-  //   console.log(filePaths);
+  async getTrainersByGymId(gymId: string): Promise<any[]> {
+    try {
+      // Find all users with role 'trainer' who are associated with this gym
+      const trainers = await User.find({
+        role: { $in: ['trainer'] },
+        gym_id: new Types.ObjectId(gymId)
+      });
+      
+      return trainers;
+    } catch (error) {
+      console.error("Error fetching trainers by gym ID:", error);
+      throw error;
+    }
+  }
+  
+  async getBoxersByGymId(gymId: string): Promise<any[]> {
+    try {
+      // Find all users with role 'boxer' who are associated with this gym
+      const boxers = await User.find({
+        role: { $in: ['boxer'] },
+        gym_id: new Types.ObjectId(gymId)
+      });
+      
+      return boxers;
+    } catch (error) {
+      console.error("Error fetching boxers by gym ID:", error);
+      throw error;
+    }
+  }
 
-  //   try {
-  //     if (typeof gymData.address === 'string') {
-  //       gymData.address = JSON.parse(gymData.address);
-  //     }
-
-  //     if (typeof gymData.contact === 'string') {
-  //       gymData.contact = JSON.parse(gymData.contact);
-  //     }
-
-  //     // อัปเดตข้อมูลทั่วไป
-  //     const updatedGym = await Gym.findByIdAndUpdate(
-  //       gymId,
-  //       {
-  //         ...gymData,
-  //         address: gymData.address, // ใส่ address อย่างชัดเจน
-  //         gym_image_url: filePaths, // เก็บ path ของไฟล์ที่อัปโหลด
-  //       },
-  //       { new: true } // ส่งคืนข้อมูลที่อัปเดต
-  //     );
-
-  //     if (!updatedGym) {
-  //       throw new Error("Gym not found");
-  //     }
-
-  //     console.log(updatedGym);
-  //     return updatedGym;
-  //   } catch (error) {
-  //     console.error("Failed to update gym:", error);
-  //     throw new Error("Failed to update gym");
-  //   }
-  // }
+  async checkGymNameExists(gymName: string): Promise<boolean> {
+    try {
+      // Use RegExp for case-insensitive search
+      const regex = new RegExp(`^${gymName}$`, 'i');
+      const gym = await Gym.findOne({ gym_name: regex });
+      return !!gym; // return true if gym found, false if not
+    } catch (error) {
+      console.error('Error checking gym name existence:', error);
+      throw error;
+    }
+  }
 }
 
 export default new GymService();

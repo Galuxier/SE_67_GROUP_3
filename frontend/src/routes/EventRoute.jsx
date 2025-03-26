@@ -14,6 +14,9 @@ import EventDetail from "../pages/events/EventDetail";
 import RegistrationForm from "../pages/events/RegistrationForm";
 import EventManageDashboard from "../pages/events/managements/EventManageDashboard";
 import EventList from "../pages/events/managements/EventList";
+import EventPackage from "../pages/events/managements/EventPackage";
+import BuyTicket from "../pages/events/BuyTicket";
+import TicketPayment from "../pages/events/TicketPayment";
 
 
 function EventRoutes() {
@@ -24,6 +27,9 @@ function EventRoutes() {
           <Route index element={<EventHome />} />
           <Route path="/:id" element={<EventDetail />} />
           <Route path="/register/:eventId" element={<RegistrationForm />} />
+          <Route path="/ticket/:eventId" element={<BuyTicket />} />
+          <Route path="/ticket/payment" element={<TicketPayment />} />
+
 
         </Route>
 
@@ -36,11 +42,13 @@ function EventRoutes() {
           }
         >
           <Route index element={<EventManageDashboard />} />
+          <Route index element={<EventManageDashboard />} />
           <Route path="/management/create" element={<FormAddEvent/>}/>
           <Route path="/management/eventList" element={<EventList/>}/>
           <Route path="/management/create/seat" element={<FormAddSeat />}/>
           <Route path="/management/create/match" element={<FormAddFighter />}/>
           <Route path="/management/create/weightClass" element={<FormAddWeightClass />}/>
+          <Route path="/management/eventPackage" element={<EventPackage />}/>
         </Route>
 
         {/* ไม่มี Layout(Navbar) */}

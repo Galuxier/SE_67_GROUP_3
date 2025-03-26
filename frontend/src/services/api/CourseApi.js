@@ -13,3 +13,24 @@ export async function createCourse(CourseData){
         throw error;
     }
 }
+
+export async function getCoursesByGymId(gym_id) {
+    try {
+      const response = await api.get(`/gym/${gym_id}/courses`);
+      return response.data;
+    } catch (error) {
+      console.error('Get Gym Courses Failed: ', error);
+      throw error;
+    }
+}
+
+export async function getAllCourses() {
+    try{
+        const response = await api.get('/courses');
+        return response.data;
+    }catch (error){
+        console.error(error);
+        throw new error;
+        
+    }
+}

@@ -6,10 +6,11 @@ import {
   updatePlaceController,
   deletePlaceController,
 } from '../controllers/place.controller';
+import { placeImagesUpload } from '../middlewares/uploads/place.upload';
 
 const router = express.Router();
 
-router.post('/places', createPlaceController);
+router.post('/places', placeImagesUpload, createPlaceController);
 router.get('/places', getPlacesController);
 router.get('/place/:id', getPlaceByIdController);
 router.put('/place/:id', updatePlaceController);

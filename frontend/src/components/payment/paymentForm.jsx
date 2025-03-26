@@ -67,30 +67,60 @@ const PaymentForm = ({ type, DatafromOrder }) => {
   };
 
   const createOrderData = () => {
-    return {
-      user_id: formData.user_id,
-      order_type: type,
-      items: [{
-        ref_id: DatafromOrder.product.product_id,
-        ref_model: "Product",
-        variant_id: DatafromOrder.product.variant_id,
-        price_at_order: DatafromOrder.product.price,
-        quantity: DatafromOrder.product.quantity,
-      }],
-      total_price: DatafromOrder.total,
-      shipping_address: {
-        receiver_name: `${formData.firstName} ${formData.lastName}`,
-        receiver_phone: formData.phone, // ใช้ค่า phone จาก formData
-        province: addressData.province || "",
-        district: addressData.district || "",
-        subdistrict: addressData.subdistrict || "",
-        street: addressData.information || "",
-        postal_code: addressData.postal_code || "",
-        information: addressData.information || "",
-      },
-      status: "pending"
-    };
+    // เช็ค event_type ว่าเป็น ticket หรือไม่
+    if (type === 'ticket') {
+      return {
+        user_id: formData.user_id,
+        order_type: 'ticket',
+        items: DatafromOrder.items.map(item => ({
+          ref_id: item.ref_id,
+          ref_model: item.refModel,
+          seat_zone_id: item.seat_zone_id,
+          price_at_order: item.price_at_order,
+          quantity: item.quantity,
+          date: item.date
+        })),
+        total_price: DatafromOrder.total_price,
+        shipping_address: {
+          receiver_name: `${formData.firstName} ${formData.lastName}`,
+          receiver_phone: formData.phone,
+          province: addressData.province || "",
+          district: addressData.district || "",
+          subdistrict: addressData.subdistrict || "",
+          street: addressData.information || "",
+          postal_code: addressData.postal_code || "",
+          information: addressData.information || "",
+        },
+        status: "pending"
+      };
+    } else {
+      // สำหรับกรณีอื่นๆ ที่ไม่ใช่ ticket (เช่น Product)
+      return {
+        user_id: formData.user_id,
+        order_type: type,
+        items: [{
+          ref_id: DatafromOrder.product.product_id,
+          ref_model: "Product",
+          variant_id: DatafromOrder.product.variant_id,
+          price_at_order: DatafromOrder.product.price,
+          quantity: DatafromOrder.product.quantity,
+        }],
+        total_price: DatafromOrder.total,
+        shipping_address: {
+          receiver_name: `${formData.firstName} ${formData.lastName}`,
+          receiver_phone: formData.phone, // ใช้ค่า phone จาก formData
+          province: addressData.province || "",
+          district: addressData.district || "",
+          subdistrict: addressData.subdistrict || "",
+          street: addressData.information || "",
+          postal_code: addressData.postal_code || "",
+          information: addressData.information || "",
+        },
+        status: "pending"
+      };
+    }
   };
+  
 
   // ส่วนที่เหลือของฟังก์ชันไม่เปลี่ยนแปลง
   const createPaymentData = () => {

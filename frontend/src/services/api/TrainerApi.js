@@ -1,12 +1,11 @@
 import { api } from "../Axios";
 
 export async function getTrainersInGym(gym_id) {
-  try {
-    // Use template literals (backticks) to format the URL correctly
+  try{
     const response = await api.get(`/gym/${gym_id}/trainers`);
     return response.data;
-  } catch (error) {
+  }catch (error){
     console.error("Cannot get Trainer in Gym: ", error);
-    throw error;
+    throw new error;
   }
 }

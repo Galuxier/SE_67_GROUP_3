@@ -1,4 +1,4 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 import { validateOrderItems } from '../middlewares/order.middleware';
 
 
@@ -18,6 +18,7 @@ interface OrderItem {
     ref_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Products, Courses, หรือ Events
     ref_model: string; // เก็บชื่อ collection ที่ ref_id อ้างอิงไป
     variant_id?: Schema.Types.ObjectId; // อ้างอิงไปที่ Variants (ถ้ามี)
+    seat_zone_id: Types.ObjectId;
     price_at_order: number;
     quantity: number;
   }
@@ -49,8 +50,10 @@ const OrderSchema = new Schema<OrderDocument>({
       ref_id: { type: Schema.Types.ObjectId, refPath: 'items.refModel', required: true }, // ใช้ refPath (product_id, course_id, event_id)
       refModel: { type: String, required: true, enum: ['Product', 'Course', 'Event'] }, // เก็บชื่อ collection
       variant_id: { type: Schema.Types.ObjectId, ref: 'Variant' }, // อ้างอิงไปที่ Variants (ถ้ามี)
+      seat_zone_id: { type : Types.ObjectId },
       price_at_order: { type: Number, required: true },
       quantity: { type: Number, required: true },
+      date:{type: Date},
     }],
     total_price: { type: Number, required: true },
     shipping_address: {

@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import AdminLayout from "../layouts/AdminLayout"; 
 import Dashboard from "../pages/admin/Dashboard";
 import Approval from "../pages/admin/Approval"; 
+import AddPackage from "../pages/admin/AddPackage"; 
 
 function AdminRoutes() {
   return (
@@ -11,6 +12,7 @@ function AdminRoutes() {
         <Route index element={<Approval />} /> 
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/approval" element={<Approval />} /> 
+        <Route path="/addPackage" element={<AddPackage />} /> 
       </Route>
     </Routes>
   );

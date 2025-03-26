@@ -38,6 +38,43 @@ export const getGymsController = async (req: Request, res: Response) => {
   }
 };
 
+export const getTrainersByGymIdController = async (req: Request, res: Response) => {
+  try {
+    const trainers = await GymService.getTrainersByGymId(req.params.id);
+    res.status(200).json({
+      success: true,
+      count: trainers.length,
+      data: trainers
+    });
+  } catch (err) {
+    console.error('Error fetching trainers:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching trainers', 
+      error: err 
+    });
+  }
+};
+
+// Get boxers by gym ID
+export const getBoxersByGymIdController = async (req: Request, res: Response) => {
+  try {
+    const boxers = await GymService.getBoxersByGymId(req.params.id);
+    res.status(200).json({
+      success: true,
+      count: boxers.length,
+      data: boxers
+    });
+  } catch (err) {
+    console.error('Error fetching boxers:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching boxers', 
+      error: err 
+    });
+  }
+};
+
 // ดึงข้อมูลโรงยิมจาก _id
 export const getGymByIdController = async (req: Request, res: Response) => {
   try {
@@ -92,5 +129,35 @@ export const deleteGymController = async (req: Request, res: Response) => {
     res.status(200).json(deletedGym);
   } catch (err) {
     res.status(500).json({ message: 'Error deleting gym', error: err });
+  }
+};
+
+export const checkGymNameController = async (req: Request, res: Response) => {
+  try {
+    const { gymName } = req.params;
+    
+    if (!gymName) {
+      res.status(400).json({ 
+        success: false, 
+        message: 'Gym name is required' 
+      });
+      return;
+    }
+    
+    const exists = await GymService.checkGymNameExists(gymName);
+    
+    // Send result back
+    res.status(200).json({
+      success: true,
+      exists: exists,
+      message: exists ? 'Gym name already exists' : 'Gym name is available'
+    });
+  } catch (err) {
+    console.error('Error checking gym name:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error checking gym name', 
+      error: err 
+    });
   }
 };

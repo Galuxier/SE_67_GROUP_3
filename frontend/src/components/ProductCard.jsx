@@ -271,11 +271,6 @@ const ProductCardItem = ({ product, size = "default" }) => {
           <p className="text-sm text-text/70 mb-2">{product.shop_name}</p>
         )}
         
-        {/* Description if available */}
-        {styles.showDescription && product.description && (
-          <p className={styles.descriptionClasses}>{product.description}</p>
-        )}
-        
         {/* Price */}
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center">
@@ -283,9 +278,6 @@ const ProductCardItem = ({ product, size = "default" }) => {
             <span className={styles.priceClasses}>
               {isLoadingVariants ? "Loading..." : getDisplayPrice()}
             </span>
-            {variants.length > 1 && !isLoadingVariants && (
-              <span className="text-sm text-text/70 ml-1">+</span>
-            )}
           </div>
           
           {size !== "small" && (
@@ -295,13 +287,6 @@ const ProductCardItem = ({ product, size = "default" }) => {
           )}
         </div>
       </div>
-      
-      {/* New badge */}
-      {new Date(product.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
-        <div className="absolute top-3 left-3 bg-green-500 text-white text-xs uppercase font-bold rounded-full px-2 py-1 z-10">
-          New
-        </div>
-      )}
     </motion.div>
   );
 };

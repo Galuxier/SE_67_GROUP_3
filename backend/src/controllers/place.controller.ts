@@ -3,9 +3,16 @@ import PlaceService from '../services/place.service';
 
 export const createPlaceController = async (req: Request, res: Response) => {
   try {
+    
+    req.body.address = JSON.parse(req.body.address);
+    console.log(req.body);
     const newPlace = await PlaceService.add(req.body);
+    
+    
     res.status(201).json(newPlace);
   } catch (err) {
+    console.log(err);
+    
     res.status(400).json({ message: 'Error creating Place', error: err });
   }
 };
