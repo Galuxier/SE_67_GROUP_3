@@ -346,7 +346,12 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                 </div>
               )}
             </div>
-
+            <Link
+            to={gymData? `/gym/management/${gymData._id}/coursePackage` : `gym/management/create`}
+            className="p-2 rounded-md hover:bg-primary hover:text-white text-text"
+          >
+            Course Package
+          </Link>
             {/* Schedule */}
             {/* <Link
               to="/gym/management/schedule"

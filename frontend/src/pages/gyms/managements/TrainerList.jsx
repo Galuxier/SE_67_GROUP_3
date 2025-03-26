@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { MagnifyingGlassIcon, PlusIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import { getTrainersInGym } from "../../../services/api/TrainerApi";
+import { updateUser } from "../../../services/api/UserApi";
 
 function TrainerList() {
+  const { gym_id } = useParams();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -12,29 +14,39 @@ function TrainerList() {
   const [trainers, setTrainers] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // แทนที่ useEffect เดิมด้วยนี้
   useEffect(() => {
     const fetchTrainers = async () => {
       try {
-        const data = await getTrainersInGym("gym_id_here");
-        const formattedTrainers = data.map(trainer => ({
+        const response = await getTrainersInGym(gym_id);
+        console.log('Trainers response:', response);
+        
+        // ใช้ response.data แทน response เพราะ API return object ที่มี property data
+        const trainerData = response.data || [];
+        
+        const formattedTrainers = trainerData.map(trainer => ({
           id: trainer._id,
-          image: trainer.image_url || trainer.profile_picture_url || "/api/placeholder/400/320",
-          name: `${trainer.firstName || trainer.first_name} ${trainer.lastName || trainer.last_name}`,
-          nickname: trainer.Nickname || trainer.nickname,
+          image: trainer.profile_picture_url || "/api/placeholder/400/320",
+          name: `${trainer.first_name} ${trainer.last_name}`,
+          nickname: trainer.nickname,
+          username: trainer.username,
           contact: trainer.contact,
           fightHistory: trainer.fightHistory,
-          detail: trainer.detail
+          detail: trainer.detail,
+          status: trainer.status
         }));
+        
         setTrainers(formattedTrainers);
       } catch (error) {
         console.error("Failed to fetch trainers:", error);
+        setTrainers([]); // เซ็ตเป็น array ว่างหากเกิด error
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchTrainers();
-  }, []);
+  }, [gym_id]);
 
   if (loading) {
     return (
@@ -51,7 +63,7 @@ function TrainerList() {
   });
 
   const handleAddTrainer = () => {
-    navigate("/gym/management/trainers/create");
+    navigate(`/gym/management/${gym_id}/trainers/create`);
   };
 
   const handleEditTrainer = (trainer, e) => {
@@ -65,14 +77,34 @@ function TrainerList() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
-    setTrainers(trainers.filter(trainer => trainer.id !== selectedTrainer.id));
-    setIsDeleteModalOpen(false);
-    setSelectedTrainer(null);
-  };
+  // ในส่วน handleDeleteConfirm
+  const handleDeleteConfirm = async () => {
+      try {
+        console.log(`Removing ${selectedTrainer.id} from gym ${gym_id}`);
+        
+        // เรียก API เพื่ออัปเดต gym_id เป็น null
+        await updateUser(selectedTrainer.id, { 
+          gym_id: null,
+          role: ['member']
+        });
+        
+        setTrainers(trainers.filter(trainer => trainer.id !== selectedTrainer.id));
+        
+        setIsDeleteModalOpen(false);
+        setSelectedTrainer(null);
+        
+        // แสดงการแจ้งเตือน
+        alert('ลบเทรนเนอร์ออกจากยิมเรียบร้อยแล้ว');
+      } catch (error) {
+        console.error("Failed to remove:", error);
+        alert('เกิดข้อผิดพลาดในการลบ: ' + error.message);
+      }
+    };
 
   const handleViewProfile = (trainer) => {
-    navigate(`/gym/management/trainers/${trainer.id}`);
+    if (trainer.username) {
+      navigate(`/gym/management/user/${trainer.username}`);
+    }
   };
 
   // Animation variants

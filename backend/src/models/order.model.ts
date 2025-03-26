@@ -5,13 +5,15 @@ import { validateOrderItems } from '../middlewares/order.middleware';
 export enum OrderType {
   Product = 'product',
   Course = 'course',
-  Ticket = 'ticket'
+  Ticket = 'ticket',
+  AdsPackage = 'ads_package',
 }
 
 enum OrderStatus {
   Pending = 'pending',
   Completed = 'completed',
   Cancelled = 'cancelled',
+  Failed = 'failed'
 }
 
 interface OrderItem {
@@ -53,6 +55,7 @@ const OrderSchema = new Schema<OrderDocument>({
       seat_zone_id: { type : Types.ObjectId },
       price_at_order: { type: Number, required: true },
       quantity: { type: Number, required: true },
+      date:{type: Date},
     }],
     total_price: { type: Number, required: true },
     shipping_address: {
