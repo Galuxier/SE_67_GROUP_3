@@ -327,12 +327,50 @@ export default function ProductDetail() {
   
   
   // Buy now function
+  // ProductDetail.jsx - ในฟังก์ชัน handleBuyNow
   const handleBuyNow = () => {
-    // First add to cart
-    handleAddToCart();
+    if (!selectedVariant) {
+      toast.error("Please select all product options");
+      return;
+    }
+  
+    if (selectedVariant.stock < quantity) {
+      toast.error(`Sorry, only ${selectedVariant.stock} items available in stock`);
+      return;
+    }
+  
+    // ตรวจสอบและเตรียม URL รูปภาพให้ถูกต้อง
+    let productImageUrl = '';
     
-    // Then navigate to cart page
-    navigate("/shop/cart");
+    // ลองดึงจาก variant image ก่อน
+    if (selectedVariant.variant_image_url) {
+      productImageUrl = variantImageMapping[selectedVariant._id] || '';
+    }
+    
+    // ถ้าไม่มี variant image ให้ใช้รูปแรกจาก product images
+    if (!productImageUrl && imageUrls.length > 0) {
+      productImageUrl = imageUrls[0];
+    }
+  
+    const orderData = {
+      type: "product",
+      product: {
+        product_id: product._id,
+        variant_id: selectedVariant._id,
+        product_name: product.product_name,
+        price: selectedVariant.price,
+        quantity: quantity,
+        image_url: productImageUrl, // ใช้ URL ที่เตรียมไว้
+        attributes: selectedVariant.attributes || {},
+        shop_id: product.shop_id,
+        shop_name: shopData?.shop_name || "Shop"
+      },
+      subTotal: selectedVariant.price * quantity,
+      shipping: 50,
+      total: (selectedVariant.price * quantity) + 50
+    };
+  
+    navigate("/shop/productPayment", { state: orderData });
   };
   
   // Open image viewer
