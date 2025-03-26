@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
-import { ChevronLeftIcon, ChevronRightIcon, CheckIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CheckIcon,
+} from "@heroicons/react/24/outline";
 import { toast } from "react-toastify";
 import ActivityModal from "../../../components/courses/ActivityModal";
 import { createCourse } from "../../../services/api/CourseApi";
-
+import { X } from "lucide-react";
 const CreateCourseForm = () => {
   const navigate = useNavigate();
   const { gymData } = useOutletContext() || {};
   const { gym_id } = useParams();
-  
+
   useEffect(() => {
     if (!gymData && !gym_id) {
       toast.error("No gym data available. Please select a gym first.");
@@ -17,9 +21,10 @@ const CreateCourseForm = () => {
     }
   }, [gymData, gym_id, navigate]);
 
+  // ใช้ location เพื่อให้การเช็ค path เป็นไปตามการเปลี่ยนแปลง URL
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
-  
+
   const [courseData, setCourseData] = useState({
     course_name: "",
     description: "",
@@ -31,27 +36,27 @@ const CreateCourseForm = () => {
     gym_id: gym_id || (gymData ? gymData._id : ""),
     gym_name: gymData ? gymData.gym_name : "",
     image_url: null,
-    previewImage: null
+    previewImage: null,
   });
-  
+
   const [activities, setActivities] = useState([]);
   const [newActivity, setNewActivity] = useState({
     startTime: "",
     endTime: "",
     description: "",
     trainer: [], // Stores array of trainer IDs
-    date: ""
+    date: "",
   });
-  
+
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
   const [currentDay, setCurrentDay] = useState(null);
   const [currentDate, setCurrentDate] = useState("");
-  
+
   const getDatesInRange = (startDate, endDate) => {
     const dates = [];
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
+
     let currentDate = new Date(start);
     while (currentDate <= end) {
       dates.push(new Date(currentDate));
@@ -59,13 +64,16 @@ const CreateCourseForm = () => {
     }
     return dates;
   };
-  
+
   const [availableDates, setAvailableDates] = useState([]);
-  
+
   useEffect(() => {
     if (courseData.start_date && courseData.end_date) {
       try {
-        const dateRange = getDatesInRange(courseData.start_date, courseData.end_date);
+        const dateRange = getDatesInRange(
+          courseData.start_date,
+          courseData.end_date
+        );
         setAvailableDates(dateRange);
       } catch (error) {
         console.error("Error calculating date range:", error);
@@ -74,37 +82,40 @@ const CreateCourseForm = () => {
       setAvailableDates([]);
     }
   }, [courseData.start_date, courseData.end_date]);
-  
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setCourseData({
         ...courseData,
         image_url: file,
-        previewImage: URL.createObjectURL(file)
+        previewImage: URL.createObjectURL(file),
       });
     }
   };
-  
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === "start_date") {
-      if (courseData.end_date && new Date(courseData.end_date) < new Date(value)) {
+      if (
+        courseData.end_date &&
+        new Date(courseData.end_date) < new Date(value)
+      ) {
         setCourseData({
           ...courseData,
           [name]: value,
-          end_date: ""
+          end_date: "",
         });
       } else {
         setCourseData({
           ...courseData,
-          [name]: value
+          [name]: value,
         });
       }
     } else {
       setCourseData({
         ...courseData,
-        [name]: value
+        [name]: value,
       });
     }
   };
@@ -124,7 +135,15 @@ const CreateCourseForm = () => {
       navigate(-1);
     }
   };
-  
+  const handleDeleteActivity = (activityId) => {
+    // Filter out the activity with the matching ID
+    const updatedActivities = activities.filter(
+      (activity) => activity.id !== activityId
+    );
+
+    // Update the activities state
+    setActivities(updatedActivities);
+  };
   const validateCurrentStep = () => {
     switch (currentStep) {
       case 1:
@@ -141,7 +160,7 @@ const CreateCourseForm = () => {
           return false;
         }
         return true;
-        
+
       case 2:
         if (!courseData.start_date) {
           toast.error("Please enter a start date");
@@ -156,26 +175,26 @@ const CreateCourseForm = () => {
           return false;
         }
         return true;
-        
+
       case 3:
         if (activities.length === 0) {
           toast.error("Please add at least one activity");
           return false;
         }
         return true;
-        
+
       default:
         return true;
     }
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateCurrentStep()) {
       return;
     }
-    
+
     const formData = new FormData();
     formData.append("course_name", courseData.course_name);
     formData.append("description", courseData.description);
@@ -185,20 +204,20 @@ const CreateCourseForm = () => {
     formData.append("start_date", courseData.start_date);
     formData.append("end_date", courseData.end_date);
     formData.append("gym_id", courseData.gym_id);
-    
+
     if (courseData.image_url) {
       formData.append("course_image_url", courseData.image_url);
     }
-    
+
     // Ensure trainer field contains only IDs
-    const formattedActivities = activities.map(activity => ({
+    const formattedActivities = activities.map((activity) => ({
       ...activity,
-      trainer: activity.trainer.map(trainer => 
-        typeof trainer === 'object' && trainer._id ? trainer._id : trainer
-      )
+      trainer: activity.trainer.map((trainer) =>
+        typeof trainer === "object" && trainer._id ? trainer._id : trainer
+      ),
     }));
     formData.append("activities", JSON.stringify(formattedActivities));
-    
+
     try {
       const response = await createCourse(formData);
       console.log("Course created:", response);
@@ -209,16 +228,16 @@ const CreateCourseForm = () => {
       toast.error("Failed to create course. Please try again.");
     }
   };
-  
+
   const handleAddActivity = (date, day) => {
-    setCurrentDate(date.toISOString().split('T')[0]);
+    setCurrentDate(date.toISOString().split("T")[0]);
     setCurrentDay(day);
     setNewActivity({
       startTime: "",
       endTime: "",
       description: "",
       trainer: [],
-      date: date.toISOString().split('T')[0]
+      date: date.toISOString().split("T")[0],
     });
     setIsActivityModalOpen(true);
   };
@@ -232,20 +251,26 @@ const CreateCourseForm = () => {
           const isCompleted = currentStep > stepNumber;
           return (
             <div key={stepNumber} className="flex flex-col items-center">
-              <div 
+              <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-                  isActive ? "border-primary bg-primary text-white" : 
-                  isCompleted ? "border-green-500 bg-green-500 text-white" : 
-                  "border-gray-300 text-gray-500"
+                  isActive
+                    ? "border-primary bg-primary text-white"
+                    : isCompleted
+                    ? "border-green-500 bg-green-500 text-white"
+                    : "border-gray-300 text-gray-500"
                 }`}
               >
                 {isCompleted ? <CheckIcon className="w-6 h-6" /> : stepNumber}
               </div>
-              <p className={`mt-2 text-xs font-medium ${
-                isActive ? "text-primary" : 
-                isCompleted ? "text-green-500" : 
-                "text-gray-500"
-              }`}>
+              <p
+                className={`mt-2 text-xs font-medium ${
+                  isActive
+                    ? "text-primary"
+                    : isCompleted
+                    ? "text-green-500"
+                    : "text-gray-500"
+                }`}
+              >
                 {["Basic Info", "Schedule", "Activities", "Review"][index]}
               </p>
             </div>
@@ -254,8 +279,8 @@ const CreateCourseForm = () => {
       </div>
       <div className="relative mt-2">
         <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2"></div>
-        <div 
-          className="absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2 transition-all duration-300" 
+        <div
+          className="absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2 transition-all duration-300"
           style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
         ></div>
       </div>
@@ -266,7 +291,9 @@ const CreateCourseForm = () => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-1 text-text">Course Name</label>
+          <label className="block text-sm font-medium mb-1 text-text">
+            Course Name
+          </label>
           <input
             type="text"
             name="course_name"
@@ -278,7 +305,9 @@ const CreateCourseForm = () => {
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-1 text-text">Description</label>
+          <label className="block text-sm font-medium mb-1 text-text">
+            Description
+          </label>
           <textarea
             name="description"
             value={courseData.description}
@@ -290,7 +319,9 @@ const CreateCourseForm = () => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1 text-text">Level</label>
+          <label className="block text-sm font-medium mb-1 text-text">
+            Level
+          </label>
           <select
             name="level"
             value={courseData.level}
@@ -303,30 +334,65 @@ const CreateCourseForm = () => {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1 text-text">Price</label>
+          <label className="block text-sm font-medium mb-1 text-text dark:text-text/90">
+            Price
+          </label>
           <input
             type="number"
             name="price"
             value={courseData.price}
-            onChange={handleInputChange}
-            className="w-full border border-border rounded-lg py-2 px-3 bg-background text-text focus:outline-none focus:ring-1 focus:ring-primary"
+            onChange={(e) => {
+              const value = Math.max(1, Number(e.target.value));
+              handleInputChange({
+                target: {
+                  name: "price",
+                  value: value,
+                },
+              });
+            }}
+            min="1"
+            className="w-full border border-border dark:border-border/70 rounded-lg py-2 px-3 bg-background dark:bg-background/10 text-text dark:text-text/90 focus:outline-none focus:ring-1 focus:ring-primary dark:focus:ring-primary/70"
             placeholder="Enter price"
             required
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium mb-1 text-text">Max Participants</label>
+          <label className="block text-sm font-medium mb-1 text-text dark:text-text/90">
+            Max Participants
+          </label>
           <input
             type="number"
             name="max_participants"
             value={courseData.max_participants}
-            onChange={handleInputChange}
-            className="w-full border border-border rounded-lg py-2 px-3 bg-background text-text focus:outline-none focus:ring-1 focus:ring-primary"
+            onChange={(e) => {
+              // Remove any decimal part and ensure minimum of 1
+              const value = Math.max(1, Math.floor(Number(e.target.value)));
+              handleInputChange({
+                target: {
+                  name: "max_participants",
+                  value: value,
+                },
+              });
+            }}
+            min="1"
+            pattern="\d+"
+            onKeyDown={(e) => {
+              // Prevent decimal point input
+              if (e.key === "." || e.key === ",") {
+                e.preventDefault();
+              }
+            }}
+            className="w-full border border-border dark:border-border/70 rounded-lg py-2 px-3 bg-background dark:bg-background/10 text-text dark:text-text/90 focus:outline-none focus:ring-1 focus:ring-primary dark:focus:ring-primary/70"
             placeholder="Enter max participants"
+            required
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium mb-1 text-text">Course Image</label>
+          <label className="block text-sm font-medium mb-1 text-text">
+            Course Image
+          </label>
           <div className="flex items-center">
             <input
               type="file"
@@ -360,7 +426,9 @@ const CreateCourseForm = () => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium mb-1 text-text">Start Date</label>
+          <label className="block text-sm font-medium mb-1 text-text">
+            Start Date
+          </label>
           <input
             type="date"
             name="start_date"
@@ -371,7 +439,9 @@ const CreateCourseForm = () => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1 text-text">End Date</label>
+          <label className="block text-sm font-medium mb-1 text-text">
+            End Date
+          </label>
           <input
             type="date"
             name="end_date"
@@ -385,29 +455,47 @@ const CreateCourseForm = () => {
       </div>
       {availableDates.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-lg font-medium mb-3 text-text">Course Duration</h3>
+          <h3 className="text-lg font-medium mb-3 text-text">
+            Course Duration
+          </h3>
           <div className="bg-card border border-border/40 rounded-lg p-4">
             <p className="mb-2 text-text">
-              {courseData.start_date && courseData.end_date && 
-                `${availableDates.length} days from ${new Date(courseData.start_date).toLocaleDateString()} to ${new Date(courseData.end_date).toLocaleDateString()}`
-              }
+              {courseData.start_date &&
+                courseData.end_date &&
+                `${availableDates.length} days from ${new Date(
+                  courseData.start_date
+                ).toLocaleDateString()} to ${new Date(
+                  courseData.end_date
+                ).toLocaleDateString()}`}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 mt-4">
               {availableDates.map((date, index) => (
-                <div 
+                <div
                   key={index}
                   className="border border-border/40 rounded-lg p-2 flex flex-col items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   onClick={() => handleAddActivity(date, date.getDate())}
                 >
-                  <span className="text-sm font-medium">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                  <span className="text-xs text-text/70">{date.toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                  {activities.some(activity => activity.date === date.toISOString().split('T')[0]) && (
+                  <span className="text-sm font-medium">
+                    {date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                  <span className="text-xs text-text/70">
+                    {date.toLocaleDateString("en-US", { weekday: "short" })}
+                  </span>
+                  {activities.some(
+                    (activity) =>
+                      activity.date === date.toISOString().split("T")[0]
+                  ) && (
                     <div className="mt-1 w-4 h-4 rounded-full bg-primary"></div>
                   )}
                 </div>
               ))}
             </div>
-            <p className="mt-4 text-sm text-text/70">Click on a date to add activities</p>
+            <p className="mt-4 text-sm text-text/70">
+              Click on a date to add activities
+            </p>
           </div>
         </div>
       )}
@@ -416,53 +504,116 @@ const CreateCourseForm = () => {
 
   const renderActivities = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium mb-3 text-text">Course Activities</h3>
+      <h3 className="text-base font-medium mb-3 text-text dark:text-text/90">
+        Course Activities
+      </h3>
       {activities.length === 0 ? (
-        <div className="text-center py-10 bg-card border border-border/40 rounded-lg">
-          <p className="text-text/70">No activities added yet</p>
-          <p className="text-sm text-text/50 mt-2">Click on a date in the calendar to add activities</p>
+        <div className="text-center py-8 bg-card dark:bg-card/20 border border-border/40 dark:border-border/20 rounded-lg">
+          <p className="text-sm text-text/70 dark:text-text/60">
+            No activities added yet
+          </p>
+          <p className="text-xs text-text/50 dark:text-text/40 mt-2">
+            Click on a date in the calendar to add activities
+          </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
           {availableDates.map((date, dateIndex) => {
-            const dateString = date.toISOString().split('T')[0];
-            const dayActivities = activities.filter(a => a.date === dateString);
-            
+            const dateString = date.toISOString().split("T")[0];
+            const dayActivities = activities.filter(
+              (a) => a.date === dateString
+            );
+
             if (dayActivities.length === 0) return null;
-            
+
             return (
-              <div key={dateIndex} className="bg-card border border-border/40 rounded-lg p-4">
-                <h4 className="text-md font-medium mb-2 text-text">
-                  {date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              <div
+                key={dateIndex}
+                className="bg-card dark:bg-card/20 border border-border/40 dark:border-border/20 rounded-lg p-4"
+              >
+                <h4 className="text-sm font-medium mb-2 text-text dark:text-text/90">
+                  {date.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                  })}
                 </h4>
                 <div className="space-y-2">
                   {dayActivities.map((activity, activityIndex) => (
-                    <div 
-                      key={activityIndex} 
-                      className="flex items-center justify-between p-3 bg-background rounded-lg border border-border/20"
+                    <div
+                      key={activity.id || activityIndex}
+                      className="flex items-center justify-between p-3 bg-background dark:bg-background/10 rounded-lg border border-border/20 dark:border-border/10"
                     >
                       <div>
-                        <p className="font-medium text-text">{activity.description}</p>
-                        <p className="text-sm text-text/70">
+                        <p className="text-sm font-medium text-text dark:text-text/90">
+                          {activity.description}
+                        </p>
+                        <p className="text-xs text-text/70 dark:text-text/60">
                           {activity.startTime} - {activity.endTime}
                         </p>
                       </div>
-                      <div>
-                        <div className="flex -space-x-2">
-                          {activity.trainer && activity.trainer.map((trainerId, trainerIndex) => (
-                            <div 
-                              key={trainerIndex} 
-                              className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white text-sm -ml-2 border-2 border-white"
-                            >
-                              {/* Assuming we might have trainer objects or just IDs */}
-                              {typeof trainerId === 'object' && trainerId.Nickname 
-                                ? trainerId.Nickname.charAt(0)
-                                : typeof trainerId === 'string' 
-                                  ? trainerId.charAt(0) 
-                                  : '?'}
+                      <div className="flex items-center space-x-2">
+                        {/* <div className="flex -space-x-2">
+                          {activity.trainer &&
+                            activity.trainer.map((trainerId, trainerIndex) => (
+                              <div
+                                key={trainerIndex}
+                                className="w-6 h-6 rounded-full bg-rose-500 dark:bg-rose-600 flex items-center justify-center text-white text-xs -ml-2 border-2 border-white dark:border-gray-800"
+                              >
+                                {typeof trainerId === "object" && trainerId.Nickname
+                                  ? trainerId.Nickname.slice(0, 1)
+                                  : "?"}
+                              </div>
+                            ))}
+                        </div> */}
+
+                        <div className="flex flex-col mt-2">
+                          <div className="mb-2">
+                            <h4 className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                              Coaches with Gym
+                            </h4>
+                            <div className="flex space-x-2">
+                              {activity.trainer
+                                .filter((trainer) => trainer.gym)
+                                .map((trainerItem) => (
+                                  <div
+                                    key={trainerItem._id}
+                                    className="flex items-center p-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                  >
+                                    <p className="text-xs font-medium text-gray-800 dark:text-gray-200">
+                                      {trainerItem.Nickname}
+                                    </p>
+                                  </div>
+                                ))}
                             </div>
-                          ))}
+                          </div>
+
+                          <div>
+                            <h4 className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                              Coaches without Gym
+                            </h4>
+                            <div className="flex space-x-2">
+                              {activity.trainer
+                                .filter((trainer) => !trainer.gym)
+                                .map((trainerItem) => (
+                                  <div
+                                    key={trainerItem._id}
+                                    className="flex items-center p-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                  >
+                                    <p className="text-xs font-medium text-gray-800 dark:text-gray-200">
+                                      {trainerItem.Nickname}
+                                    </p>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
                         </div>
+                        <button
+                          onClick={() => handleDeleteActivity(activity.id)}
+                          className="ml-2 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                        >
+                          <X size={14} />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -470,7 +621,7 @@ const CreateCourseForm = () => {
                 <button
                   type="button"
                   onClick={() => handleAddActivity(date, date.getDate())}
-                  className="mt-2 text-sm text-primary hover:text-secondary"
+                  className="mt-2 text-xs text-primary dark:text-primary/80 hover:text-secondary dark:hover:text-secondary/80"
                 >
                   + Add more activities
                 </button>
@@ -479,22 +630,6 @@ const CreateCourseForm = () => {
           })}
         </div>
       )}
-      <div className="flex justify-center mt-4">
-        <button
-          type="button"
-          onClick={() => {
-            if (availableDates.length > 0) {
-              handleAddActivity(availableDates[0], availableDates[0].getDate());
-            } else {
-              toast.error("Please set course start and end dates first");
-              setCurrentStep(2);
-            }
-          }}
-          className="px-4 py-2 bg-primary hover:bg-secondary text-white rounded-lg transition-colors"
-        >
-          + Add Activity
-        </button>
-      </div>
     </div>
   );
 
@@ -503,11 +638,15 @@ const CreateCourseForm = () => {
       <h3 className="text-xl font-bold mb-4 text-text">Course Summary</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-card border border-border/40 rounded-lg p-4">
-          <h4 className="text-lg font-medium mb-3 text-text">Basic Information</h4>
+          <h4 className="text-lg font-medium mb-3 text-text">
+            Basic Information
+          </h4>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-text/70">Course Name:</span>
-              <span className="font-medium text-text">{courseData.course_name}</span>
+              <span className="font-medium text-text">
+                {courseData.course_name}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-text/70">Level:</span>
@@ -519,11 +658,15 @@ const CreateCourseForm = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-text/70">Max Participants:</span>
-              <span className="font-medium text-text">{courseData.max_participants || "Unlimited"}</span>
+              <span className="font-medium text-text">
+                {courseData.max_participants || "Unlimited"}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-text/70">Gym:</span>
-              <span className="font-medium text-text">{courseData.gym_name}</span>
+              <span className="font-medium text-text">
+                {courseData.gym_name}
+              </span>
             </div>
           </div>
         </div>
@@ -532,15 +675,21 @@ const CreateCourseForm = () => {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-text/70">Start Date:</span>
-              <span className="font-medium text-text">{new Date(courseData.start_date).toLocaleDateString()}</span>
+              <span className="font-medium text-text">
+                {new Date(courseData.start_date).toLocaleDateString()}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-text/70">End Date:</span>
-              <span className="font-medium text-text">{new Date(courseData.end_date).toLocaleDateString()}</span>
+              <span className="font-medium text-text">
+                {new Date(courseData.end_date).toLocaleDateString()}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-text/70">Duration:</span>
-              <span className="font-medium text-text">{availableDates.length} days</span>
+              <span className="font-medium text-text">
+                {availableDates.length} days
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-text/70">Total Activities:</span>
@@ -570,17 +719,24 @@ const CreateCourseForm = () => {
 
   const renderCurrentStep = () => {
     switch (currentStep) {
-      case 1: return renderBasicInfo();
-      case 2: return renderSchedule();
-      case 3: return renderActivities();
-      case 4: return renderReview();
-      default: return null;
+      case 1:
+        return renderBasicInfo();
+      case 2:
+        return renderSchedule();
+      case 3:
+        return renderActivities();
+      case 4:
+        return renderReview();
+      default:
+        return null;
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto bg-card border border-border/30 rounded-lg p-6 shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-text text-center">Create New Course</h1>
+      <h1 className="text-2xl font-bold mb-6 text-text text-center">
+        Create New Course
+      </h1>
       {renderStepIndicator()}
       <form onSubmit={handleSubmit}>
         {renderCurrentStep()}
@@ -615,6 +771,7 @@ const CreateCourseForm = () => {
       </form>
       <ActivityModal
         isOpen={isActivityModalOpen}
+        activities={activities}
         setIsOpen={setIsActivityModalOpen}
         setActivities={setActivities}
         currentDay={currentDay}
