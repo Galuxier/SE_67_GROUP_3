@@ -1,41 +1,60 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { LucideMapPin } from "lucide-react";
+import { getImage } from "../../services/api/ImageApi";
 
 // Event Type Components
 const TicketSale = ({ event }) => {
   return (
-    <div className="p-4 text-center">
-      <h2 className="font-semibold text-2xl mb-4">ราคาบัตร</h2>
-      
+    <div className="p-6 text-center">
+      <h2 className="font-semibold text-2xl mb-4 text-text">Ticket Price</h2>
+
       {/* Seat Zone Price List */}
-      <div className="space-y-2 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 pr-2">
+      <div className="space-y-3 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 pr-2">
         {event.seat_zones?.map((zone, index) => (
-          <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-            <div className="flex items-center">
-              <div 
-                className={`w-4 h-4 rounded-full mr-2 ${
-                  index === 0 ? "bg-purple-500" :
-                  index === 1 ? "bg-blue-500" :
-                  index === 2 ? "bg-orange-500" :
-                  index === 3 ? "bg-green-500" : "bg-red-500"
+          <div
+            key={index}
+            className="flex items-center justify-around py-3 border-b border-gray-100 last:border-0"
+          >
+            <div className="flex items-center text-text">
+              <div
+                className={`w-5 h-5 rounded-full mr-3 ${
+                  index === 0
+                    ? "bg-purple-500"
+                    : index === 1
+                    ? "bg-blue-500"
+                    : index === 2
+                    ? "bg-orange-500"
+                    : index === 3
+                    ? "bg-green-500"
+                    : "bg-red-500"
                 }`}
               ></div>
               <span>{zone.zone_name}</span>
             </div>
-            <span>{zone.price.toLocaleString()} THB</span>
-            <button className="text-gray-400">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            <span className="text-text">{zone.price.toLocaleString()} THB</span>
+            {/* <button className="text-gray-400">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
-            </button>
+            </button> */}
           </div>
         ))}
       </div>
-      
+
       {/* Buy Button */}
-      <button className="w-full mt-6 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg">
-        ซื้อบัตร
+      <button className="w-full mt-6 bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-6 rounded-lg">
+        Buy Tickets
       </button>
     </div>
   );
@@ -43,31 +62,34 @@ const TicketSale = ({ event }) => {
 
 const Registration = ({ event, navigate }) => {
   return (
-    <div className="p-4 text-center">
-      <h2 className="font-semibold text-2xl mb-4">ช่วงน้ำหนัก</h2>
-      
+    <div className="p-6 text-center">
+      <h2 className="font-semibold text-2xl mb-4 text-text">Weight Categories</h2>
+
       {/* Weight Class List */}
-      <div className="text-left space-y-2 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 pr-2">
+      <div className="text-left text-text space-y-3 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 pr-2">
         {event.weight_classes?.map((weight, index) => (
-          <div key={index} className="flex items-center py-2 border-b border-gray-100 last:border-0">
+          <div
+            key={index}
+            className="flex items-center py-3 border-b border-gray-100 last:border-0"
+          >
             <span className="mr-2">{index + 1}.</span>
-            <span>รุ่น{weight.weigh_name}</span>
+            <span>{weight.weigh_name}</span>
           </div>
         ))}
       </div>
-      
+
       {/* Registration Info */}
       <div className="mt-6 text-left">
-        <h3 className="font-semibold text-xl mb-2">ค่าสมัคร</h3>
-        <p className="text-gray-700">ไม่มีค่าใช้จ่าย</p>
+        <h3 className="font-semibold text-xl mb-2 text-text">Registration Fee</h3>
+        <p className="text-gray-700 text-text">No fee required</p>
       </div>
-      
+
       {/* Register Button */}
-      <button 
+      <button
         onClick={() => navigate(`/event/register/${event._id}`, { state: { event } })}
-        className="w-full mt-6 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg"
+        className="w-full mt-6 bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-6 rounded-lg"
       >
-        Register
+        Register Now
       </button>
     </div>
   );
@@ -89,12 +111,12 @@ function EventDetail() {
           let data = await response.json();
 
           // Format dates if needed
-          data.start_date = data.start_date instanceof Date
-            ? data.start_date.toISOString()
-            : data.start_date;
-          data.end_date = data.end_date instanceof Date
-            ? data.end_date.toISOString()
-            : data.end_date;
+          data.start_date =
+            data.start_date instanceof Date
+              ? data.start_date.toISOString()
+              : data.start_date;
+          data.end_date =
+            data.end_date instanceof Date ? data.end_date.toISOString() : data.end_date;
 
           setEvent(data);
         } catch (error) {
@@ -118,35 +140,48 @@ function EventDetail() {
 
   // Format dates for display
   const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  const [imageUrl, setImageUrl] = useState(null);
+  const [seatZoneUrl, setSeatZoneUrl] = useState(null);
+
+  useEffect(() => {
+    async function fetchImage() {
+      const url = await getImage(event.poster_url);
+      setImageUrl(url); // Update state
+      const seat_url = await getImage(event.seatZone_url);
+      setSeatZoneUrl(seat_url); // Update state
+    }
+    fetchImage();
+  }, [event.poster_url]); // Run when poster_url changes
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 ">
       {/* Event Header */}
-      <div className="mb-6 max-w-6xl mx-auto">
+      <div className="mb-6 max-w-6xl mx-auto mt-5">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{event.event_name}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white text-text">{event.event_name}</h1>
         </div>
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-8 max-w-7xl mx-auto text-text">
         {/* Left Column - Event Poster */}
         <div className="md:col-span-3">
           <img
-            src={event.image_url}
+            src={imageUrl}
             alt={event.event_name}
             className="w-full h-auto rounded-lg shadow-md"
           />
-          
+
           {/* Detail Section */}
-          <div className="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Detail</h2>
+          <div className="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Event Details</h2>
             <div className="prose dark:prose-invert">
               <p className="text-gray-700 dark:text-gray-300">
-                {event.description || "No detail available"}
+                {event.description || ""}
               </p>
               <p className="mt-4">
                 <strong>Dates:</strong> {formatDate(event.start_date)} - {formatDate(event.end_date)}
@@ -156,9 +191,9 @@ function EventDetail() {
               </p>
             </div>
           </div>
-          
+
           {/* Location Section */}
-          <div className="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+          <div className="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
             <div className="flex items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Location</h2>
               <LucideMapPin className="ml-2 h-6 w-6 text-gray-500 dark:text-gray-400" />
@@ -170,19 +205,21 @@ function EventDetail() {
         </div>
 
         {/* Right Column - Seating Chart and Pricing/Registration */}
-        <div className="md:col-span-2 space-y-6 md:sticky md:top-20 self-start">
+        <div className="md:col-span-2 space-y-8 md:sticky md:top-20 self-start">
           {/* Seating Chart */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-            <img
-              src="/api/placeholder/400/320"
-              alt="Seating Chart"
-              className="w-full h-auto rounded-lg"
-            />
-          </div>
-          
+          {event.event_type === "ticket_sales" && seatZoneUrl && (
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+              <img
+                src={seatZoneUrl}
+                alt="Seating Chart"
+                className="w-full h-auto rounded-lg"
+              />
+            </div>
+          )}
+
           {/* Pricing or Registration Section */}
-          <div className=" bg-background rounded-lg shadow-md">
-            {event.event_type === "TicketSale" ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            {event.event_type === "ticket_sales" ? (
               <TicketSale event={event} />
             ) : (
               <Registration event={event} navigate={navigate} />

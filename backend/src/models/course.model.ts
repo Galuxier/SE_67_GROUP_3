@@ -63,7 +63,7 @@ const CourseSchema = new Schema<CourseDocument>({
   price: { type: Number, required: true },
   description: { type: String },
   course_image_url: { type: [String], required: true },
-  status: { type: String, enum: Object.values(CourseStatus), required: true },
+  status: { type: String, enum: Object.values(CourseStatus), required: true, default: CourseStatus.Preparing },
   activities: [{
     description: { type: String, required: true },
     date: { type: Date, required: true },

@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { createEvent } from "../../../services/api/EventApi";
 import { useAuth } from "../../../context/AuthContext";
 import { PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { boxers } from "./MockBoxer";
+import { boxers } from "./mockBoxer";
 import { defaultWeightClass } from "./DefaultWeightClass";
 
 const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) => {
@@ -395,17 +395,17 @@ const locations = [
   const totalSteps = 4;
 
   const [eventData, setEventData] = useState({
-    organizer_id: user.user._id || "",
+    organizer_id: organizer_id || "",
     location_id: "",
     event_name: "",
-    level: "beginner",
+    level: "",
     description: "",
     poster_url: null,
     seatZone_url: null,
     previewPoster: null,
     start_date: "",
     end_date: "",
-    event_type: "open_register",
+    event_type: "",
     status: "preparing"
   });
 
@@ -419,11 +419,6 @@ const locations = [
   const [editingWeightClass, setEditingWeightClass] = useState(null);
   const [currentDate, setCurrentDate] = useState("");
   const [newMatch, setNewMatch] = useState({ boxer1_id: "", boxer2_id: "", match_time: "" });
-
-  console.log("new",newMatch);
-  console.log("match",matches);
-  console.log("weight",weightClasses);
-  
 
   const getDatesInRange = (startDate, endDate) => {
     const dates = [];
@@ -520,6 +515,9 @@ const locations = [
     setSeatImg(null); // ลบ posterURL
     setEventData({ ...eventData, seatZone_url: null });
   };
+  const handleRemovePoster = (index) => {
+    setEventData({ ...eventData, poster_url: null, previewPoster: null });
+  };
 
 
   const validateCurrentStep = () => {
@@ -535,17 +533,17 @@ const locations = [
           toast.error("Please set start and end dates");
           return false;
         }
-        if (eventData.event_type === "open_register" && weightClasses.length === 0) {
+        if (eventData.event_type === "registration" && weightClasses.length === 0) {
           toast.error("Please add at least one weight class");
           return false;
         }
-        if (eventData.event_type === "ticket_sale" && seatZones.length === 0) {
+        if (eventData.event_type === "ticket_sales" && seatZones.length === 0) {
           toast.error("Please add at least one seat zone");
           return false;
         }
         return true;
       case 3:
-        if (eventData.event_type === "ticket_sale" && matches.length === 0) {
+        if (eventData.event_type === "ticket_sales" && matches.length === 0) {
           toast.error("Please add at least one match");
           return false;
         }
@@ -564,22 +562,24 @@ const locations = [
     }
     
     if (!validateCurrentStep()) return;
-    console.log("Before JSON.stringify:", weightClasses);
-    console.log("After JSON.stringify:", JSON.stringify(weightClasses));
     console.log(eventData);
-    const eventDataToSend = {
-        organizer_id: eventData.organizer_id,
-        location_id: eventData.location_id, // ใส่ ObjectId จริง
-        event_name: eventData.event_name,
-        level: eventData.level.toLowerCase(), // ✅ ใช้พิมพ์เล็ก
-        start_date: eventData.start_date,
-        end_date: eventData.end_date,
-        description: eventData.description,
-        poster_url: eventData.poster_url, // ✅ ถ้ามีการอัปโหลด ต้องใช้ FormData
-        seatZone_url: eventData.seatZone_url, // ✅ ถ้ามีการอัปโหลด ต้องใช้ FormData
-        status: eventData.status || "preparing", // ✅ ค่าเริ่มต้น
-        seat_zones: seatZones, // ✅ ส่งเป็น Object/Array โดยตรง
-        weight_classes: weightClasses.map(wc => ({
+      const formData = new FormData();
+
+      // ใส่ค่าที่ไม่ใช่ไฟล์โดยแปลงเป็น JSON String
+      formData.append("organizer_id", eventData.organizer_id);
+      formData.append("location_id", eventData.location_id);
+      formData.append("event_name", eventData.event_name);
+      formData.append("level", eventData.level.toLowerCase());
+      formData.append("start_date", eventData.start_date);
+      formData.append("end_date", eventData.end_date);
+      formData.append("description", eventData.description);
+      formData.append("event_type", eventData.event_type);
+      formData.append("status", eventData.status || "preparing");
+      
+      // แปลง Array/Object ให้เป็น JSON แล้วส่งไป
+      formData.append("seat_zones", JSON.stringify(seatZones));
+      formData.append("weight_classes", JSON.stringify(
+        weightClasses.map(wc => ({
           ...wc,
           matches: matches
             .filter(match => match.weight_class_id === wc.id)
@@ -588,17 +588,28 @@ const locations = [
               match_time: match.match_time,
               boxer1_id: match.boxer1_id,
               boxer2_id: match.boxer2_id
-              // สามารถเพิ่มข้อมูลอื่นๆ ของแมตช์ได้ตามต้องการ
             }))
         }))
-      };
+      ));
+      
+      // ใส่ไฟล์ภาพ (ถ้ามี)
+      console.log();
+      
+      if (eventData.poster_url) {
+        formData.append("poster_url", eventData.poster_url); // ใช้ชื่อ key "poster_url"
+      }
+      
+      if (eventData.seatZone_url) {
+        formData.append("seatZone_url", eventData.seatZone_url); // ใช้ชื่อ key "seatZone_url"
+      }
 
     try {
-      const response = await createEvent(eventDataToSend);
+      const response = await createEvent(formData);
       toast.success("Event created successfully!");
       console.log(response);
       
-      navigate(`/organizer/events/${organizer_id}`);
+      // navigate(`/organizer/events/${organizer_id}`);
+      navigate('/event/management/eventList');
     } catch (error) {
       toast.error("Failed to create event");
       console.error(error);
@@ -636,46 +647,103 @@ const locations = [
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-1">Event Name</label>
-          <input type="text" name="event_name" value={eventData.event_name} onChange={handleInputChange} className="w-full border rounded-lg py-2 px-3" placeholder="Enter event name" required />
+          <label className="block text-sm font-medium mb-2 text-gray-700">Event Name</label>
+          <input 
+            type="text" 
+            name="event_name" 
+            value={eventData.event_name} 
+            onChange={handleInputChange} 
+            className="w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
+            placeholder="Enter event name" 
+            required 
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Location ID</label>
+          <label className="block text-sm font-medium mb-2 text-gray-700">Location ID</label>
           <select
-          name="location_id"
-          value={eventData.location_id}
-          onChange={handleInputChange}
-          className="border px-3 py-2 w-full rounded-lg shadow-sm focus:ring-primary focus:border-primary transition"
-          required
-        >
+            name="location_id"
+            value={eventData.location_id}
+            onChange={handleInputChange}
+            className="w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200"
+            required
+          >
             <option value="">-- Select Location --</option>
-          {locations.map((location, index) => (
-            <option key={index} value={location.location_id}>
-              {location.name}
-            </option>
-          ))}
-        </select>
+            {locations.map((location, index) => (
+              <option key={index} value={location.location_id}>
+                {location.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Level</label>
-          <select name="level" value={eventData.level} onChange={handleInputChange} className="w-full border rounded-lg py-2 px-3" required>
+          <label className="block text-sm font-medium mb-2 text-gray-700">Level</label>
+          <select 
+            name="level" 
+            value={eventData.level} 
+            onChange={handleInputChange} 
+            className="w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
+            required
+          >
             <option value="">-- Select Level --</option>
             <option value="beginner">Beginner</option>
             <option value="fighter">Fighter</option>
           </select>
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <textarea name="description" value={eventData.description} onChange={handleInputChange} className="w-full border rounded-lg py-2 px-3" rows="4" placeholder="Enter event description" />
+          <label className="block text-sm font-medium mb-2 text-gray-700">Description</label>
+          <textarea 
+            name="description" 
+            value={eventData.description} 
+            onChange={handleInputChange} 
+            className="w-full border border-gray-300 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
+            rows="4" 
+            placeholder="Enter event description" 
+          />
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Poster</label>
-          <input type="file" accept="image/*" onChange={handleFileChange} className="w-full border rounded-lg py-2 px-3" required/>
-          {eventData.previewPoster && <img src={eventData.previewPoster} alt="Preview" className="mt-2 h-24 object-cover rounded-md" />}
+  
+        <div className="md:col-span-2">
+          <label className="block mb-1">Poster</label>
+          <input
+            type="file"
+            ref={fileSeatInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*"
+          />
+          <div className="mt-4 flex justify-center">
+            {eventData.previewPoster ? (
+              <div className="relative w-full max-w-2xl">
+                <img
+                  src={eventData.previewPoster}
+                  alt="Preview"
+                  className="w-full h-80 object-cover rounded-lg border border-border/50 mx-auto"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemovePoster(0)}
+                  className="absolute top-1 right-1 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+                >
+                  <XMarkIcon className="h-3 w-3 text-white" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileSeatInputRef.current.click()}
+                className="flex flex-col items-center justify-center w-full max-w-2xl h-80 border-2 border-gray-300 border-dashed border-border/50 rounded-lg hover:border-primary/50 transition-colors mx-auto"
+              >
+                <PhotoIcon className="h-8 w-8 text-text/40" />
+                <p className="mt-2 text-sm text-text/60">Click to upload a photo</p>
+              </button>
+            )}
+          </div>
         </div>
+
+
       </div>
     </div>
   );
+  
 
   const renderDetails = () => (
     <div className="space-y-6">
@@ -691,13 +759,14 @@ const locations = [
         <div className="md:col-span-2">
           <label className="block text-sm font-medium mb-1">Event Type</label>
           <select name="event_type" value={eventData.event_type} onChange={handleInputChange} className="w-full border rounded-lg py-2 px-3">
-            <option value="open_register">Open for Registration</option>
-            <option value="ticket_sale">Ticket Sale</option>
+            <option value="">-- Select Event Type --</option>
+            <option value="registration">Open for Registration</option>
+            <option value="ticket_sales">Ticket Sale</option>
           </select>
         </div>
       </div>
 
-      {eventData.event_type === "open_register" ? (
+      {eventData.event_type === "registration" ? (
         <div>
           <div className="flex items-center gap-2 mb-3">
             <h3 className="text-lg font-medium">Weight Classes</h3>
@@ -811,7 +880,7 @@ const locations = [
                 <button
                   type="button"
                   onClick={() => fileSeatInputRef.current.click()}
-                  className="flex flex-col items-center justify-center w-4/5 h-80 border-2 border-dashed border-border/50 rounded-lg hover:border-primary/50 transition-colors mx-auto"
+                  className="flex flex-col items-center justify-center w-4/5 h-80 border-2 border-gray-300 border-dashed border-border/50 rounded-lg hover:border-primary/50 transition-colors mx-auto"
                 >
                   <PhotoIcon className="h-8 w-8 text-text/40" />
                   <p className="mt-2 text-sm text-text/60">Click to upload a photo</p>
@@ -835,7 +904,7 @@ const locations = [
   };
   
   const renderMatches = () => (
-    eventData.event_type === "ticket_sale" ? (
+    eventData.event_type === "ticket_sales" ? (
       <div className="space-y-6">
         <h3 className="text-lg font-medium mb-3">Event Matches</h3>
         {matches.length === 0 ? (
@@ -931,7 +1000,7 @@ const locations = [
         }
       </p>
       <p>Level: {eventData.level}</p>
-      <p>Type: {eventData.event_type === "open_register" ? "Open for Registration" : "Ticket Sale"}</p>
+      <p>Type: {eventData.event_type === "registration" ? "Open for Registration" : "Ticket Sale"}</p>
     </div>
     
     <div className="border p-4 rounded-lg">
@@ -940,7 +1009,7 @@ const locations = [
       <p>End: {new Date(eventData.end_date).toLocaleDateString()}</p>
     </div>
 
-    {eventData.event_type === "open_register" ? (
+    {eventData.event_type === "registration" ? (
       <div className="border p-4 rounded-lg md:col-span-2">
         <h4 className="text-lg font-medium mb-3">Weight Classes</h4>
         {weightClasses.map((wc, index) => (
@@ -994,6 +1063,8 @@ const locations = [
       <img src={fileSeatPreviews[0]} alt="Zone" className="h-40 object-cover rounded-md" />
     </div>
   )}
+
+  
 
 </div>
   );
