@@ -482,7 +482,7 @@ const locations = [
   const totalSteps = 4;
 
   const [eventData, setEventData] = useState({
-    organizer_id: organizer_id || "",
+    organizer_id: user.user._id || "",
     location_id: "",
     event_name: "",
     level: "",
@@ -683,7 +683,6 @@ const handleAddWeightClass = () => {
       const formData = new FormData();
 
       console.log(eventData);
-     
       // ใส่ค่าที่ไม่ใช่ไฟล์โดยแปลงเป็น JSON String
       formData.append("organizer_id", eventData.organizer_id);
       formData.append("location_id", eventData.location_id);

@@ -44,7 +44,7 @@ function BuyTicket() {
       alert("Please select a ticket count and a date first");
       return;
     }
-    
+    console.log(event);
     // สร้าง orderData
     const items = ticketCounts.map(ticket => {
       const zone = event.seat_zones.find(zone => zone._id === ticket.zone_id);
@@ -71,8 +71,10 @@ function BuyTicket() {
       status: "" // สถานะ (ยังไม่กำหนดค่า)
     };
   
+    console.log(orderData);
+    
     // นำข้อมูล orderData ไปส่งไปยังหน้าชำระเงิน
-    navigate(`/event/ticket/payment`, { state: { orderData, event } });
+    navigate(`/event/ticket/payment`, { state: { orderData,event } });
   };
 
   const incrementCount = (zoneId) => {
@@ -119,11 +121,9 @@ function BuyTicket() {
   if (!event) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
-
   const formatNumber = (number) => {
     return new Intl.NumberFormat('en-US').format(number);
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-100 via-gray-200 to-gray-300 dark:from-gray-800 dark:via-gray-700 dark:to-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
@@ -153,7 +153,7 @@ function BuyTicket() {
                   const date = new Date(match.match_date);
                   const formattedDate = date.toISOString().split('T')[0];
                   return <option key={index} value={formattedDate}>{formattedDate}</option>;
-                }))} 
+                }))}
             </select>
 
             <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200">Select Ticket Tier</h2>
@@ -236,7 +236,6 @@ function BuyTicket() {
           </div>
         </div>
       </div>
-
       {isImageModalOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"

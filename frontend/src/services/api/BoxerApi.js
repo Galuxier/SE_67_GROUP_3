@@ -10,3 +10,12 @@ export async function getBoxerInGym(gym_id) {
     throw new error;
   }
 }
+
+export async function getBoxers() {
+  try{
+    const response = await api.get('/boxers');
+    return response.data;
+  } catch (error) {
+    throw new error;
+  }
+}
