@@ -1,10 +1,10 @@
-// Notification component for Navbar
 import { useState, useRef, useEffect } from "react";
 import { BellIcon } from "@heroicons/react/24/outline";
-import { useNotificationPolling } from "../hooks/useNotificationsPolling";
+import { useNotificationPolling } from "../../hooks/useNotificationsPolling";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
+import { markNotificationAsRead } from "../../services/api/NotificationApi"; // Add this import
 
 const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,13 +15,12 @@ const NotificationBell = () => {
     isLoading, 
     markAsRead, 
     markAllAsRead 
-  } = useNotificationPolling(5000); // Polling every 5 seconds
+  } = useNotificationPolling(5000);
 
   const toggleNotifications = () => {
     setIsOpen(!isOpen);
   };
 
-  // Close notification panel when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notificationRef.current && !notificationRef.current.contains(event.target)) {
@@ -35,34 +34,39 @@ const NotificationBell = () => {
     };
   }, []);
 
-  // Get icon based on notification type
   const getNotificationIcon = (type) => {
     switch (type) {
-      case "order":
-        return "📦";
-      case "event":
-        return "🎪";
-      case "course":
-        return "📚";
-      case "enrollment":
-        return "📝";
-      default:
-        return "🔔";
+      case "order": return "📦";
+      case "event": return "🎪";
+      case "course": return "📚";
+      case "enrollment": return "📝";
+      case "shop": return "🛍️";
+      default: return "🔔";
     }
   };
 
-  // Format notification date
   const formatNotificationDate = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
     
-    if (diffInHours < 1) {
-      return "Just now";
-    } else if (diffInHours < 24) {
-      return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    } else {
-      return format(date, "MMM d, yyyy");
+    if (diffInHours < 1) return "Just now";
+    else if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    else return format(date, "MMM d, yyyy");
+  };
+
+  // Updated handleNotificationClick with backend sync
+  const handleNotificationClick = async (notification) => {
+    if (!notification.is_read) {
+      try {
+        // Update backend
+        await markNotificationAsRead(notification._id);
+        // Update local state
+        markAsRead(notification._id);
+      } catch (error) {
+        console.error("Failed to mark notification as read:", error);
+        // Optionally add error handling UI feedback here
+      }
     }
   };
 
@@ -103,7 +107,7 @@ const NotificationBell = () => {
             </div>
 
             <div className="py-1 max-h-80 overflow-y-auto">
-              {isLoading ? (
+              {isLoading && notifications.length === 0 ? (
                 <div className="px-4 py-8 text-center text-text/70">
                   <div className="animate-spin h-6 w-6 border-t-2 border-primary border-r-2 rounded-full mx-auto mb-2"></div>
                   <p>Loading notifications...</p>
@@ -119,11 +123,7 @@ const NotificationBell = () => {
                     className={`px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
                       !notification.is_read ? "bg-primary/5" : ""
                     }`}
-                    onClick={() => {
-                      if (!notification.is_read) {
-                        markAsRead(notification._id);
-                      }
-                    }}
+                    onClick={() => handleNotificationClick(notification)}
                   >
                     <div className="flex items-start">
                       <div className="flex-shrink-0 mr-3 text-lg">
@@ -153,9 +153,9 @@ const NotificationBell = () => {
             </div>
             
             <div className="p-2 text-center">
-              <button className="text-sm text-primary hover:text-secondary transition-colors">
+              <Link to="/notifications" className="text-sm text-primary hover:text-secondary transition-colors">
                 View all notifications
-              </button>
+              </Link>
             </div>
           </motion.div>
         )}

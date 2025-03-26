@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { createEvent } from "../../../services/api/EventApi";
 import { useAuth } from "../../../context/AuthContext";
 import { PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { boxers } from "./mockBoxer";
+import { boxers } from "./MockBoxer";
 import { defaultWeightClass } from "./DefaultWeightClass";
 
 const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) => {

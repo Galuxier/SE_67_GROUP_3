@@ -13,7 +13,7 @@ export const getNotifications = async (userId) => {
 
 export const markNotificationAsRead = async (notificationId) => {
   try {
-    const response = await api.put(`/notification/${notificationId}`, {
+    const response = await api.put(`/notification/${notificationId}/read`, {
       is_read: true
     });
     return response.data;
