@@ -18,6 +18,7 @@ import {
   FaChevronLeft,
 } from "react-icons/fa";
 
+import Authenticator from "./Authenticator";
 const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -27,12 +28,12 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
     contact_info: {
       line: "",
       facebook: "",
-      phone: ""
-    }
+      phone: "",
+    },
   });
 
   const [activeTab, setActiveTab] = useState("profile");
-  
+
   // Image cropping states
   const [image, setImage] = useState(null);
   const [tempImage, setTempImage] = useState(null);
@@ -46,13 +47,18 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
   const overlayVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
-    exit: { opacity: 0 }
+    exit: { opacity: 0 },
   };
 
   const modalVariants = {
     hidden: { opacity: 0, y: 50, scale: 0.9 },
-    visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", duration: 0.5 } },
-    exit: { opacity: 0, y: 50, scale: 0.9, transition: { duration: 0.2 } }
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { type: "spring", duration: 0.5 },
+    },
+    exit: { opacity: 0, y: 50, scale: 0.9, transition: { duration: 0.2 } },
   };
 
   // Initialize form data when userData changes
@@ -65,10 +71,10 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
         contact_info: {
           line: userData.contact_info?.line || "",
           facebook: userData.contact_info?.facebook || "",
-          phone: userData.phone || ""
-        }
+          phone: userData.phone || "",  
+        },
       });
-      
+
       // Initialize profile picture if available
       if (userData.profile_picture_url) {
         setImage(userData.profile_picture_url);
@@ -79,20 +85,20 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prevData => ({
+
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      setFormData((prevData) => ({
         ...prevData,
         [parent]: {
           ...prevData[parent],
-          [child]: value
-        }
+          [child]: value,
+        },
       }));
     } else {
-      setFormData(prevData => ({
+      setFormData((prevData) => ({
         ...prevData,
-        [name]: value
+        [name]: value,
       }));
     }
   };
@@ -102,12 +108,12 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       const reader = new FileReader();
-      
+
       reader.onload = () => {
         setTempImage(reader.result);
         setIsCropping(true);
       };
-      
+
       reader.readAsDataURL(file);
     }
   };
@@ -122,21 +128,28 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
     try {
       const image = new Image();
       image.src = tempImage;
-      
-      // Wait for image to load
+
       await new Promise((resolve) => {
         image.onload = resolve;
       });
-      
-      // Create canvas for cropped image
+
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
-      
-      // Set canvas dimensions to match cropped area
+
       canvas.width = croppedAreaPixels.width;
       canvas.height = croppedAreaPixels.height;
-      
-      // Draw cropped image onto canvas
+
+      ctx.beginPath();
+      ctx.arc(
+        croppedAreaPixels.width / 2,
+        croppedAreaPixels.height / 2,
+        Math.min(croppedAreaPixels.width, croppedAreaPixels.height) / 2,
+        0,
+        2 * Math.PI
+      );
+      ctx.closePath();
+      ctx.clip();
+
       ctx.drawImage(
         image,
         croppedAreaPixels.x,
@@ -148,40 +161,112 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
         croppedAreaPixels.width,
         croppedAreaPixels.height
       );
-      
-      // Convert canvas to blob
+
       const croppedImage = await new Promise((resolve) => {
-        canvas.toBlob((blob) => {
-          resolve(blob);
-        }, "image/jpeg", 0.95);
+        canvas.toBlob(
+          (blob) => {
+            resolve(blob);
+          },
+          "image/jpeg",
+          0.8 // ลดคุณภาพเพื่อให้ขนาดเล็กลง
+        );
       });
-      
-      // Create a file from the blob
-      const croppedFile = new File([croppedImage], "profile-picture.jpg", {
-        type: "image/jpeg"
+
+      const croppedFile = new File([croppedImage], "profile_picture_url.jpg", {
+        type: "image/jpeg",
       });
-      
+
       return { file: croppedFile, preview: URL.createObjectURL(croppedImage) };
     } catch (error) {
       console.error("Error creating cropped image:", error);
-      toast.error("Error cropping image. Please try again.");
+      alert("Error cropping image. Please try again.");
       return null;
     }
   };
+  
+  
+
+  // const createCroppedImage = async () => {
+  //   if (!previewImage || !croppedAreaPixels) return null;
+
+  //   try {
+  //     const image = new Image();
+  //     image.src = previewImage;
+      
+  //     // Wait for image to load
+  //     await new Promise((resolve) => {
+  //       image.onload = resolve;
+  //     });
+
+  //     const canvas = document.createElement("canvas");
+  //     const ctx = canvas.getContext("2d");
+      
+  //     // Set canvas dimensions to the cropped area
+  //     canvas.width = croppedAreaPixels.width;
+  //     canvas.height = croppedAreaPixels.height;
+      
+  //     // Draw the cropped area onto the canvas
+  //     ctx.drawImage(
+  //       image,
+  //       croppedAreaPixels.x,
+  //       croppedAreaPixels.y,
+  //       croppedAreaPixels.width,
+  //       croppedAreaPixels.height,
+  //       0,
+  //       0,
+  //       croppedAreaPixels.width,
+  //       croppedAreaPixels.height
+  //     );
+      
+  //     // Convert canvas to blob with promise
+  //     return new Promise((resolve) => {
+  //       canvas.toBlob((blob) => {
+  //         if (!blob) {
+  //           console.error("Canvas to Blob conversion failed");
+  //           resolve(null);
+  //           return;
+  //         }
+          
+  //         // Create a File object from the blob
+  //         // Always use a consistent filename for better backend processing
+  //         const fileName = "profile_picture.jpg";
+  //         const fileType = "image/jpeg";
+          
+  //         // Create a File object with a name the backend expects
+  //         const croppedFile = new File([blob], fileName, {
+  //           type: fileType,
+  //           lastModified: new Date().getTime()
+  //         });
+          
+  //         // Create a URL for preview
+  //         const previewUrl = URL.createObjectURL(blob);
+  //         setPreviewImage(previewUrl);
+          
+  //         console.log("Created cropped file:", croppedFile.name, "Size:", croppedFile.size, "Type:", croppedFile.type);
+  //         resolve(croppedFile);
+  //       }, 'image/jpeg', 0.95); // Always use JPEG with 95% quality for consistency
+  //     });
+  //   } catch (error) {
+  //     console.error("Error creating cropped image:", error);
+  //     toast.error("Error cropping image. Please try again.");
+  //     return null;
+  //   }
+  // };
 
   // Apply crop and set the cropped image
   const applyCrop = async () => {
     const result = await createCroppedImage();
     if (result) {
       setImage(result.preview);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        profile_picture: result.file
+        profile_picture_url: result.file,
       }));
       setIsCropping(false);
       setTempImage(null);
     }
   };
+  
 
   // Cancel cropping
   const cancelCrop = () => {
@@ -189,47 +274,60 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
     setTempImage(null);
   };
 
+  const [isModalOpen, setIsModalOpen] = useState(false); // ใช้เพื่อเปิด/ปิด Authenticator Modal
+  const [isPasswordVerified, setIsPasswordVerified] = useState(false); // ใช้สำหรับเช็คว่ารหัสผ่านถูกต้องไหม
+
   // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // ต้องให้ `e` ถูกส่งเข้ามาในฟังก์ชันนี้
+
+    if (!isPasswordVerified) {
+      setIsModalOpen(true);
+      return;
+    }
+
     setIsLoading(true);
-    
     try {
-      // Create FormData for sending to API
       const submitData = new FormData();
-      
-      // Append basic profile info
       submitData.append("first_name", formData.first_name);
       submitData.append("last_name", formData.last_name);
       submitData.append("bio", formData.bio);
-      
-      // Append contact info
-      submitData.append("contact_info", JSON.stringify({
-        line: formData.contact_info.line,
-        facebook: formData.contact_info.facebook
-      }));
-      
-      // Append phone number
+      submitData.append("contact_info", JSON.stringify(formData.contact_info));
       submitData.append("phone", formData.contact_info.phone);
-      
-      // Append profile picture if it exists
-      if (formData.profile_picture) {
-        submitData.append("profile_picture_url", formData.profile_picture);
+
+      if (formData.profile_picture_url) {
+        submitData.append("profile_picture_url", formData.profile_picture_url);
       }
-      
-      // Update user profile
+
+      // ส่งข้อมูลไป API เพื่ออัปเดตข้อมูล
       const result = await updateUser(userData._id, submitData);
-      
-      // Show success message
+      setImage(result.profile_picture_url);
+      // แสดงข้อความสำเร็จ
       toast.success("Profile updated successfully!");
-      
-      // Call onSave with the updated user data
+
+      // อัปเดตข้อมูลผู้ใช้หลังจากการบันทึก
       onSave(result);
+      setIsLoading(false);
+      onClose();
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile. Please try again.");
-    } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCancle = () => {
+    setIsLoading(false);
+    onClose(true);
+  };
+
+  const handlePasswordVerification = (isVerified) => {
+    setIsPasswordVerified(isVerified); // ถ้ารหัสผ่านถูกต้อง
+    setIsModalOpen(false); // ปิด Authenticator Modal เมื่อยืนยันรหัสผ่านสำเร็จ
+
+    if (isVerified) {
+      // เมื่อรหัสผ่านถูกต้อง, อัปเดตข้อมูลทันที
+      handleSubmit(); // เรียกฟังก์ชัน handleSubmit เพื่อบันทึกข้อมูล
     }
   };
 
@@ -246,9 +344,11 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
               {/* Profile Picture Section */}
               <div className="relative mb-5 group">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-rose-100 dark:border-rose-900/30">
-                  <img 
-                    src={image || userData?.profile_picture_url || defaultAvatar} 
-                    alt="Profile" 
+                  <img
+                    src={
+                      image || userData?.profile_picture_url || defaultAvatar
+                    }
+                    alt="Profile"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -410,7 +510,9 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
                   disabled
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
+              <p className="mt-1 text-xs text-gray-500">
+                Email cannot be changed
+              </p>
             </div>
           </div>
         );
@@ -454,13 +556,16 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
             {isCropping && (
               <div className="absolute inset-0 z-10 bg-black bg-opacity-90 flex flex-col">
                 <div className="p-4 text-white flex justify-between items-center bg-gray-900">
-                  <button onClick={cancelCrop} className="flex items-center text-rose-300 hover:text-rose-100">
+                  <button
+                    onClick={cancelCrop}
+                    className="flex items-center text-rose-300 hover:text-rose-100"
+                  >
                     <FaChevronLeft className="mr-2" /> Back
                   </button>
                   <h4 className="text-xl font-medium">Crop Your Photo</h4>
                   <div></div> {/* Empty div for flexbox alignment */}
                 </div>
-                
+
                 <div className="flex-grow relative">
                   <Cropper
                     image={tempImage}
@@ -473,10 +578,12 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
                     onZoomChange={setZoom}
                   />
                 </div>
-                
+
                 <div className="p-4 bg-gray-900">
                   <div className="mb-4">
-                    <label className="text-white text-sm mb-1 block">Zoom</label>
+                    <label className="text-white text-sm mb-1 block">
+                      Zoom
+                    </label>
                     <input
                       type="range"
                       min={1}
@@ -487,7 +594,7 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
                       className="w-full"
                     />
                   </div>
-                  
+
                   <div className="flex justify-end space-x-3">
                     <button
                       onClick={cancelCrop}
@@ -534,9 +641,7 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
               </div>
 
               {/* Tab Content */}
-              <div className="p-6">
-                {renderTabContent()}
-              </div>
+              <div className="p-6">{renderTabContent()}</div>
 
               {/* Form Actions */}
               <div className="bg-gray-50 dark:bg-gray-800 px-6 py-4 flex justify-end border-t border-gray-200 dark:border-gray-700">
@@ -549,6 +654,7 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
                 </button>
                 <button
                   type="submit"
+                  onClick={(e) => handleSaveChanges(e)}
                   disabled={isLoading}
                   className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px]"
                 >
@@ -568,6 +674,15 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
             </form>
           </motion.div>
         </motion.div>
+      )}
+      {/* เปิด Modal สำหรับกรอกรหัสผ่าน */}
+      {isModalOpen && (
+        <Authenticator
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onVerify={handlePasswordVerification}
+          setIsLoading={setIsLoading} // ส่งฟังก์ชัน setIsLoading ให้ Authenticator
+        />
       )}
     </AnimatePresence>
   );
