@@ -14,6 +14,7 @@ import EventDetail from "../pages/events/EventDetail";
 import RegistrationForm from "../pages/events/RegistrationForm";
 import EventManageDashboard from "../pages/events/managements/EventManageDashboard";
 import EventList from "../pages/events/managements/EventList";
+import EventPackage from "../pages/events/managements/EventPackage";
 
 
 function EventRoutes() {
@@ -41,6 +42,7 @@ function EventRoutes() {
           <Route path="/management/create/seat" element={<FormAddSeat />}/>
           <Route path="/management/create/match" element={<FormAddFighter />}/>
           <Route path="/management/create/weightClass" element={<FormAddWeightClass />}/>
+          <Route path="/management/eventPackage" element={<EventPackage />}/>
         </Route>
 
         {/* ไม่มี Layout(Navbar) */}

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { MagnifyingGlassIcon, FunnelIcon, PlusIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import { getBoxerInGym } from "../../../services/api/BoxerApi";
+import { updateUser } from "../../../services/api/UserApi";
 
 function BoxerList() {
+  const { gym_id } = useParams(); // ดึง gym_id จาก URL
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterWeight, setFilterWeight] = useState("all");
@@ -13,34 +15,43 @@ function BoxerList() {
   const [boxers, setBoxers] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // แทนที่ useEffect เดิมด้วยนี้
   useEffect(() => {
     const fetchBoxers = async () => {
       try {
-        const data = await getBoxerInGym("gym_id_here");
-        const formattedBoxers = data.map(boxer => ({
+        const response = await getBoxerInGym(gym_id);
+        console.log('Boxers response:', response);
+        
+        // ใช้ response.data แทน response เพราะ API return object ที่มี property data
+        const boxerData = response.data || [];
+        
+        const formattedBoxers = boxerData.map(boxer => ({
           id: boxer._id,
-          image: boxer.image_url || boxer.profile_picture_url || "/api/placeholder/400/320",
-          name: `${boxer.firstName || boxer.first_name} ${boxer.lastName || boxer.last_name}`,
-          nickname: boxer.Nickname || boxer.nickname,
+          image: boxer.profile_picture_url || "/api/placeholder/400/320",
+          name: `${boxer.first_name} ${boxer.last_name}`,
+          nickname: boxer.nickname,
+          username: boxer.username,
           age: boxer.age, 
           weight: boxer.weight, 
           wins: boxer.wins,
           losses: boxer.losses,
           draws: boxer.draws,
           fightHistory: boxer.fightHistory,
-          detail: boxer.detail
+          detail: boxer.detail,
+          status: boxer.status
         }));
+        
         setBoxers(formattedBoxers);
       } catch (error) {
         console.error("Failed to fetch boxers:", error);
+        setBoxers([]); // เซ็ตเป็น array ว่างหากเกิด error
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchBoxers();
-  }, []);
-
+  }, [gym_id]);
   if (loading) {
     return (
       <div className="min-h-screen p-8 bg-gray-50 flex items-center justify-center">
@@ -64,7 +75,7 @@ function BoxerList() {
   });
 
   const handleAddBoxer = () => {
-    navigate("/gym/management/boxers/create");
+    navigate(`/gym/management/${gym_id}/boxers/create`);
   };
 
   const handleEditBoxer = (boxer, e) => {
@@ -78,15 +89,35 @@ function BoxerList() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
-    // In a real app, you would call an API to delete the boxer
-    setBoxers(boxers.filter(boxer => boxer.id !== selectedBoxer.id));
-    setIsDeleteModalOpen(false);
-    setSelectedBoxer(null);
+  // ในส่วน handleDeleteConfirm
+  const handleDeleteConfirm = async () => {
+    try {
+      console.log(`Removing ${selectedBoxer.id} from gym ${gym_id}`);
+      
+      // เรียก API เพื่ออัปเดต gym_id เป็น null
+      await updateUser(selectedBoxer.id, { 
+        gym_id: null,
+        role: ['member'] // เปลี่ยน role เป็น member เมื่อออกจาก gym
+      });
+      
+      // อัปเดต state โดยไม่ต้องรอ refetch
+      setBoxers(boxers.filter(boxer => boxer.id !== selectedBoxer.id));
+      
+      setIsDeleteModalOpen(false);
+      setSelectedBoxer(null);
+      
+      // แสดงการแจ้งเตือน
+      alert('ลบนักมวยออกจากยิมเรียบร้อยแล้ว');
+    } catch (error) {
+      console.error("Failed to remove:", error);
+      alert('เกิดข้อผิดพลาดในการลบ: ' + error.message);
+    }
   };
 
   const handleViewProfile = (boxer) => {
-    navigate(`/gym/management/boxers/${boxer.id}`);
+    if (boxer.username) {
+      navigate(`/gym/management/user/${boxer.username}`);
+    }
   };
 
   // Weight category badge 
