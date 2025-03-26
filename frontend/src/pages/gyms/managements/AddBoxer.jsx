@@ -89,9 +89,8 @@ function AddBoxer() {
     formData.append("last_name", boxerData.last_name);
     formData.append("nickname", boxerData.nickname);
     formData.append("role", boxerData.role);
+    formData.append("gym_id",gym_id)
     formData.append("status", "inActive");
-    formData.append("gym_id", "inActive");
-
     // Append cropped profile picture ถ้ามี
     if (profile) {
       formData.append("profile_picture_url", profile);
@@ -99,7 +98,7 @@ function AddBoxer() {
 
     // Append รูปภาพใบอนุญาต (licence)
     licenceFiles.forEach((file) => {
-      formData.append("licence", file);
+      formData.append("license_urls", file);
     });
 
     // สำหรับ debug: iterate ผ่าน entries ของ formData เพื่อ log ค่า

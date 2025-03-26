@@ -5,7 +5,7 @@ import {
   XMarkIcon,
   PhotoIcon,
 } from "@heroicons/react/24/outline";
-
+import { useParams } from "react-router-dom";
 function AddTrainer() {
   const [trainerData, setTrainerData] = useState({
     first_name: "",
@@ -14,7 +14,7 @@ function AddTrainer() {
     role: "trainer",
     licence: [],
   });
-
+  const { gym_id } = useParams();
   // State for cropped profile picture and preview
   const [profile, setProfile] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
@@ -89,6 +89,7 @@ function AddTrainer() {
     formData.append("last_name", trainerData.last_name);
     formData.append("nickname", trainerData.nickname);
     formData.append("role", trainerData.role);
+    formData.append("gym_id",gym_id);
     formData.append("status", "inActive"); // เพิ่ม status คล้ายกับ AddBoxer
 
     // Append cropped profile picture
@@ -98,7 +99,7 @@ function AddTrainer() {
 
     // Append รูปภาพใบอนุญาต (licence)
     licenceFiles.forEach((file) => {
-      formData.append("licence", file);
+      formData.append("license_urls", file);
     });
 
     // Log formData for debugging
