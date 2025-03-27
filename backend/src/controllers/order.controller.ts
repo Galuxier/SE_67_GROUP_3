@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import OrderService from '../services/order.service';
 import { Types } from 'mongoose';
+import { OrderStatus } from '../models/order.model';
 
 export const createOrderController = async (req: Request, res: Response) => {
   try {
@@ -89,5 +90,43 @@ export const getOrdersByUserIdController = async (req: Request, res: Response) =
     res.status(200).json(orders);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching shop orders', error: err });
+  }
+};
+
+export const updateOrderStatusController = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    if (!status || !Object.values(OrderStatus).includes(status)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid status provided'
+      });
+      return;
+    }
+    
+    const updatedOrder = await OrderService.updateOrderStatus(id, status);
+    
+    if (!updatedOrder) {
+      res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+      return;
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: `Order status updated to ${status}`,
+      data: updatedOrder
+    });
+  } catch (err) {
+    console.error('Error updating order status:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating order status',
+      error: err
+    });
   }
 };
