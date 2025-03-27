@@ -7,15 +7,14 @@ import { api } from "../Axios";
  * @returns {Promise} - Cart data
  */
 export const getUserCart = async (userId) => {
-  try {
-    const response = await api.get(`/cart/user/${userId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching user cart:', error);
-    throw error;
-  }
-};
-
+    try {
+      const response = await api.get(`/cart/user/${userId}`);
+      return response.data ? response.data : response;
+    } catch (error) {
+      console.error('Error fetching user cart:', error);
+      throw error;
+    }
+  };
 
 /**
  * Add an item to the cart
@@ -64,6 +63,7 @@ export const removeItemFromCart = async ({ user_id, shop_id, variant_id }) => {
     throw error;
   }
 };
+
 
 /**
  * Update the quantity of an item in the cart

@@ -175,25 +175,59 @@ const Cart = () => {
   const shippingCost = subTotal > 0 ? 50 : 0;
   const total = subTotal + shippingCost;
 
+  // Cart.jsx
   const handleCheckout = () => {
-    const hasSelected = cart.shops.some((shop) =>
-      shop.items.some((item) => selectedItems[`${shop.shop_id}-${item.variant_id}`])
+    // 1. ตรวจสอบว่ามีสินค้าเลือกหรือไม่
+    const hasSelectedItems = cart.shops.some(shop => 
+      shop.items.some(item => selectedItems[`${shop.shop_id}-${item.variant_id}`])
     );
-    
-    if (hasSelected) {
-      navigate("/shop/productPayment", {
-        state: { 
-          cart: { 
-            shops: cart.shops, 
-            subTotal,
-            shippingCost,
-            total
-          } 
-        },
-      });
-    } else {
-      toast.error("Please select at least one item before checkout.");
+  
+    if (!hasSelectedItems) {
+      toast.error("Please select at least one item");
+      return;
     }
+  
+    // 2. เตรียมข้อมูลที่จะส่ง
+    const selectedProducts = cart.shops.flatMap(shop => 
+      shop.items
+        .filter(item => selectedItems[`${shop.shop_id}-${item.variant_id}`])
+        .map(item => ({
+          product_id: item.product_id,
+          variant_id: item.variant_id,
+          quantity: item.quantity,
+          price: item.price,
+          shop_id: shop.shop_id,
+          shop_name: shop.shop_name || "Unknown Shop"
+        }))
+    );
+  
+    // 3. คำนวณยอดรวม
+    const subTotal = selectedProducts.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const shipping = 50; // ค่าจัดส่งคงที่
+    const total = subTotal + shipping;
+  
+    // 4. ส่งข้อมูลด้วย state ที่ชัดเจน
+    navigate("/shop/productPayment", {
+      state: {
+        formData: {
+          type: "cart",
+          selectedProducts,
+          subTotal,
+          shipping,
+          total,
+          timestamp: Date.now() // เพิ่ม timestamp เพื่อป้องกัน cache
+        }
+      }
+    });
+  
+    // 5. Log ข้อมูลเพื่อ debug
+    console.log("Navigating with:", {
+      type: "cart",
+      selectedProducts,
+      subTotal,
+      shipping,
+      total
+    });
   };
 
   if (isLoading) {
