@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import FightHistoryService from '../services/fightHistory.service';
+import { Types } from 'mongoose';
 
 // สร้างประวัติการต่อสู้ใหม่
 export const createFightHistoryController = async (req: Request, res: Response) => {
@@ -52,5 +53,36 @@ export const deleteFightHistoryController = async (req: Request, res: Response) 
     res.status(200).json(deletedFightHistory);
   } catch (err) {
     res.status(500).json({ message: 'Error deleting fight history', error: err });
+  }
+};
+
+export const getFightHistoriesByUserIdController = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Validate userId
+    if (!Types.ObjectId.isValid(userId)) {
+      res.status(400).json({ 
+        success: false, 
+        message: 'Invalid user ID format' 
+      });
+      return;
+    }
+    
+    // Get fight histories for the specified user
+    const fightHistories = await FightHistoryService.getFightHistoriesByUserId(userId);
+    
+    res.status(200).json({
+      success: true,
+      count: fightHistories.length,
+      data: fightHistories
+    });
+  } catch (err) {
+    console.error('Error fetching user fight histories:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching fight histories', 
+      error: err 
+    });
   }
 };

@@ -19,3 +19,12 @@ export async function getBoxers() {
     throw new error;
   }
 }
+
+export async function getFightHistoriesByUserId(user_id) {
+  try{
+    const response = await api.get(`/user/${user_id}/fightHistories`);
+    return response;
+  }catch (error){
+    throw new error;
+  }
+}

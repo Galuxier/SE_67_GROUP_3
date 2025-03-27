@@ -1,18 +1,24 @@
+// src/routes/cart.routes.ts
 import express from 'express';
 import {
-  addToCartController,
-  getCartsController,
-  getCartByIdController,
-  updateCartController,
-  deleteCartController,
+  addItemToCartController,
+  getCartByUserIdController,
+  removeItemFromCartController,
+  updateItemQuantityController
 } from '../controllers/cart.controller';
 
 const router = express.Router();
 
-router.post('/carts', addToCartController);
-router.get('/carts', getCartsController);
-router.get('/cart/:id', getCartByIdController);
-router.put('/cart/:id', updateCartController);
-router.delete('/cart/:id', deleteCartController);
+// Add item to cart
+router.post('/cart/add', addItemToCartController);
+
+// Get cart by user ID
+router.get('/cart/user/:user_id', getCartByUserIdController);
+
+// Remove item from cart
+router.post('/cart/remove', removeItemFromCartController);
+
+// Update item quantity
+router.post('/cart/update-quantity', updateItemQuantityController);
 
 export default router;

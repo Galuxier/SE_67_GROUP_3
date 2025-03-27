@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import TeachHistoryService from '../services/teachHistory.service';
+import { Types } from 'mongoose';
 
 export const createTeachHistoryController = async (req: Request, res: Response) => {
   try {
@@ -47,5 +48,36 @@ export const deleteTeachHistoryController = async (req: Request, res: Response) 
     res.status(200).json(deletedTeachHistory);
   } catch (err) {
     res.status(500).json({ message: 'Error deleting teaching history', error: err });
+  }
+};
+
+export const getTeachHistoriesByUserIdController = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Validate userId
+    if (!Types.ObjectId.isValid(userId)) {
+      res.status(400).json({ 
+        success: false, 
+        message: 'Invalid user ID format' 
+      });
+      return;
+    }
+    
+    // Get teach histories for the specified user (trainer)
+    const teachHistories = await TeachHistoryService.getTeachHistoriesByUserId(userId);
+    
+    res.status(200).json({
+      success: true,
+      count: teachHistories.length,
+      data: teachHistories
+    });
+  } catch (err) {
+    console.error('Error fetching user teach histories:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching teach histories', 
+      error: err 
+    });
   }
 };
