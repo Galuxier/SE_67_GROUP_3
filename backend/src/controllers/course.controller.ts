@@ -163,6 +163,8 @@ export const updateCourseController = async (req: Request, res: Response) => {
     const updatedCourse = await CourseService.update(req.params.id, req.body);
     res.status(200).json(updatedCourse);
   } catch (err) {
+    console.log(err);
+    
     res.status(500).json({ message: 'Error updating course', error: err });
   }
 };

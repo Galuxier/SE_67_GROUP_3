@@ -97,7 +97,7 @@ const CourseSchema = new Schema<CourseDocument>({
    trainer_in_course:[{
     trainer_id: { type: Schema.Types.ObjectId, required: true},
     status: { type : String, enum: TrainerStatus, required: true },
-    isMenber:{type: Boolean , require:true}
+    isMember:{type: Boolean , require:true}
    }],
    max_participants: { type: Number, required: true },
    available_slot: { type: Number }
