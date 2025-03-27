@@ -32,36 +32,10 @@ const GymDetail = () => {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
-  // Sample upcoming courses
-  const [upcomingCourses, setUpcomingCourses] = useState([
-    {
-      id: 1,
-      name: "Beginner Muay Thai",
-      startDate: "April 15, 2025",
-      endDate: "May 30, 2025",
-      price: 2500,
-      spots: 5,
-      level: "Beginner"
-    },
-    {
-      id: 2,
-      name: "Advanced Clinching Techniques",
-      startDate: "April 20, 2025",
-      endDate: "June 10, 2025",
-      price: 3500,
-      spots: 3,
-      level: "Advanced"
-    },
-    {
-      id: 3,
-      name: "Kids Muay Thai",
-      startDate: "May 1, 2025",
-      endDate: "June 30, 2025",
-      price: 2000,
-      spots: 8,
-      level: "Beginner"
-    }
-  ]);
+  // Courses state
+  const [upcomingCourses, setUpcomingCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+  const [coursesError, setCoursesError] = useState(null);
   
   // Animation for sections
   const [aboutRef, aboutInView] = useInView({
@@ -82,30 +56,28 @@ const GymDetail = () => {
   // Check if user is the owner of the gym
   const isGymOwner = user && gym && user._id === gym.owner_id;
   
-  // Fetch gym data
+  // Fetch gym data and courses
   useEffect(() => {
-    const fetchGym = async () => {
+    const fetchGymData = async () => {
       try {
         setLoading(true);
         const response = await getGymFromId(id);
         setGym(response);
 
-        // ดึง URL ของรูปภาพทั้งหมด
-        if (response.gym_image_url && response.gym_image_url.length > 0) {
+        // Fetch image URLs
+        if (response.gym_image_urls && response.gym_image_urls.length > 0) {
           const urls = await Promise.all(
-            response.gym_image_url.map(async (imageUrl) => {
+            response.gym_image_urls.map(async (imageUrl) => {
               try {
                 return await getImage(imageUrl);
               } catch (error) {
                 console.error("Error fetching image:", error);
-                // Return a placeholder image URL for failed images
                 return "https://via.placeholder.com/800x500?text=Image+Not+Available";
               }
             })
           );
           setImageUrls(urls);
         } else {
-          // If no images, use placeholder
           setImageUrls([
             "https://via.placeholder.com/800x500?text=No+Images+Available",
             "https://via.placeholder.com/800x500?text=Muay+Thai+Gym"
@@ -118,8 +90,54 @@ const GymDetail = () => {
         setLoading(false);
       }
     };
-    
-    fetchGym();
+
+    const fetchCourses = async () => {
+      try {
+        setCoursesLoading(true);
+        // Simulate API call - replace with actual API call when available
+        const sampleCourses = [
+          {
+            id: 1,
+            name: "Beginner Muay Thai",
+            startDate: "April 15, 2025",
+            endDate: "May 30, 2025",
+            price: 2500,
+            spots: 5,
+            level: "Beginner"
+          },
+          {
+            id: 2,
+            name: "Advanced Clinching Techniques",
+            startDate: "April 20, 2025",
+            endDate: "June 10, 2025",
+            price: 3500,
+            spots: 3,
+            level: "Advanced"
+          },
+          {
+            id: 3,
+            name: "Kids Muay Thai",
+            startDate: "May 1, 2025",
+            endDate: "June 30, 2025",
+            price: 2000,
+            spots: 8,
+            level: "Beginner"
+          }
+        ];
+        
+        // Simulate delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setUpcomingCourses(sampleCourses);
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+        setCoursesError("Failed to load courses. Please try again.");
+      } finally {
+        setCoursesLoading(false);
+      }
+    };
+
+    fetchGymData();
+    fetchCourses();
   }, [id]);
   
   const handleSave = (updatedGym) => {
@@ -128,7 +146,6 @@ const GymDetail = () => {
   };
   
   const handleCourseClick = (courseId) => {
-    // Navigate to course detail page
     navigate(`/course/${courseId}`);
   };
   
@@ -177,7 +194,7 @@ const GymDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Image Slider - Smaller size */}
+      {/* Image Slider */}
       <div className="relative w-full h-[40vh] md:h-[50vh] max-w-7xl mx-auto mt-4 rounded-lg overflow-hidden">
         <Swiper
           modules={[Navigation, Pagination]}
@@ -206,7 +223,7 @@ const GymDetail = () => {
         </Swiper>
       </div>
       
-      {/* Gym Name and Location - Moved below the images */}
+      {/* Gym Name and Location */}
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="flex justify-between items-start">
           <div>
@@ -221,7 +238,6 @@ const GymDetail = () => {
             </div>
           </div>
           
-          {/* Only show edit button for gym owner */}
           {isGymOwner && (
             <button
               onClick={() => setIsModalOpen(true)}
@@ -261,7 +277,7 @@ const GymDetail = () => {
                 >
                   Trainers
                 </button>
-                <button
+                {/* <button
                   onClick={() => setActiveTab("facilities")}
                   className={`py-4 px-1 font-medium text-lg text-text border-b-2 ${
                     activeTab === "facilities"
@@ -270,7 +286,7 @@ const GymDetail = () => {
                   } transition-colors`}
                 >
                   Facilities
-                </button>
+                </button> */}
               </nav>
             </div>
             
@@ -404,7 +420,6 @@ const GymDetail = () => {
                 </h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                  {/* Placeholder facility items */}
                   {Array.from({ length: 6 }).map((_, index) => (
                     <div key={index} className="bg-card border border-border/20 rounded-lg p-5 shadow-md hover:shadow-lg transition-shadow">
                       <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mb-4">
@@ -455,7 +470,6 @@ const GymDetail = () => {
                   </div>
                 ) : upcomingCourses.length > 0 ? (
                   <div className="space-y-4 max-h-[360px] overflow-y-auto" style={{ paddingRight: "12px" }}>
-                    {/* แสดงแค่ 3 รายการแรก และเพิ่ม scrollbar ถ้ามีมากกว่านั้น */}
                     {upcomingCourses.map((course) => (
                       <div
                         key={course.id}
@@ -491,12 +505,6 @@ const GymDetail = () => {
                         </div>
                       </div>
                     ))}
-                    {/* ถ้ามีคอร์สมากกว่า 3 ให้แสดงข้อความหรือปุ่มเพิ่มเติม */}
-                    {/* {upcomingCourses.length > 3 && (
-                      <p className="text-text/70 text-center mt-4">
-                        Scroll down to see more courses
-                      </p>
-                    )} */}
                   </div>
                 ) : (
                   <div className="text-center py-8">
@@ -506,12 +514,6 @@ const GymDetail = () => {
                     <p className="text-text/70">No upcoming courses available</p>
                   </div>
                 )}
-
-                {/* <div className="mt-6 text-center">
-                  <button className="w-full px-4 py-3 bg-primary hover:bg-secondary text-white rounded-lg transition-colors">
-                    View All Courses
-                  </button>
-                </div> */}
               </div>
             </div>
           </div>
@@ -539,6 +541,6 @@ const GymDetail = () => {
       )}
     </div>
   );
-};
+};  
 
 export default GymDetail;

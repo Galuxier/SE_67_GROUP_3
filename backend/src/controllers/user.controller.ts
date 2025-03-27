@@ -25,6 +25,35 @@ export const createTempUserController = async (req: Request, res: Response) => {
   }
 };
 
+export const getTrainersInGymController = async (req: Request, res: Response) => {
+  try {
+    const gymId = req.params.gymId;
+    
+    if (!Types.ObjectId.isValid(gymId)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid gym ID format'
+      });
+      return;
+    }
+    
+    const trainers = await UserService.getTrainersInGym(gymId);
+    
+    res.status(200).json({
+      success: true,
+      count: trainers.length,
+      data: trainers
+    });
+  } catch (err) {
+    console.error('Error fetching trainers in gym:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching trainers in gym', 
+      error: err 
+    });
+  }
+};
+
 export const getTrainersNotInGymController = async (req: Request, res: Response) => {
   try {
     const gymId = req.params.gymId;

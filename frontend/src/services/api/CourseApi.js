@@ -14,6 +14,20 @@ export async function createCourse(CourseData){
     }
 }
 
+export async function updateCourse(course_id, course_data) {
+    try{
+      const response = await api.put(`/course/${course_id}`, course_data, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response;
+    }catch(error){
+      console.error("update course failed: ", error);
+      throw new error;
+    }
+}
+
 export async function getCoursesByGymId(gym_id) {
     try {
       const response = await api.get(`/gym/${gym_id}/courses`);

@@ -13,7 +13,7 @@ class PlaceService extends BaseService<PlaceDocument> {
 
     async getById(id: string): Promise<PlaceDocument | null> {
         return await Place.findById(id);
-    }
+}
 }
 
 export default new PlaceService;

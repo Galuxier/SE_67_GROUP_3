@@ -13,6 +13,7 @@ export interface PaymentDocument extends Document {
   payment_method: string;
   payment_status: PaymentStatus;
   paid_at?: Date;
+  create_at: Date;
 }
 
 const PaymentSchema = new Schema<PaymentDocument>({
@@ -22,6 +23,7 @@ const PaymentSchema = new Schema<PaymentDocument>({
   payment_method: { type: String, required: true },
   payment_status: { type: String, enum: Object.values(PaymentStatus), required: true },
   paid_at: { type: Date },
+  create_at: { type: Date, required: true, default: Date.now },
 });
 
 export const Payment = model<PaymentDocument>('Payment', PaymentSchema);
