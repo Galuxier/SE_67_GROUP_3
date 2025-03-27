@@ -1,6 +1,6 @@
-import React from "react";
-import { shops } from "../../data/ShopsData";
-import { trainer } from "../../components/Trainer";
+import React, { useEffect, useState } from "react";
+import { getAllUser } from "../../services/api/UserApi";
+import { getAllGyms } from "../../services/api/GymApi";
 
 function UserIcon() {
     return (
@@ -46,13 +46,56 @@ function UserIcon() {
   }
   
   export default function Dashboard() {
-    const nakMuayCount = 20;
-    const gymCount = 20;
-    const organizerCount = 20;
-    const memberCount = 20;
-    const shopCount = shops.length;
-    const trainerCount = trainer.length;
-  
+    const [counts, setCounts] = useState({
+      nakMuay: 0,
+      gym: 0,
+      organizer: 0,
+      member: 0,
+      shopOwner: 0,
+      trainer: 0,
+      loading: true
+    });
+
+    useEffect(() => {
+      const fetchCounts = async () => {
+        try {
+          // Fetch gym count
+          const gyms = await getAllGyms();
+          const gymCount = gyms.length;
+
+          // Fetch all users and filter by role
+          const users = await getAllUser();
+          
+          // Helper function to check roles safely
+          const hasRole = (user, role) => {
+            const roles = user.roles || user.role || []; // Use roles or role property
+            return Array.isArray(roles) && roles.includes(role);
+          };
+
+          const nakMuayCount = users.filter(user => hasRole(user, 'boxer')).length;
+          const organizerCount = users.filter(user => hasRole(user, 'organizer')).length;
+          const memberCount = users.filter(user => hasRole(user, 'member')).length;
+          const trainerCount = users.filter(user => hasRole(user, 'trainer')).length;
+          const shopOwnerCount = users.filter(user => hasRole(user, 'shop_owner')).length;
+
+          setCounts({
+            nakMuay: nakMuayCount,
+            gym: gymCount,
+            organizer: organizerCount,
+            member: memberCount,
+            shopOwner: shopOwnerCount,
+            trainer: trainerCount,
+            loading: false
+          });
+        } catch (error) {
+          console.error("Failed to fetch dashboard counts:", error);
+          setCounts(prev => ({ ...prev, loading: false }));
+        }
+      };
+
+      fetchCounts();
+    }, []);
+
     function StatCard({ title, count, iconColor, icon }) {
       return (
         <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
@@ -65,7 +108,7 @@ function UserIcon() {
             </div>
           </div>
           <div className="text-3xl font-bold text-gray-900">
-            {count}
+            {counts.loading ? '...' : count}
           </div>
         </div>
       );
@@ -78,13 +121,13 @@ function UserIcon() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <StatCard
             title="นักมวย"
-            count={nakMuayCount}
+            count={counts.nakMuay}
             iconColor="blue"
             icon={<UserIcon />}
           />
           <StatCard
             title="ค่าย"
-            count={gymCount}
+            count={counts.gym}
             iconColor="green"
             icon={
               <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -100,7 +143,7 @@ function UserIcon() {
           />
           <StatCard
             title="ผู้จัด"
-            count={organizerCount}
+            count={counts.organizer}
             iconColor="yellow"
             icon={
               <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -112,19 +155,19 @@ function UserIcon() {
           />
           <StatCard
             title="ร้านค้า"
-            count={shopCount}
+            count={counts.shopOwner}
             iconColor="pink"
             icon={<ShopIcon />}
           />
           <StatCard
             title="สมาชิก"
-            count={memberCount}
+            count={counts.member}
             iconColor="red"
             icon={<UserIcon />}
           />
           <StatCard
             title="เทรนเนอร์"
-            count={trainerCount}
+            count={counts.trainer}
             iconColor="purple"
             icon={
               <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

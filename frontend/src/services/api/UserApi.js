@@ -78,4 +78,13 @@ export async function submitEnrollment(formData) {
     }
   }
 
-  
+  export async function getAllUser() {
+    try{
+        const response = await api.get('/users');
+        console.log(response.data);
+        return response.data;
+    } catch(error){
+        console.error('Failed to get User: ', error);
+        throw error;
+    }
+  }
