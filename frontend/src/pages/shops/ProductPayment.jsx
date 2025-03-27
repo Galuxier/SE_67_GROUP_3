@@ -12,84 +12,96 @@ import { useAuth } from "../../context/AuthContext";
 const ProductPayment = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [groupedProducts, setGroupedProducts] = useState([]);
   const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [orderSummary, setOrderSummary] = useState(null);
 
   useEffect(() => {
     const fetchOrderData = async () => {
       try {
         setIsLoading(true);
-        
-        if (!state?.formData) {
+
+        if (!state || !state.type || !state.DatafromOrder) {
           throw new Error("Missing order data");
         }
 
-        const { type, selectedProducts } = state.formData;
+        const { type, DatafromOrder } = state;
 
-        if (type === "cart") {
-          // 1. ดึงข้อมูลร้านค้าทั้งหมด
-          const shopIds = [...new Set(selectedProducts.map(p => p.shop_id))];
-          const shopsResponse = await Promise.all(
-            shopIds.map(shopId => getShopById(shopId))
-          );
+        let summaryData = {
+          items: [],
+          total: DatafromOrder.total || 0,
+          shipping: 0
+        };
 
-          // 2. สร้าง Map ของร้านค้า
-          const shopsMap = {};
-          shopsResponse.forEach(response => {
-            const shopData = response.data || response;
-            if (shopData) {
-              shopsMap[shopData._id] = {
-                shop_name: shopData.shop_name || `ร้านค้า (${shopData._id})`
-              };
-            }
-          });
+        if (type === "product") {
+          const { product } = DatafromOrder;
+          const productRes = await getProductById(product.product_id);
+          const variantRes = await getVariantById(product.variant_id);
+          const shopRes = await getShopById(productRes.data.shop_id);
 
-          // 3. ดึงข้อมูลสินค้าและรูปภาพ
-          const productsWithImages = await Promise.all(
+          let imageUrl = "";
+          try {
+            imageUrl = variantRes.data?.variant_image_url 
+              ? await getImage(variantRes.data.variant_image_url)
+              : productRes.data?.product_image_urls?.[0]
+              ? await getImage(productRes.data.product_image_urls[0])
+              : "";
+          } catch (imgError) {
+            console.warn("Failed to load image:", imgError);
+          }
+
+          summaryData.items = [{
+            product_id: product.product_id, // ใช้ product_id
+            variant_id: product.variant_id,
+            product_name: productRes.data?.product_name || "Unknown Product",
+            price: product.price, // ใช้ price
+            quantity: product.quantity,
+            attributes: variantRes.data?.attributes || {},
+            image_url: imageUrl,
+            shop_name: shopRes.data?.shop_name || "Unknown Shop"
+          }];
+        } else if (type === "cart") {
+          const { selectedProducts } = DatafromOrder;
+
+          const productsWithDetails = await Promise.all(
             selectedProducts.map(async (item) => {
-              const [productRes, variantRes] = await Promise.all([
+              const [productRes, variantRes, shopRes] = await Promise.all([
                 getProductById(item.product_id),
-                getVariantById(item.variant_id)
+                getVariantById(item.variant_id),
+                getShopById(item.shop_id)
               ]);
 
-              // ดึงรูปภาพจาก variant ก่อน ถ้าไม่มีใช้จาก product
               let imageUrl = "";
               try {
-                if (variantRes.data?.variant_image_url) {
-                  imageUrl = await getImage(variantRes.data.variant_image_url);
-                } else if (productRes.data?.product_image_urls?.[0]) {
-                  imageUrl = await getImage(productRes.data.product_image_urls[0]);
-                }
+                imageUrl = variantRes.data?.variant_image_url 
+                  ? await getImage(variantRes.data.variant_image_url)
+                  : productRes.data?.product_image_urls?.[0]
+                  ? await getImage(productRes.data.product_image_urls[0])
+                  : "";
               } catch (imgError) {
                 console.warn("Failed to load image:", imgError);
               }
 
               return {
-                ...item,
+                product_id: item.product_id, // ใช้ product_id
+                variant_id: item.variant_id,
                 product_name: productRes.data?.product_name || "Unknown Product",
+                price: item.price, // ใช้ price
+                quantity: item.quantity,
                 attributes: variantRes.data?.attributes || {},
-                image_url: imageUrl
+                image_url: imageUrl,
+                shop_name: shopRes.data?.shop_name || "Unknown Shop"
               };
             })
           );
 
-          // 4. จัดกลุ่มสินค้าโดยร้านค้า
-          const productsByShop = {};
-          productsWithImages.forEach(product => {
-            if (!productsByShop[product.shop_id]) {
-              productsByShop[product.shop_id] = {
-                shopInfo: shopsMap[product.shop_id] || { 
-                  shop_name: `ร้านค้า (${product.shop_id})`
-                },
-                products: []
-              };
-            }
-            productsByShop[product.shop_id].products.push(product);
-          });
-
-          setGroupedProducts(Object.values(productsByShop));
+          summaryData.items = productsWithDetails;
         }
+
+        summaryData.shipping = summaryData.items.length > 0 ? 50 : 0;
+        summaryData.total += summaryData.shipping;
+
+        setOrderSummary(summaryData);
       } catch (error) {
         console.error("Failed to load order data:", error);
         toast.error("เกิดข้อผิดพลาดในการโหลดข้อมูลคำสั่งซื้อ");
@@ -102,17 +114,17 @@ const ProductPayment = () => {
     fetchOrderData();
   }, [state, navigate]);
 
-  if (!state?.formData) {
+  if (!state || !state.type || !state.DatafromOrder) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
-          <h2 className="text-xl font-bold text-red-500 mb-4">Order Error</h2>
-          <p className="mb-6">Missing order information. Please try again from your cart.</p>
+          <h2 className="text-xl font-bold text-red-500 mb-4">ข้อผิดพลาดคำสั่งซื้อ</h2>
+          <p className="mb-6">ไม่พบข้อมูลคำสั่งซื้อ กรุณาลองใหม่จากตะกร้าสินค้า</p>
           <button
             onClick={() => navigate("/shop/cart")}
             className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded"
           >
-            Back to Cart
+            กลับไปที่ตะกร้า
           </button>
         </div>
       </div>
@@ -131,37 +143,61 @@ const ProductPayment = () => {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-800">Order Confirmation</h1>
-          <p className="text-gray-600">Please complete your payment information</p>
+          <h1 className="text-2xl font-bold text-gray-800">ยืนยันคำสั่งซื้อ</h1>
+          <p className="text-gray-600">กรุณากรอกข้อมูลการชำระเงินให้ครบถ้วน</p>
         </div>
 
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="md:flex">
-            {/* Payment Form Section */}
             <div className="md:w-2/3 p-6 border-r border-gray-200">
               <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-4">Payment Information</h2>
-                <PaymentForm 
-                  type={state.formData.type}
-                  DatafromOrder={{
-                    ...state.formData,
-                    groupedProducts
-                  }}
-                  user={user} // ส่ง user เข้าไป
+                <h2 className="text-xl font-semibold mb-4">ข้อมูลการชำระเงิน</h2>
+                <PaymentForm
+                  type={state.type}
+                  DatafromOrder={
+                    state.type === "product"
+                      ? {
+                          product: {
+                            product_id: state.DatafromOrder.product.product_id, // ใช้ product_id
+                            variant_id: state.DatafromOrder.product.variant_id,
+                            price: state.DatafromOrder.product.price, // ใช้ price
+                            quantity: state.DatafromOrder.product.quantity
+                          },
+                          total: orderSummary.total
+                        }
+                      : {
+                          selectedProducts: state.DatafromOrder.selectedProducts.map(item => ({
+                            product_id: item.product_id, // ใช้ product_id
+                            variant_id: item.variant_id,
+                            price: item.price, // ใช้ price
+                            quantity: item.quantity
+                          })),
+                          total: orderSummary.total
+                        }
+                  }
+                  user={user}
                 />
               </div>
             </div>
 
-            {/* Order Summary Section */}
             <div className="md:w-1/3 p-6 bg-gray-50">
-              <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-              
-              {groupedProducts.map((shopGroup, shopIndex) => (
+              <h2 className="text-xl font-semibold mb-4">สรุปคำสั่งซื้อ</h2>
+              {orderSummary.items.reduce((acc, item) => {
+                const shopGroup = acc.find(g => g.shop_name === item.shop_name);
+                if (shopGroup) {
+                  shopGroup.products.push(item);
+                } else {
+                  acc.push({
+                    shop_name: item.shop_name,
+                    products: [item]
+                  });
+                }
+                return acc;
+              }, []).map((shopGroup, shopIndex) => (
                 <div key={shopIndex} className="mb-6">
                   <h3 className="font-medium text-gray-700 mb-3">
-                    {shopGroup.shopInfo.shop_name}
+                    {shopGroup.shop_name}
                   </h3>
-
                   <div className="space-y-3">
                     {shopGroup.products.map((product, productIndex) => (
                       <div key={productIndex} className="p-3 bg-white rounded-lg border border-gray-200">
@@ -172,13 +208,12 @@ const ProductPayment = () => {
                               alt={product.product_name}
                               className="w-16 h-16 object-cover rounded"
                               onError={(e) => {
-                                e.target.onerror = null;
                                 e.target.src = "/images/product-placeholder.jpg";
                               }}
                             />
                           ) : (
                             <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
-                              <span className="text-gray-500 text-xs">No Image</span>
+                              <span className="text-gray-500 text-xs">ไม่มีรูปภาพ</span>
                             </div>
                           )}
                           <div>
@@ -191,7 +226,7 @@ const ProductPayment = () => {
                               </p>
                             ))}
                             <p className="text-gray-800">
-                              ฿{product.price?.toLocaleString()} x {product.quantity}
+                              ฿{product.price.toLocaleString()} x {product.quantity}
                             </p>
                           </div>
                         </div>
@@ -203,17 +238,17 @@ const ProductPayment = () => {
 
               <div className="space-y-2 mt-6">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span>฿{state.formData.subTotal?.toLocaleString()}</span>
+                  <span className="text-gray-600">ยอดรวมสินค้า</span>
+                  <span>฿{(orderSummary.total - orderSummary.shipping).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
-                  <span>฿{state.formData.shipping?.toLocaleString()}</span>
+                  <span className="text-gray-600">ค่าจัดส่ง</span>
+                  <span>฿{orderSummary.shipping.toLocaleString()}</span>
                 </div>
                 <div className="border-t border-gray-200 my-2"></div>
                 <div className="flex justify-between font-semibold text-lg">
-                  <span>Total</span>
-                  <span>฿{state.formData.total?.toLocaleString()}</span>
+                  <span>ยอดรวมทั้งสิ้น</span>
+                  <span>฿{orderSummary.total.toLocaleString()}</span>
                 </div>
               </div>
             </div>

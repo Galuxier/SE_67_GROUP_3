@@ -167,7 +167,7 @@ const ProfileSetup = ({ user }) => {
   };
 
   const handleSkip = () => {
-    navigate("/");
+    navigate("/login");
   };
 
   const handleNextStep = async () => {
@@ -236,7 +236,7 @@ const ProfileSetup = ({ user }) => {
 
       // Redirect to home page after a delay
       setTimeout(() => {
-        navigate('/');
+        navigate('/login');
       }, 2000);
       
     } catch (error) {

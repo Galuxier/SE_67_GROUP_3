@@ -141,7 +141,7 @@ const EventSchema = new Schema<EventDocument>({
   poster_url: { type: String, required: true },
   event_type: { type: String, enum: Object.values(EventType), required: true },
   weight_classes: [{
-    type: { type: String, enum: Object.values(MatchType), required: true },
+    type: { type: String, enum: Object.values(MatchType), required: false  },
     gender: { type: String, enum: Object.values(Gender), required: true },
     weigh_name: { type: String, required: true },
     min_weight: { type: Number, required: true },
@@ -155,7 +155,7 @@ const EventSchema = new Schema<EventDocument>({
       result: { type: String, enum: Object.values(MatchResult) },
       previous_match: { type: Schema.Types.ObjectId },
       next_match: { type: Schema.Types.ObjectId },
-    }],
+    }], 
     applicants: [{
       applicant_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
       first_name: { type: String, required: true },
@@ -190,6 +190,7 @@ const EventSchema = new Schema<EventDocument>({
     status: { type: String, enum: Object.values(PackageStatus), required: true },
   }],
 });
+
 
 
 
