@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useEffect,useRef,useMemo  } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeftIcon, ChevronRightIcon, CheckIcon, TrashIcon, PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ChevronLeftIcon, ChevronRightIcon, CheckIcon, TrashIcon, PencilIcon, PlusIcon,PencilSquareIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-toastify";
 import { createEvent } from "../../../services/api/EventApi";
 import { useAuth } from "../../../context/AuthContext";
@@ -17,9 +17,8 @@ const PlaceModal = ({ places, isOpen, setIsOpen,setPlaceModalOpen,location, setL
   const [imageUrls, setImageUrls] = useState({});
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedProvince, setSelectedProvince] = useState("");
-const [selectedDistrict, setSelectedDistrict] = useState("");
-const [filteredPlaces, setFilteredPlaces] = useState([]);
-
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [filteredPlaces, setFilteredPlaces] = useState([]);
 
   useEffect(() => {
     async function fetchImages() {
@@ -53,6 +52,8 @@ const [filteredPlaces, setFilteredPlaces] = useState([]);
     }
   }, [places, selectedPlace]); // เรียกใหม่ทุกครั้งที่ places หรือ selectedPlace เปลี่ยนแปลง
   
+  const currentImages = selectedPlace && imageUrls[selectedPlace._id] ? imageUrls[selectedPlace._id] : [];
+
   const savePlace = () => {
     // Validate required fields
     console.log("selectedPlace",selectedPlace);
@@ -69,11 +70,12 @@ const [filteredPlaces, setFilteredPlaces] = useState([]);
     let filtered = places;
 
     if (selectedProvince) {
+      setSelectedDistrict(null);
       filtered = filtered.filter((place) => place.address.province === selectedProvince);
     }
 
     if (selectedDistrict) {
-      filtered = filtered.filter((place) => place.address.district === selectedProvince);
+      filtered = filtered.filter((place) => place.address.district === selectedDistrict);
     }
 
     setFilteredPlaces(filtered);
@@ -87,22 +89,27 @@ const [filteredPlaces, setFilteredPlaces] = useState([]);
   };
 
   const handlePrevImage = () => {
-    if (selectedPlace && selectedPlace.place_image_urls.length > 0) {
-      setSelectedImageIndex((prevIndex) => (prevIndex === 0 ? selectedPlace.place_image_urls.length - 1 : prevIndex - 1));
+    if (currentImages.length > 0) {
+      setSelectedImageIndex((prevIndex) => 
+        prevIndex === 0 ? currentImages.length - 1 : prevIndex - 1
+      );
     }
   };
-
+  
   const handleNextImage = () => {
-    if (selectedPlace && selectedPlace.place_image_urls.length > 0) {
-      setSelectedImageIndex((prevIndex) => (prevIndex === selectedPlace.place_image_urls.length - 1 ? 0 : prevIndex + 1));
+    if (currentImages.length > 0) {
+      setSelectedImageIndex((prevIndex) => 
+        prevIndex === currentImages.length - 1 ? 0 : prevIndex + 1
+      );
     }
   };
+  
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl max-w-lg w-full mx-4 border border-gray-200 dark:border-gray-700">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Select a Place</h2>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl max-w-lg w-full mx-4 border border-gray-200 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6 ">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white ">Select a Place</h2>
           <button 
             onClick={() => setIsOpen(false)}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -113,40 +120,40 @@ const [filteredPlaces, setFilteredPlaces] = useState([]);
           </button>
         </div>
         
-        <div>
-          <div className="mb-4">
-              <select
-                value={selectedProvince}
-                onChange={(e) => setSelectedProvince(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Province</option>
-                {[...new Set(places.map((p) => p.address.province))].map((province) => (
-                  <option key={province} value={province}>
-                    {province}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="flex flex-wrap justify-between gap-4 w-full mb-4">
+          <div className="flex-1 min-w-[200px]">
+            <select
+              value={selectedProvince}
+              onChange={(e) => setSelectedProvince(e.target.value)}
+              className="w-full p-3 border rounded-lg text-sm bg-gray-50 dark:bg-gray-800 dark:text-white"
+            >
+              <option value="">Select Province</option>
+              {[...new Set(places.map((p) => p.address.province))].map((province) => (
+                <option key={province} value={province}>
+                  {province}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div className="mb-4">
-              <select
-                value={selectedDistrict}
-                onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="w-full p-2 border rounded"
-                disabled={!selectedProvince}
-              >
-                <option value="">District</option>
-                {[...new Set(places.filter(p => p.address.province === selectedProvince)
-                  .map((p) => p.address.district))].map((district) => (
-                  <option key={district} value={district}>
-                    {district}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+          <div className="flex-1 min-w-[200px]">
+            <select
+              value={selectedDistrict}
+              onChange={(e) => setSelectedDistrict(e.target.value)}
+              className="w-full p-3 border rounded-lg text-sm bg-gray-50 dark:bg-gray-800 dark:text-white"
+              disabled={!selectedProvince}
+            >
+              <option value="">Select District</option>
+              {[...new Set(places.filter(p => p.address.province === selectedProvince)
+                .map((p) => p.address.district))].map((district) => (
+                <option key={district} value={district}>
+                  {district}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
+
   
         {/* List of places */}
         <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
@@ -207,11 +214,12 @@ const [filteredPlaces, setFilteredPlaces] = useState([]);
               </button>
               
               <div className="w-full h-64 bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden">
-                <img
-                  src={selectedPlace.place_image_urls[selectedImageIndex]}
-                  alt={selectedPlace.name}
-                  className="w-full h-full object-cover transition-opacity duration-300"
-                />
+              <img
+                src={currentImages[selectedImageIndex] || "/default-event-image.jpg"}
+                alt={selectedPlace.name}
+                className="w-full h-full object-cover transition-opacity duration-300"
+              />
+
               </div>
               
               <button 
@@ -268,15 +276,28 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
     );
   });
 
-  const fetchImage = async (url) => {
-    try {
-      const imageUrl = await getImage(url); // รับค่า imageUrl
-      return imageUrl;
-    } catch (error) {
-      console.error("Error fetching image:", error);
-      return "/default-event-image.jpg"; // ใช้ default ในกรณีเกิดข้อผิดพลาด
+  useEffect(() => {
+    async function fetchImages() {
+      const urls = {};
+      for (const boxer of boxers) {
+        const url = await getImage(boxer.profile_picture_url); // Ensure the url is valid
+        if (url) {
+          urls[boxer._id] = url; // Use event._id as key
+        } else {
+          urls[boxer._id] = "/default-event-image.jpg"; // Fallback if no image
+        }
+      }
+      setImageUrls(urls);
+      console.log("profile",urls);
     }
-  };
+
+    if (boxers && boxers.length) {
+      fetchImages();
+    }
+  }, []);
+
+  console.log(selectedBoxer);
+  
   
   return (
     <div>
@@ -301,12 +322,12 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
               }}
             >
               <img
-                src={fetchImage(boxer.profile_picture_url)}
+                src={imageUrls[boxer._id]}
                 alt={`${boxer.first_name} ${boxer.last_name}`}
                 className="w-12 h-12 rounded-full object-cover border-2 border-gray-300"
               />
               <p className="text-gray-800 font-medium">
-                {boxer.first_name} {boxer.last_name}
+                {boxer.first_name} {boxer.last_name} ({boxer.nickname})
               </p>
             </div>
           ))}
@@ -316,7 +337,7 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
       {selectedBoxer && (
         <div className="mt-2 flex items-center bg-gray-100 rounded-full px-4 py-2 shadow-md">
           <img
-            src={fetchImage(selectedBoxer.profile_picture_url) || "/default-event-image.jpg"}
+            src={imageUrls[selectedBoxer._id] || "/default-event-image.jpg"}
             alt={`${selectedBoxer.first_name} ${selectedBoxer.last_name}`}
             className="w-14 h-14 rounded-full object-cover border-2 border-gray-300"
           />
@@ -854,8 +875,14 @@ useEffect(() => {
   console.log("isOpen",isPlaceModalOpen);
   
   const [location,setLocation] = useState(null);
-  const [locaionImg,setLocationImg] =useState(null);
+  const [locationImg, setLocationImg] = useState(null);
+
   console.log("location",location);
+  if (location) {
+    eventData.location_id = [location._id]; // กำหนดใหม่ทุกครั้ง ไม่ใช้ .push()
+  }
+  
+  console.log("eventData",eventData);
   
 
   const handleAddLocation = () =>{
@@ -863,22 +890,32 @@ useEffect(() => {
     setSelectedPlace(null);
   }
 
-
+  const [locationImgs, setLocationImgs] = useState([]); // เก็บรูปทั้งหมด
+  const [currentImageIndex, setCurrentImageIndex] = useState(0); 
 
   useEffect(() => {
-    async function fetchImage() {
-      if (location?.place_image_urls?.length > 0) { // ตรวจสอบก่อน
-        const url = await getImage(location.place_image_urls[0]);
-        console.log(url);
-        
-        setLocationImg(url);
+    async function fetchImages() {
+      if (location?.place_image_urls?.length > 0) {
+        const validUrls = await Promise.all(location.place_image_urls.map(url => getImage(url))); 
+        setLocationImgs(validUrls);
       } else {
-        setLocationImg("/default-event-image.jpg"); // ตั้งค่าภาพเริ่มต้นหากไม่มีข้อมูล
+        setLocationImgs(["/default-event-image.jpg"]); // ตั้งค่าภาพเริ่มต้น
       }
     }
+    fetchImages();
+  }, [location?.place_image_urls]);
   
-    fetchImage();
-  }, [location?.place_image_urls]); // ใช้ optional chaining ป้องกัน error
+  const handlePrevImage = () => {
+    setCurrentImageIndex(prevIndex => 
+      prevIndex === 0 ? locationImgs.length - 1 : prevIndex - 1
+    );
+  };
+  
+  const handleNextImage = () => {
+    setCurrentImageIndex(prevIndex => 
+      prevIndex === locationImgs.length - 1 ? 0 : prevIndex + 1
+    );
+  };
   
 
 const handleEditSeat = (seat) => {
@@ -1124,50 +1161,81 @@ const handleAddWeightClass = () => {
         />
       </div>
   
-    {/* Location & Level */}
-    <div className="space-y-6">
-  {/* Location - With enhanced UI */}
-  <div>
-    <div className="flex">
-    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Location</label>
-      <button 
-          onClick={handleAddLocation} 
-          className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2.5 rounded-full transition-colors"
-        >
-          {location ? <span className="text-lg">✎</span> : <span className="text-lg">+</span>} 
-        </button>
-    </div>
-    
+ {/* Location - With enhanced UI */}
+<div className="block">
+  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Location</label>
+  {location ? (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-
-      
-      {location && (
-        <div className="flex items-start gap-4 w-full">
-          <div className="relative flex-shrink-0">
-            <img 
-              src={locaionImg} 
-              alt={location.name} 
-              className="w-28 h-28 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
-            />
-            <div className="absolute inset-0 rounded-lg ring-1 ring-inset ring-black/10 pointer-events-none" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-              {location.name}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {location.address.province}, {location.address.district}
-            </p>
-            {location.address.details && (
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                {location.address.details}
-              </p>
-            )}
-          </div>
+      <div className="flex items-start gap-4 w-full">
+        <div className="relative flex-shrink-0">
+          {/* ปุ่ม Previous */}
+          {locationImgs.length > 1 && (
+            <button
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 hover:bg-gray-100 hover:text-gray-900 p-2 rounded-full shadow-md opacity-25"
+              onClick={handlePrevImage}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white hover:text-gray-900" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
+          
+          <img 
+            src={locationImgs[currentImageIndex]} 
+            alt={location.name} 
+            className="w-full h-80 object-cover rounded-lg border border-gray-300"
+          />
+          
+          {/* ปุ่ม Next */}
+          {locationImgs.length > 1 && (
+            <button
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full shadow-md hover:bg-gray-100 opacity-25 hover:text-gray-900"
+              onClick={handleNextImage}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white hover:text-gray-900" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
+          
+          <button
+            type="button"
+            onClick={handleAddLocation}
+            className="absolute top-1 right-1 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+          >
+            <PencilSquareIcon className="h-3 w-3 text-white" />
+          </button>
         </div>
-      )}
+        
+        <div className="flex-1 min-w-0">
+          <p className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+            {location.name}
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            {location.address.province}, {location.address.district}
+          </p>
+          {location.address.details && (
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+              {location.address.details}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
-  </div>
+  ) : (
+    <div className="flex justify-center items-center w-full h-80">
+      <button
+        type="button"
+        onClick={handleAddLocation}
+        className="flex flex-col items-center justify-center w-full h-80 max-w-2xl border-2 border-gray-300 border-dashed rounded-lg hover:border-primary/50 transition-colors"
+      >
+        <PhotoIcon className="h-8 w-8 text-gray-500" />
+        <p className="mt-2 text-sm text-gray-600">Click to Select Location</p>
+      </button>
+    </div>
+  )}
+</div>
+
 
   {/* Level - Styled with better spacing */}
   <div>
@@ -1191,7 +1259,6 @@ const handleAddWeightClass = () => {
       </div>
     </div>
   </div>
-</div>
 
       {/* Description */}
       <div>
@@ -1268,131 +1335,134 @@ const handleAddWeightClass = () => {
         </div>
       </div>
 
-      {eventData.event_type === "registration" ? (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-lg font-medium">Weight Classes</h3>
-            <button onClick={() => handleAddWeightClass()} className="p-1 rounded-full bg-rose-500 text-white">
-              <PlusIcon className="h-5 w-5" />
-            </button>
-          </div>
-          <table className="w-full border-collapse border rounded-lg text-sm">
-            <thead>
-              <tr className="bg-gray-200  dark:text-gray-900">
-                <th className="p-2 border">Type</th>
-                <th className="p-2 border">Weight Name</th>
-                <th className="p-2 border">Min Weight</th>
-                <th className="p-2 border">Max Weight</th>
-                <th className="p-2 border">Max Enrollment</th>
-                <th className="p-2 border">Price</th>
-                <th className="p-2 border">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {weightClasses.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="p-2 border text-center text-gray-500">
-                    No weight classes added yet. Please add a weight class.
-                  </td>
-                </tr>
-              ) : (
-                weightClasses.map((wc) => (
-                  <tr key={wc.id} className="text-center ">
-                    <td className="p-2 border">{wc.type}</td>
-                    <td className="p-2 border">{wc.weigh_name}</td>
-                    <td className="p-2 border">{wc.min_weight}</td>
-                    <td className="p-2 border">{wc.max_weight}</td>
-                    <td className="p-2 border">{wc.max_enrollment}</td>
-                    <td className="p-2 border">{wc.price ? new Intl.NumberFormat().format(wc.price) : "Free"}</td>
-                    <td className="p-2 border">
-                      <button className="text-blue-500 mr-2" onClick={() => handleEditWeightClass(wc)}>
-                        <PencilIcon className="h-4 w-4" />
-                      </button>
-                      <button className="text-red-500" onClick={() => handleDeleteWeightClass(wc.id)}>
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-lg font-medium">Seat Zones</h3>
-            <button onClick={() => handleAddSeat()} className="p-1 rounded-full bg-rose-500 text-white">
-              <PlusIcon className="h-5 w-5" />
-            </button>
-          </div>
-          <table className="w-full border-collapse border rounded-lg text-sm">
-            <thead>
-              <tr className="bg-gray-200  dark:text-gray-900">
-                <th className="p-2 border">Zone</th>
-                <th className="p-2 border">Quantity</th>
-                <th className="p-2 border">Price</th>
-                <th className="p-2 border">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {seatZones.map((seat) => (
-                <tr key={seat.id} className="text-center">
-                  <td className="p-2 border">{seat.zone_name}</td>
-                  <td className="p-2 border">{seat.number_of_seat}</td>
-                  <td className="p-2 border">{seat.price ? new Intl.NumberFormat().format(seat.price) : "Free"}</td>
-                  <td className="p-2 border">
-                    <button className="text-blue-500 mr-2" onClick={() => handleEditSeat(seat)}>
-                      <PencilIcon className="h-4 w-4" />
-                    </button>
-                    <button className="text-red-500" onClick={() => handleDeleteSeat(seat.id)}>
-                      <TrashIcon className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div>
-          <label className="block mb-1">Seat Zone</label>
-            <input
-              type="file"
-              ref={fileSeatInputRef}
-              onChange={handleFileUpload}
-              className="hidden"
-              accept="image/png, image/jpeg"
-            />
-            <div className="mt-4 flex justify-center">
-              {fileSeatPreviews.length > 0 ? (
-                <div className="relative">
-                  <img
-                    src={fileSeatPreviews[0]}
-                    alt="Preview"
-                    className="w-full h-80 object-cover rounded-lg border border-border/50 mx-auto"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(0)}
-                    className="absolute top-1 right-1 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
-                  >
-                    <XMarkIcon className="h-3 w-3 text-white" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileSeatInputRef.current.click()}
-                  className="flex flex-col items-center justify-center w-4/5 h-80 border-2 border-gray-300 border-dashed border-border/50 rounded-lg hover:border-primary/50 transition-colors mx-auto"
-                >
-                  <PhotoIcon className="h-8 w-8 text-text/40" />
-                  <p className="mt-2 text-sm text-text/60">Click to upload a photo</p>
+      {eventData.event_type === "registration" && (
+  <div>
+    <div className="flex items-center gap-2 mb-3">
+      <h3 className="text-lg font-medium">Weight Classes</h3>
+      <button onClick={() => handleAddWeightClass()} className="p-1 rounded-full bg-rose-500 text-white">
+        <PlusIcon className="h-5 w-5" />
+      </button>
+    </div>
+    <table className="w-full border-collapse border rounded-lg text-sm">
+      <thead>
+        <tr className="bg-gray-200 dark:text-gray-900">
+          <th className="p-2 border">Type</th>
+          <th className="p-2 border">Weight Name</th>
+          <th className="p-2 border">Min Weight</th>
+          <th className="p-2 border">Max Weight</th>
+          <th className="p-2 border">Max Enrollment</th>
+          <th className="p-2 border">Price</th>
+          <th className="p-2 border">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {weightClasses.length === 0 ? (
+          <tr>
+            <td colSpan="7" className="p-2 border text-center text-gray-500">
+              No weight classes added yet. Please add a weight class.
+            </td>
+          </tr>
+        ) : (
+          weightClasses.map((wc) => (
+            <tr key={wc.id} className="text-center ">
+              <td className="p-2 border">{wc.type}</td>
+              <td className="p-2 border">{wc.weigh_name}</td>
+              <td className="p-2 border">{wc.min_weight}</td>
+              <td className="p-2 border">{wc.max_weight}</td>
+              <td className="p-2 border">{wc.max_enrollment}</td>
+              <td className="p-2 border">{wc.price ? new Intl.NumberFormat().format(wc.price) : "Free"}</td>
+              <td className="p-2 border">
+                <button className="text-blue-500 mr-2" onClick={() => handleEditWeightClass(wc)}>
+                  <PencilIcon className="h-4 w-4" />
                 </button>
-              )}
-            </div>
+                <button className="text-red-500" onClick={() => handleDeleteWeightClass(wc.id)}>
+                  <TrashIcon className="h-4 w-4" />
+                </button>
+              </td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </div>
+)}
+
+{eventData.event_type === "ticket_sales" && (
+  <div>
+    <div className="flex items-center gap-2 mb-3">
+      <h3 className="text-lg font-medium">Seat Zones</h3>
+      <button onClick={() => handleAddSeat()} className="p-1 rounded-full bg-rose-500 text-white">
+        <PlusIcon className="h-5 w-5" />
+      </button>
+    </div>
+    <table className="w-full border-collapse border rounded-lg text-sm">
+      <thead>
+        <tr className="bg-gray-200 dark:text-gray-900">
+          <th className="p-2 border">Zone</th>
+          <th className="p-2 border">Quantity</th>
+          <th className="p-2 border">Price</th>
+          <th className="p-2 border">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {seatZones.map((seat) => (
+          <tr key={seat.id} className="text-center">
+            <td className="p-2 border">{seat.zone_name}</td>
+            <td className="p-2 border">{seat.number_of_seat}</td>
+            <td className="p-2 border">{seat.price ? new Intl.NumberFormat().format(seat.price) : "Free"}</td>
+            <td className="p-2 border">
+              <button className="text-blue-500 mr-2" onClick={() => handleEditSeat(seat)}>
+                <PencilIcon className="h-4 w-4" />
+              </button>
+              <button className="text-red-500" onClick={() => handleDeleteSeat(seat.id)}>
+                <TrashIcon className="h-4 w-4" />
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <div>
+      <label className="block mb-1">Seat Zone</label>
+      <input
+        type="file"
+        ref={fileSeatInputRef}
+        onChange={handleFileUpload}
+        className="hidden"
+        accept="image/png, image/jpeg"
+      />
+      <div className="mt-4 flex justify-center">
+        {fileSeatPreviews.length > 0 ? (
+          <div className="relative">
+            <img
+              src={fileSeatPreviews[0]}
+              alt="Preview"
+              className="w-full h-80 object-cover rounded-lg border border-border/50 mx-auto"
+            />
+            <button
+              type="button"
+              onClick={() => handleRemoveImage(0)}
+              className="absolute top-1 right-1 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+            >
+              <XMarkIcon className="h-3 w-3 text-white" />
+            </button>
           </div>
-        </div>
-        
-      )}
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileSeatInputRef.current.click()}
+            className="flex flex-col items-center justify-center w-4/5 h-80 border-2 border-gray-300 border-dashed border-border/50 rounded-lg hover:border-primary/50 transition-colors mx-auto"
+          >
+            <PhotoIcon className="h-8 w-8 text-text/40" />
+            <p className="mt-2 text-sm text-text/60">Click to upload a photo</p>
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 

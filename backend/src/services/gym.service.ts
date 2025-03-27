@@ -8,6 +8,65 @@ class GymService extends BaseService<GymDocument> {
     super(Gym); // ส่ง Model ไปยัง BaseService
   }
 
+  async searchGyms(
+    query: string = '',
+    province?: string,
+    district?: string,
+    facility?: string,
+    page: number = 1,
+    limit: number = 10,
+    sort?: string
+  ): Promise<{ gyms: GymDocument[], total: number }> {
+    const filter: any = {};
+  
+    // Add search query condition
+    if (query && query.trim().length > 0) {
+      const searchRegex = new RegExp(query, 'i');
+      filter.$or = [
+        { gym_name: searchRegex },
+        { description: searchRegex }
+      ];
+    }
+  
+    // Add province filter
+    if (province) {
+      filter['address.province'] = new RegExp(province, 'i');
+    }
+  
+    // Add district filter
+    if (district) {
+      filter['address.district'] = new RegExp(district, 'i');
+    }
+  
+    // Add facility filter
+    if (facility) {
+      filter['facilities.facility_name'] = new RegExp(facility, 'i');
+    }
+  
+    // Define sort options
+    let sortOption: any = { createdAt: -1 }; // Default sort by creation date DESC
+    if (sort === 'name') {
+      sortOption = { gym_name: 1 }; // Sort by name ASC
+    } else if (sort === 'latest') {
+      sortOption = { createdAt: -1 }; // Sort by creation date DESC
+    }
+  
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+  
+    // Execute query
+    const gyms = await Gym.find(filter)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit)
+      .lean();
+  
+    // Get total count for pagination
+    const total = await Gym.countDocuments(filter);
+  
+    return { gyms, total };
+  }
+
   // สร้างโรงยิมใหม่
   async createGym(gymData: any, filePaths: string[]) {
     console.log(gymData);

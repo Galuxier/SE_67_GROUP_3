@@ -1,7 +1,7 @@
 import { Schema, model, Document } from 'mongoose';
 
 // กำหนด enum สำหรับ status ใน course
-enum CourseStatus {
+export enum CourseStatus {
   Preparing = 'preparing',
   Ongoing = 'ongoing',
   Finished = 'finished',
@@ -44,9 +44,10 @@ enum TrainerStatus {
   Reject = 'reject',
 }
 
-interface Trainer {
+interface TrainerInCourse {
   traier_id: Schema.Types.ObjectId;
   status: TrainerStatus;
+  isMenber: boolean;
 }
 
 // กำหนด interface สำหรับ Course document
@@ -59,10 +60,12 @@ export interface CourseDocument extends Document {
   price: number;
   description?: string;
   course_image_url: string[];
-  available_slot: number;
   status: CourseStatus;
   activities: Activity[];
   packages: Package[];
+  trainer_in_course: TrainerInCourse[];
+  max_participants: number;
+  available_slot: number;
 }
 
 // สร้าง schema สำหรับ Course
@@ -75,7 +78,6 @@ const CourseSchema = new Schema<CourseDocument>({
   price: { type: Number, required: true },
   description: { type: String },
   course_image_url: { type: [String], required: true },
-  available_slot: { type: Number, required: true },
   status: { type: String, enum: Object.values(CourseStatus), required: true, default: CourseStatus.Preparing },
   activities: [{
     description: { type: String, required: true },
@@ -84,7 +86,6 @@ const CourseSchema = new Schema<CourseDocument>({
     end_time: { type: String, required: true },
     trainer_list: [{
       trainer_id: { type: Schema.Types.ObjectId, required: true},
-      status: { type : String, enum: TrainerStatus, required: true }
     }],
   }],
   packages: [{
@@ -93,6 +94,13 @@ const CourseSchema = new Schema<CourseDocument>({
     used_at: { type: Date, required: true },
     status: { type: String, enum: Object.values(PackageStatus), required: true },
   }],
+   trainer_in_course:[{
+    trainer_id: { type: Schema.Types.ObjectId, required: true},
+    status: { type : String, enum: TrainerStatus, required: true },
+    isMember:{type: Boolean , require:true}
+   }],
+   max_participants: { type: Number, required: true },
+   available_slot: { type: Number }
 });
 
 // สร้างโมเดล Course

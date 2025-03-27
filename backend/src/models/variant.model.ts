@@ -26,7 +26,7 @@ const VariantSchema = new Schema<VariantDocument>({
   },
   attributes: { 
     type: Schema.Types.Mixed,
-    required: true
+    required: false
   },
   variant_image_url: { 
     type: String 

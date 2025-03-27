@@ -9,7 +9,6 @@ import {
   ClockIcon,
 } from "@heroicons/react/24/outline";
 import EditGymModal from "../../../components/gyms/EditGymModal";
-
 function GymInfo() {
   const { gym_id } = useParams();
   const [gym, setGym] = useState({

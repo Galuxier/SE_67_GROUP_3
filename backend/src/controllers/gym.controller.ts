@@ -89,28 +89,55 @@ export const getGymByIdController = async (req: Request, res: Response) => {
   }
 };
 
-// export const updateGymController = async (req: Request, res: Response) => {
-//   try {
-//     const { owner_id, gym_name, description, contact, address } = req.body;
-
-//     // ตรวจสอบและระบุประเภทของ req.files
-//     const files = req.files as Express.Multer.File[] | undefined;
-
-//     // ดึง path ของไฟล์ที่อัปโหลด
-//     const filePaths = files?.map((file) => file.path) || [];
-
-//     // อัปเดตข้อมูลโรงยิมโดยใช้ GymService
-//     const updatedGym = await GymService.updateGym(
-//       req.params.id, // gymId
-//       { owner_id, gym_name, description, contact, address }, // ข้อมูลทั่วไป
-//       filePaths // path ของไฟล์ที่อัปโหลด
-//     );
-
-//     res.status(200).json({ success: true, data: updatedGym });
-//   } catch (err) {
-//     res.status(500).json({ message: "Error updating gym", error: err });
-//   }
-// };
+export const searchGymsController = async (req: Request, res: Response) => {
+  try {
+    // Extract query parameters
+    const { 
+      query = '', 
+      province, 
+      district, 
+      facility,
+      page = '1',
+      limit = '10',
+      sort
+    } = req.query;
+    
+    // Parse numeric parameters
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 10;
+    
+    // Search for gyms with filters
+    const { gyms, total } = await GymService.searchGyms(
+      query as string,
+      province as string | undefined,
+      district as string | undefined,
+      facility as string | undefined,
+      pageNum,
+      limitNum,
+      sort as string | undefined
+    );
+    
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limitNum);
+    
+    res.status(200).json({
+      success: true,
+      count: gyms.length,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+      data: gyms
+    });
+  } catch (err) {
+    console.error('Error searching gyms:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error searching gyms', 
+      error: err 
+    });
+  }
+};
 
 // อัปเดตข้อมูลโรงยิม 
 export const updateGymController = async (req: Request, res: Response) => {

@@ -31,9 +31,20 @@ enum Level {
   Fighter = 'fighter'
 }
 
+enum Gender {
+  Male = 'male',
+  Female = 'female'
+}
+
+enum MatchType {
+  Amateur = 'amateur',
+  Professional = 'professional'
+}
+
 // กำหนด interface สำหรับ weight_classes
 interface WeightClass {
-  type: string; // สามารถปรับเป็น enum ได้หากมีค่าที่แน่นอน
+  type: MatchType; // สามารถปรับเป็น enum ได้หากมีค่าที่แน่นอน
+  gender: Gender;
   weigh_name: string;
   min_weight: number;
   max_weight: number;
@@ -120,17 +131,18 @@ export interface EventDocument extends Document {
 
 // สร้าง schema สำหรับ Event
 const EventSchema = new Schema<EventDocument>({
-  organizer_id: { type: Schema.Types.ObjectId, required: true },
-  location_id: { type: Schema.Types.ObjectId, required: true },
+  organizer_id: { type: Schema.Types.ObjectId, required: true, ref: 'User' }, // ref ถึง User
+  location_id: { type: Schema.Types.ObjectId, required: true, ref: 'Place' }, // เพิ่ม ref: 'Place'
   event_name: { type: String, required: true },
   description: { type: String, required: false },
   level: { type: String, enum: Object.values(Level), required: true },
   start_date: { type: Date, required: true },
   end_date: { type: Date, required: true },
   poster_url: { type: String, required: true },
-  event_type: { type: String, enum: Object.values(EventType), required: true }, // ✅ เพิ่มตรงนี้
+  event_type: { type: String, enum: Object.values(EventType), required: true },
   weight_classes: [{
-    type: { type: String, required: true },
+    type: { type: String, enum: Object.values(MatchType), required: true },
+    gender: { type: String, enum: Object.values(Gender), required: true },
     weigh_name: { type: String, required: true },
     min_weight: { type: Number, required: true },
     max_weight: { type: Number, required: true },

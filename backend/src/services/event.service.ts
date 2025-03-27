@@ -1,10 +1,79 @@
 import { Event, EventDocument } from '../models/event.model';
 import {BaseService} from './base.service';
 import { Types } from 'mongoose';
+import { Place } from '../models/place.model'; // ปรับ path ตามโครงสร้างโปรเจค
 
 class EventService extends BaseService<EventDocument> {
   constructor() {
     super(Event);
+  }
+  async searchEvents(
+    query: string,
+    province?: string,
+    locationName?: string,
+    minDate?: Date,
+    maxDate?: Date,
+    level?: string,
+    page: number = 1,
+    limit: number = 10,
+    sort?: string
+  ): Promise<{ events: EventDocument[], total: number }> {
+    const filter: any = {};
+  
+    // Add search query condition
+    if (query && query.trim().length > 0) {
+      const searchRegex = new RegExp(query, 'i');
+      filter.$or = [
+        { event_name: searchRegex },
+        { description: searchRegex }
+      ];
+    }
+  
+    // Add level filter
+    if (level) {
+      filter.level = level;
+    }
+  
+    // Add date range filter
+    if (minDate !== undefined || maxDate !== undefined) {
+      filter.start_date = {};
+      if (minDate !== undefined) filter.start_date.$gte = minDate;
+      if (maxDate !== undefined) filter.end_date.$lte = maxDate;
+    }
+  
+    // Define sort options
+    let sortOption: any = { start_date: 1 };
+    if (sort === 'price-low-to-high') {
+      sortOption = { 'seat_zones.price': 1 };
+    } else if (sort === 'price-high-to-low') {
+      sortOption = { 'seat_zones.price': -1 };
+    } else if (sort === 'newest') {
+      sortOption = { start_date: -1 };
+    }
+  
+    // Execute query with population
+    const eventsQuery = Event.find(filter)
+      .populate({
+        path: 'location_id',
+        match: {
+          ...(province && { 'address.province': new RegExp(province, 'i') }),
+          ...(locationName && { name: new RegExp(locationName, 'i') })
+        },
+        select: 'name address'
+      })
+      .sort(sortOption)
+      .lean();
+  
+    // Get all matching events first
+    const allEvents = await eventsQuery.exec();
+    const filteredEvents = allEvents.filter(event => event.location_id !== null);
+  
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+    const paginatedEvents = filteredEvents.slice(skip, skip + limit);
+    const total = filteredEvents.length;
+  
+    return { events: paginatedEvents, total };
   }
 
   async getEventByOrganizerId(id: string): Promise<EventDocument[]> {

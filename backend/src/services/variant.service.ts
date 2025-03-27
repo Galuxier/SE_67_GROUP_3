@@ -1,6 +1,7 @@
 import { Variant, VariantDocument, VariantStatus } from '../models/variant.model';
 import { BaseService } from './base.service';
 import { Types } from 'mongoose';
+import mongoose from 'mongoose';
 
 class VariantService extends BaseService<VariantDocument> {
   constructor() {
@@ -95,6 +96,25 @@ class VariantService extends BaseService<VariantDocument> {
   // Search variants by multiple criteria
   async searchVariants(criteria: Record<string, any>): Promise<VariantDocument[]> {
     return await Variant.find(criteria);
+  }
+
+  /**
+   * Updates the stock quantity of multiple variants in a transaction
+   * @param variantUpdates Array of variant updates with IDs and quantities
+   * @param session Mongoose session for transaction
+   * @returns Array of updated variants
+   */
+  async updateMultipleStocks(
+    variantUpdates: Array<{ variantId: string; quantityChange: number }>,
+    session?: mongoose.ClientSession
+  ): Promise<Array<VariantDocument | null>> {
+    const updates = await Promise.all(
+      variantUpdates.map(update => 
+        this.adjustStock(update.variantId, update.quantityChange, session)
+      )
+    );
+    
+    return updates;
   }
 }
 
