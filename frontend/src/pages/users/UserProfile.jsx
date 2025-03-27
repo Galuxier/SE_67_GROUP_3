@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom"; 
 import { useAuth } from "../../context/AuthContext";
-import { getUserProfile } from "../../services/api/UserApi";
+import { getUserProfile, getUser  } from "../../services/api/UserApi";
 import { ClipLoader } from "react-spinners";
 import { motion } from "framer-motion";
 import {
@@ -20,21 +20,33 @@ import { getImage } from "../../services/api/ImageApi";
 
 function UserProfile() {
   const { user } = useAuth(); // user ที่ล็อกอินอยู่
-  const { username } = useParams();
+  const { encoded_id } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [profileUser, setProfileUser] = useState(null); // state สำหรับข้อมูลผู้ใช้ที่กำลังดู
   const [profileImageUrl, setProfileImageUrl] = useState("");
 
+  const decodeUserId = (encodedId) => {
+    try {
+      // Decode the ID using base64 and handle any necessary transformations
+      // This is a simple example; you might want to use a more secure encoding
+      return atob(encodedId);
+    } catch (error) {
+      console.error("Error decoding user ID:", error);
+      return null;
+    }
+  };
   // ตรวจสอบว่าเป็นโปรไฟล์ของตัวเองหรือไม่
-  const isCurrentUserProfile = user?.username === username;
+  const isCurrentUserProfile = user?._id === decodeUserId(encoded_id);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         setIsLoading(true);
-        const response = await getUserProfile(username);
+
+        const userId = decodeUserId(encoded_id);
+        const response = await getUser(userId);
         setProfileUser(response);
         
         // Fetch profile image if available
@@ -55,10 +67,10 @@ function UserProfile() {
       }
     };
   
-    if (username) {
+    if (encoded_id) {
       fetchUserProfile();
     }
-  }, [username]);
+  }, [encoded_id]);
 
   const handleProfileUpdate = (updatedUser) => {
     setProfileUser(updatedUser);
