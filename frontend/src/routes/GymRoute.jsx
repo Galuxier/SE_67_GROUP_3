@@ -12,17 +12,16 @@ import GymList from "../pages/gyms/managements/GymList";
 import AddGym from "../pages/gyms/managements/AddGym";
 import AddBoxer from "../pages/gyms/managements/AddBoxer";
 import AddTrainer from "../pages/gyms/managements/AddTrainer";
-import EditCourse from "../pages/courses/EditCourse";
-import EditCourseFrom from "../pages/courses/EditCourseFrom";
-// import CreateCourse from "../pages/courses/CreateCourse";
-// import CourseFrom from "../pages/courses/CourseFrom";
 import CreateCourseForm from "../pages/courses/managements/CreateCourseForm";
 import TrainerList from "../pages/gyms/managements/TrainerList";
 import BoxerList from "../pages/gyms/managements/BoxerList";
 import GymInfo from "../pages/gyms/managements/GymInfo";
 import UserProfile from "../pages/users/UserProfile";
 import CoursePackage from "../pages/gyms/managements/CoursePackage";
+// import CourseList from "../pages/gyms/managements/CourseList";
 import CourseList from "../pages/gyms/managements/CourseList";
+import EditCourseForm from "../pages/courses/managements/EditCourseForm";
+
 
 function GymRoutes() {
   return (
@@ -56,12 +55,13 @@ function GymRoutes() {
         <Route path=":gym_id/trainers/list" element={<TrainerList />} />
         <Route path="user/:username" element={<UserProfile />} />
         <Route path=":gym_id/coursePackage" element={<CoursePackage />} />
-        <Route path=":gym_id/course/list" element={<CourseList/>}/>
+        <Route path=":gym_id/courses/list" element={<CourseList/>}/>
+        <Route path=":gym_id/course/edit/:course_id" element={<EditCourseForm />} />
       </Route>
 
       {/* Course Routes */}
-      <Route path="/editCourseFrom" element={<EditCourseFrom />} />
-      <Route path="/editCourse" element={<EditCourse />} />
+      {/* <Route path="/editCourseFrom" element={<EditCourseFrom />} />
+      <Route path="/editCourse" element={<EditCourse />} /> */}
 
       {/* ไม่มี Layout(Navbar) */}
       <Route path="/forrent" element={<GymForRent />} />

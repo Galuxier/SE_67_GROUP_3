@@ -2,10 +2,13 @@ import { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { LucideMapPin } from "lucide-react";
 import { getImage } from "../../services/api/ImageApi";
+import { useAuth } from "../../context/AuthContext";
 
 // Event Type Components
 const TicketSale = ({ event, navigate }) => {
-
+  const user = useAuth();
+  console.log(user);
+  
   return (
     <div className="p-6 text-center">
       <h2 className="font-semibold text-2xl mb-4 text-text">Ticket Price</h2>
@@ -55,7 +58,13 @@ const TicketSale = ({ event, navigate }) => {
 
       {/* Buy Button */}
       <button 
-       onClick={() => navigate(`/event/ticket/${event._id}`, { state: { event } })}
+        onClick={() => {
+          if (user.isLoggedIn) {
+            navigate(`/event/ticket/${event._id}`, { state: { event } });
+          } else {
+            navigate("/login");
+          }
+        }}
        className="w-full mt-6 bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-6 rounded-lg">
         Buy Tickets
       </button>
@@ -89,11 +98,18 @@ const Registration = ({ event, navigate }) => {
 
       {/* Register Button */}
       <button
-        onClick={() => navigate(`/event/register/${event._id}`, { state: { event } })}
+        onClick={() => {
+          if (user.isLoggedIn) {
+            navigate(`/event/register/${event._id}`, { state: { event } });
+          } else {
+            navigate("/login");
+          }
+        }}
         className="w-full mt-6 bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-6 rounded-lg"
       >
         Register Now
       </button>
+
     </div>
   );
 };
@@ -110,6 +126,8 @@ function EventDetail() {
       const fetchEventById = async () => {
         try {
           const response = await fetch(`/api/events/${id}`);
+          console.log(`/api/events/${id}`);
+          
           if (!response.ok) throw new Error("Failed to fetch event");
           let data = await response.json();
 
@@ -156,6 +174,8 @@ function EventDetail() {
       setImageUrl(url); // Update state
       const seat_url = await getImage(event.seatZone_url);
       setSeatZoneUrl(seat_url); // Update state
+      console.log(seat_url);
+      
     }
     fetchImage();
   }, [event.poster_url]); // Run when poster_url changes

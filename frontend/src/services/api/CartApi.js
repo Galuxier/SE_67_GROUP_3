@@ -27,20 +27,20 @@ export const getUserCart = async (userId) => {
  * @returns {Promise} - Updated cart
  */
 export const addItemToCart = async ({ user_id, shop_id, product_id, variant_id, quantity }) => {
-    try {
-      const response = await api.post('/cart/add', {
-        user_id,
-        shop_id,
-        product_id,
-        variant_id,
-        quantity
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error adding item to cart:', error);
-      throw error;
-    }
-  };
+  try {
+    const response = await api.post('/cart/add', {
+      user_id,
+      shop_id,
+      product_id,
+      variant_id,
+      quantity
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error adding item to cart:', error);
+    throw error;
+  }
+};
 
 /**
  * Remove an item from the cart
@@ -63,7 +63,7 @@ export const removeItemFromCart = async ({ user_id, shop_id, variant_id }) => {
     throw error;
   }
 };
-  
+
 
 /**
  * Update the quantity of an item in the cart
@@ -75,19 +75,19 @@ export const removeItemFromCart = async ({ user_id, shop_id, variant_id }) => {
  * @returns {Promise} - Updated cart
  */
 export const updateCartItemQuantity = async ({ user_id, shop_id, variant_id, quantity }) => {
-    try {
-      const response = await api.post('/cart/update-quantity', {
-        user_id,
-        shop_id,
-        variant_id,
-        quantity
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error updating cart item quantity:', error);
-      throw error;
-    }
-  };
+  try {
+    const response = await api.post('/cart/update-quantity', {
+      user_id,
+      shop_id,
+      variant_id,
+      quantity
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating cart item quantity:', error);
+    throw error;
+  }
+};
 
 /**
  * Clear all items from the user's cart

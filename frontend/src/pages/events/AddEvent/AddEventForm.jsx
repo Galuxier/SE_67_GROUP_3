@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useEffect,useRef,useMemo  } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeftIcon, ChevronRightIcon, CheckIcon, TrashIcon, PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ChevronLeftIcon, ChevronRightIcon, CheckIcon, TrashIcon, PencilIcon, PlusIcon,PencilSquareIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-toastify";
 import { createEvent } from "../../../services/api/EventApi";
 import { useAuth } from "../../../context/AuthContext";
@@ -10,6 +10,253 @@ import { defaultWeightClass } from "./DefaultWeightClass";
 import { getBoxers } from "../../../services/api/BoxerApi";
 import { getImage } from "../../../services/api/ImageApi";
 import { getPlaces } from "../../../services/api/PlaceApi";
+import { set } from "date-fns";
+
+const PlaceModal = ({ places, isOpen, setIsOpen,setPlaceModalOpen,location, setLocation}) => {
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [imageUrls, setImageUrls] = useState({});
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedProvince, setSelectedProvince] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [filteredPlaces, setFilteredPlaces] = useState([]);
+
+  useEffect(() => {
+    async function fetchImages() {
+      const urls = {};
+      // ลูปผ่านแต่ละ place
+      for (const place of places) {
+        const validUrls = [];
+        // ถ้า place มี place_image_urls ให้ดึง URL ทุกตัวใน array
+        if (place.place_image_urls && Array.isArray(place.place_image_urls)) {
+          for (const url of place.place_image_urls) {
+            const validUrl = await getImage(url); // ฟังก์ชันที่คุณใช้ตรวจสอบ URL
+            console.log("validUrl",validUrl);
+            if (validUrl) {
+              validUrls.push(validUrl); // เก็บ URL ที่ถูกต้อง
+            }
+          }
+        }
+  
+        // ถ้าไม่มีภาพที่ถูกต้อง ให้ใช้ default image
+        if (validUrls.length > 0) {
+          urls[place._id] = validUrls; // เก็บหลาย ๆ URL ถ้ามีหลายตัว
+        } else {
+          urls[place._id] = ["/default-event-image.jpg"]; // fallback image
+        }
+      }
+      setImageUrls(urls); // อัปเดต state ของ imageUrls
+    }
+  
+    if (places && places.length) {
+      fetchImages(); // เรียกใช้ฟังก์ชัน
+    }
+  }, [places, selectedPlace]); // เรียกใหม่ทุกครั้งที่ places หรือ selectedPlace เปลี่ยนแปลง
+  
+  const currentImages = selectedPlace && imageUrls[selectedPlace._id] ? imageUrls[selectedPlace._id] : [];
+
+  const savePlace = () => {
+    // Validate required fields
+    console.log("selectedPlace",selectedPlace);
+    
+    if (!selectedPlace) {
+      toast.error("Please fill in all match details including weight class");
+      return;
+    }
+    setLocation(selectedPlace);
+    setPlaceModalOpen(false);
+  };
+  
+  useEffect(() => {
+    let filtered = places;
+
+    if (selectedProvince) {
+      setSelectedDistrict(null);
+      filtered = filtered.filter((place) => place.address.province === selectedProvince);
+    }
+
+    if (selectedDistrict) {
+      filtered = filtered.filter((place) => place.address.district === selectedDistrict);
+    }
+
+    setFilteredPlaces(filtered);
+  }, [selectedProvince, selectedDistrict, places]);
+  
+  if (!isOpen) return null;
+
+  const handleSelectPlace = (place) => {
+    setSelectedPlace(place);
+    setSelectedImageIndex(0); // Reset image index to 0 when new place is selected
+  };
+
+  const handlePrevImage = () => {
+    if (currentImages.length > 0) {
+      setSelectedImageIndex((prevIndex) => 
+        prevIndex === 0 ? currentImages.length - 1 : prevIndex - 1
+      );
+    }
+  };
+  
+  const handleNextImage = () => {
+    if (currentImages.length > 0) {
+      setSelectedImageIndex((prevIndex) => 
+        prevIndex === currentImages.length - 1 ? 0 : prevIndex + 1
+      );
+    }
+  };
+  
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl max-w-lg w-full mx-4 border border-gray-200 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6 ">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white ">Select a Place</h2>
+          <button 
+            onClick={() => setIsOpen(false)}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="flex flex-wrap justify-between gap-4 w-full mb-4">
+          <div className="flex-1 min-w-[200px]">
+            <select
+              value={selectedProvince}
+              onChange={(e) => setSelectedProvince(e.target.value)}
+              className="w-full p-3 border rounded-lg text-sm bg-gray-50 dark:bg-gray-800 dark:text-white"
+            >
+              <option value="">Select Province</option>
+              {[...new Set(places.map((p) => p.address.province))].map((province) => (
+                <option key={province} value={province}>
+                  {province}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex-1 min-w-[200px]">
+            <select
+              value={selectedDistrict}
+              onChange={(e) => setSelectedDistrict(e.target.value)}
+              className="w-full p-3 border rounded-lg text-sm bg-gray-50 dark:bg-gray-800 dark:text-white"
+              disabled={!selectedProvince}
+            >
+              <option value="">Select District</option>
+              {[...new Set(places.filter(p => p.address.province === selectedProvince)
+                .map((p) => p.address.district))].map((district) => (
+                <option key={district} value={district}>
+                  {district}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+  
+        {/* List of places */}
+        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+          {filteredPlaces.length > 0 ? (
+            filteredPlaces.map((place) => (
+              <div
+                key={place._id}
+                className={`flex items-center space-x-4 p-3 rounded-lg cursor-pointer transition-all
+                  ${selectedPlace?._id === place._id 
+                    ? 'bg-primary/10 border border-primary/30' 
+                    : 'border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
+                onClick={() => handleSelectPlace(place)}
+              >
+                <div className="relative flex-shrink-0">
+                  <img
+                    src={imageUrls[place._id] ? imageUrls[place._id][0] : "/default-event-image.jpg"}
+                    alt={place.name}
+                    className="w-16 h-16 object-cover rounded-lg"
+                  />
+                  {selectedPlace?._id === place._id && (
+                    <div className="absolute -top-1 -right-1 bg-primary rounded-full p-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">{place.name}</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {place.address.province}, {place.address.district}
+                  </p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="mt-2 text-gray-500 dark:text-gray-400">No places available</p>
+            </div>
+          )}
+        </div>
+  
+        {/* Show selected place's images */}
+        {selectedPlace && selectedPlace.place_image_urls.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Images of {selectedPlace.name}</h3>
+            <div className="relative flex items-center justify-center">
+              <button 
+                onClick={handlePrevImage} 
+                className="absolute left-0 p-2 rounded-full bg-white dark:bg-gray-700 shadow-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors z-10 -translate-x-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </button>
+              
+              <div className="w-full h-64 bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden">
+              <img
+                src={currentImages[selectedImageIndex] || "/default-event-image.jpg"}
+                alt={selectedPlace.name}
+                className="w-full h-full object-cover transition-opacity duration-300"
+              />
+
+              </div>
+              
+              <button 
+                onClick={handleNextImage} 
+                className="absolute right-0 p-2 rounded-full bg-white dark:bg-gray-700 shadow-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors z-10 translate-x-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+            <div className="text-center mt-2 text-sm text-gray-500 dark:text-gray-400">
+              {selectedImageIndex + 1} / {selectedPlace.place_image_urls.length}
+            </div>
+          </div>
+        )}
+  
+        <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <button 
+            onClick={() => setIsOpen(false)} 
+            className="px-5 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={savePlace}
+            className="px-5 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors shadow-md"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+  
+};
+
 
 const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,19 +276,27 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
     );
   });
 
-  const fetchImage = async (url) => {
-    try {
-      const imageUrl = await getImage(url); // รับค่า imageUrl
-      console.log(imageUrl);
-      
-      return imageUrl;
-    } catch (error) {
-      console.error("Error fetching image:", error);
-      return "/default-event-image.jpg"; // ใช้ default ในกรณีเกิดข้อผิดพลาด
+  useEffect(() => {
+    async function fetchImages() {
+      const urls = {};
+      for (const boxer of boxers) {
+        const url = await getImage(boxer.profile_picture_url); // Ensure the url is valid
+        if (url) {
+          urls[boxer._id] = url; // Use event._id as key
+        } else {
+          urls[boxer._id] = "/default-event-image.jpg"; // Fallback if no image
+        }
+      }
+      setImageUrls(urls);
+      console.log("profile",urls);
     }
-  };
-  
-  
+
+    if (boxers && boxers.length) {
+      fetchImages();
+    }
+  }, []);
+
+  console.log(selectedBoxer);
   
   
   return (
@@ -67,12 +322,12 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
               }}
             >
               <img
-                src={fetchImage(boxer.profile_picture_url)}
+                src={imageUrls[boxer._id]}
                 alt={`${boxer.first_name} ${boxer.last_name}`}
                 className="w-12 h-12 rounded-full object-cover border-2 border-gray-300"
               />
               <p className="text-gray-800 font-medium">
-                {boxer.first_name} {boxer.last_name}
+                {boxer.first_name} {boxer.last_name} ({boxer.nickname})
               </p>
             </div>
           ))}
@@ -82,7 +337,7 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
       {selectedBoxer && (
         <div className="mt-2 flex items-center bg-gray-100 rounded-full px-4 py-2 shadow-md">
           <img
-            src={fetchImage(selectedBoxer.profile_picture_url) || "/default-event-image.jpg"}
+            src={imageUrls[selectedBoxer._id] || "/default-event-image.jpg"}
             alt={`${selectedBoxer.first_name} ${selectedBoxer.last_name}`}
             className="w-14 h-14 rounded-full object-cover border-2 border-gray-300"
           />
@@ -523,6 +778,9 @@ const AddEventForm = () => {
 
 const [places, setPlaces] = useState([]); // ✅ เก็บข้อมูลสถานที่
 
+console.log("places",places);
+
+
 useEffect(() => {
   const fetchPlaces = async () => {
     try {
@@ -568,6 +826,9 @@ useEffect(() => {
   const [newMatch, setNewMatch] = useState({ boxer1_id: "", boxer2_id: "", match_time: "" });
   const [isEditMode, setIsEditMode] = useState(false);  // เพิ่ม state นี้
 
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [isPlaceModalOpen, setPlaceModalOpen] = useState(false);
+
 
   useEffect(() => {
     if(eventData?.event_type === "ticket_sales") {
@@ -610,6 +871,52 @@ useEffect(() => {
       setEventData({ ...eventData, poster_url: file, previewPoster: URL.createObjectURL(file) });
     }
   };
+
+  console.log("isOpen",isPlaceModalOpen);
+  
+  const [location,setLocation] = useState(null);
+  const [locationImg, setLocationImg] = useState(null);
+
+  console.log("location",location);
+  if (location) {
+    eventData.location_id = [location._id]; // กำหนดใหม่ทุกครั้ง ไม่ใช้ .push()
+  }
+  
+  console.log("eventData",eventData);
+  
+
+  const handleAddLocation = () =>{
+    setPlaceModalOpen(true);
+    setSelectedPlace(null);
+  }
+
+  const [locationImgs, setLocationImgs] = useState([]); // เก็บรูปทั้งหมด
+  const [currentImageIndex, setCurrentImageIndex] = useState(0); 
+
+  useEffect(() => {
+    async function fetchImages() {
+      if (location?.place_image_urls?.length > 0) {
+        const validUrls = await Promise.all(location.place_image_urls.map(url => getImage(url))); 
+        setLocationImgs(validUrls);
+      } else {
+        setLocationImgs(["/default-event-image.jpg"]); // ตั้งค่าภาพเริ่มต้น
+      }
+    }
+    fetchImages();
+  }, [location?.place_image_urls]);
+  
+  const handlePrevImage = () => {
+    setCurrentImageIndex(prevIndex => 
+      prevIndex === 0 ? locationImgs.length - 1 : prevIndex - 1
+    );
+  };
+  
+  const handleNextImage = () => {
+    setCurrentImageIndex(prevIndex => 
+      prevIndex === locationImgs.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+  
 
 const handleEditSeat = (seat) => {
   setEditingSeat(seat);  // ตั้งค่าข้อมูลที่จะแก้ไข
@@ -745,14 +1052,21 @@ const handleAddWeightClass = () => {
       // console.log(eventData);
       // ใส่ค่าที่ไม่ใช่ไฟล์โดยแปลงเป็น JSON String
       formData.append("organizer_id", eventData.organizer_id);
-      formData.append("location_id", eventData.location_id);
+      formData.append("location_id",location._id);
       formData.append("event_name", eventData.event_name);
       formData.append("level", eventData.level.toLowerCase());
       formData.append("start_date", eventData.start_date);
       formData.append("end_date", eventData.end_date);
       formData.append("description", eventData.description);
       formData.append("event_type", eventData.event_type);
-      formData.append("status", eventData.status || "preparing");
+      
+      if(eventData.event_type === "ticket_sales"){
+        formData.append("status", "ongoing");
+      }
+      else{
+        formData.append("status",eventData.event_type);
+      }
+      
 
       const weightClassesData = weightClasses.map(wc => {
         // แปลง id ของ weightClass เป็น string เพื่อเปรียบเทียบกับ weight_class_id
@@ -832,106 +1146,173 @@ const handleAddWeightClass = () => {
   };
 
   const renderBasicInfo = () => (
-    <div className="space-y-6 ">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-2 text-gray-700 text-text">Event Name</label>
-          <input 
-            type="text" 
-            name="event_name" 
-            value={eventData.event_name} 
-            onChange={handleInputChange} 
-            className="w-full border border-gray-300 dark:text-black rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
-            placeholder="Enter event name" 
-            required 
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Location ID</label>
-          <select
-            name="location_id"
-            value={eventData.location_id}
-            onChange={handleInputChange}
-            className="w-full text-gray-900 dark:text-black border border-gray-300 dark:border-gray-600 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200"
-            required
-          >
-            <option value="" className="text-gray-900 dark:text-black">-- Select Location --</option>
-            {places.map((location, index) => (
-              <option className="text-gray-900 dark:text-black" key={index} value={location._id}>
-                {location.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div >
-          <label className="block text-sm font-medium mb-2 text-gray-700 text-text">Level</label>
-          <select 
-            name="level" 
-            value={eventData.level} 
-            onChange={handleInputChange} 
-            className="w-full border border-gray-300 dark:text-black rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
-            required
-          >
-            <option value="" className="text-gray-900 dark:text-black">-- Select Level --</option>
-            <option value="beginner" className="text-gray-900 dark:text-black">Beginner</option>
-            <option value="fighter" className="text-gray-900 dark:text-black">Fighter</option>
-          </select>
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-2 text-gray-700 text-text">Description</label>
-          <textarea 
-            name="description" 
-            value={eventData.description} 
-            onChange={handleInputChange} 
-            className="w-full border border-gray-300 rounded-lg dark:text-black py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition ease-in-out duration-200" 
-            rows="4" 
-            placeholder="Enter event description" 
-          />
-        </div>
+    <div className="space-y-6">
+      {/* Event Name */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Event Name</label>
+        <input
+          type="text"
+          name="event_name"
+          value={eventData.event_name}
+          onChange={handleInputChange}
+          className="w-full border border-gray-300 dark:text-black rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition duration-200"
+          placeholder="Enter event name"
+          required
+        />
+      </div>
   
-        <div className="md:col-span-2">
-          <label className="block mb-1">Poster</label>
-          <input
-            type="file"
-            ref={fileSeatInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-            accept="image/*"
+ {/* Location - With enhanced UI */}
+<div className="block">
+  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Location</label>
+  {location ? (
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div className="flex items-start gap-4 w-full">
+        <div className="relative flex-shrink-0">
+          {/* ปุ่ม Previous */}
+          {locationImgs.length > 1 && (
+            <button
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 hover:bg-gray-100 hover:text-gray-900 p-2 rounded-full shadow-md opacity-25"
+              onClick={handlePrevImage}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white hover:text-gray-900" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
+          
+          <img 
+            src={locationImgs[currentImageIndex]} 
+            alt={location.name} 
+            className="w-full h-80 object-cover rounded-lg border border-gray-300"
           />
-          <div className="mt-4 flex justify-center">
-            {eventData.previewPoster ? (
-              <div className="relative w-full max-w-2xl">
-                <img
-                  src={eventData.previewPoster}
-                  alt="Preview"
-                  className="w-full h-80 object-cover rounded-lg border border-border/50 mx-auto"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemovePoster(0)}
-                  className="absolute top-1 right-1 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
-                >
-                  <XMarkIcon className="h-3 w-3 text-white" />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileSeatInputRef.current.click()}
-                className="flex flex-col items-center justify-center w-full max-w-2xl h-80 border-2 border-gray-300 border-dashed border-border/50 rounded-lg hover:border-primary/50 transition-colors mx-auto"
-              >
-                <PhotoIcon className="h-8 w-8 text-text/40" />
-                <p className="mt-2 text-sm text-text/60">Click to upload a photo</p>
-              </button>
-            )}
-          </div>
+          
+          {/* ปุ่ม Next */}
+          {locationImgs.length > 1 && (
+            <button
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full shadow-md hover:bg-gray-100 opacity-25 hover:text-gray-900"
+              onClick={handleNextImage}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white hover:text-gray-900" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
+          
+          <button
+            type="button"
+            onClick={handleAddLocation}
+            className="absolute top-1 right-1 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+          >
+            <PencilSquareIcon className="h-3 w-3 text-white" />
+          </button>
         </div>
-
-
+        
+        <div className="flex-1 min-w-0">
+          <p className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+            {location.name}
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            {location.address.province}, {location.address.district}
+          </p>
+          {location.address.details && (
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+              {location.address.details}
+            </p>
+          )}
+        </div>
       </div>
     </div>
-  );
+  ) : (
+    <div className="flex justify-center items-center w-full h-80">
+      <button
+        type="button"
+        onClick={handleAddLocation}
+        className="flex flex-col items-center justify-center w-full h-80 max-w-2xl border-2 border-gray-300 border-dashed rounded-lg hover:border-primary/50 transition-colors"
+      >
+        <PhotoIcon className="h-8 w-8 text-gray-500" />
+        <p className="mt-2 text-sm text-gray-600">Click to Select Location</p>
+      </button>
+    </div>
+  )}
+</div>
+
+
+  {/* Level - Styled with better spacing */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Level</label>
+    <div className="relative">
+      <select
+        name="level"
+        value={eventData.level}
+        onChange={handleInputChange}
+        className="w-full border border-gray-300 dark:border-gray-600 dark:text-white dark:bg-gray-700 rounded-lg py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition duration-200 appearance-none"
+        required
+      >
+        <option value="">-- Select Level --</option>
+        <option value="beginner">Beginner</option>
+        <option value="fighter">Fighter</option>
+      </select>
+      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+        <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+      {/* Description */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description</label>
+        <textarea
+          name="description"
+          value={eventData.description}
+          onChange={handleInputChange}
+          className="w-full border border-gray-300 rounded-lg dark:text-black py-3 px-4 focus:ring-2 focus:ring-primary/50 focus:border-primary transition duration-200"
+          rows="4"
+          placeholder="Enter event description"
+        />
+      </div>
   
+      {/* Poster Upload */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Poster</label>
+        <input
+          type="file"
+          ref={fileSeatInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+          accept="image/*"
+        />
+        <div className="mt-4 flex justify-center">
+          {eventData.previewPoster ? (
+            <div className="relative w-full max-w-2xl">
+              <img
+                src={eventData.previewPoster}
+                alt="Preview"
+                className="w-full h-80 object-cover rounded-lg border border-gray-300"
+              />
+              <button
+                type="button"
+                onClick={() => handleRemovePoster(0)}
+                className="absolute top-1 right-1 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+              >
+                <XMarkIcon className="h-3 w-3 text-white" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileSeatInputRef.current.click()}
+              className="flex flex-col items-center justify-center w-full max-w-2xl h-80 border-2 border-gray-300 border-dashed rounded-lg hover:border-primary/50 transition-colors"
+            >
+              <PhotoIcon className="h-8 w-8 text-gray-500" />
+              <p className="mt-2 text-sm text-gray-600">Click to upload a photo</p>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );  
 
   const renderDetails = () => (
     <div className="space-y-6">
@@ -954,131 +1335,134 @@ const handleAddWeightClass = () => {
         </div>
       </div>
 
-      {eventData.event_type === "registration" ? (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-lg font-medium">Weight Classes</h3>
-            <button onClick={() => handleAddWeightClass()} className="p-1 rounded-full bg-rose-500 text-white">
-              <PlusIcon className="h-5 w-5" />
-            </button>
-          </div>
-          <table className="w-full border-collapse border rounded-lg text-sm">
-            <thead>
-              <tr className="bg-gray-200  dark:text-gray-900">
-                <th className="p-2 border">Type</th>
-                <th className="p-2 border">Weight Name</th>
-                <th className="p-2 border">Min Weight</th>
-                <th className="p-2 border">Max Weight</th>
-                <th className="p-2 border">Max Enrollment</th>
-                <th className="p-2 border">Price</th>
-                <th className="p-2 border">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {weightClasses.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="p-2 border text-center text-gray-500">
-                    No weight classes added yet. Please add a weight class.
-                  </td>
-                </tr>
-              ) : (
-                weightClasses.map((wc) => (
-                  <tr key={wc.id} className="text-center ">
-                    <td className="p-2 border">{wc.type}</td>
-                    <td className="p-2 border">{wc.weigh_name}</td>
-                    <td className="p-2 border">{wc.min_weight}</td>
-                    <td className="p-2 border">{wc.max_weight}</td>
-                    <td className="p-2 border">{wc.max_enrollment}</td>
-                    <td className="p-2 border">{wc.price ? new Intl.NumberFormat().format(wc.price) : "Free"}</td>
-                    <td className="p-2 border">
-                      <button className="text-blue-500 mr-2" onClick={() => handleEditWeightClass(wc)}>
-                        <PencilIcon className="h-4 w-4" />
-                      </button>
-                      <button className="text-red-500" onClick={() => handleDeleteWeightClass(wc.id)}>
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-lg font-medium">Seat Zones</h3>
-            <button onClick={() => handleAddSeat()} className="p-1 rounded-full bg-rose-500 text-white">
-              <PlusIcon className="h-5 w-5" />
-            </button>
-          </div>
-          <table className="w-full border-collapse border rounded-lg text-sm">
-            <thead>
-              <tr className="bg-gray-200  dark:text-gray-900">
-                <th className="p-2 border">Zone</th>
-                <th className="p-2 border">Quantity</th>
-                <th className="p-2 border">Price</th>
-                <th className="p-2 border">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {seatZones.map((seat) => (
-                <tr key={seat.id} className="text-center">
-                  <td className="p-2 border">{seat.zone_name}</td>
-                  <td className="p-2 border">{seat.number_of_seat}</td>
-                  <td className="p-2 border">{seat.price ? new Intl.NumberFormat().format(seat.price) : "Free"}</td>
-                  <td className="p-2 border">
-                    <button className="text-blue-500 mr-2" onClick={() => handleEditSeat(seat)}>
-                      <PencilIcon className="h-4 w-4" />
-                    </button>
-                    <button className="text-red-500" onClick={() => handleDeleteSeat(seat.id)}>
-                      <TrashIcon className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div>
-          <label className="block mb-1">Seat Zone</label>
-            <input
-              type="file"
-              ref={fileSeatInputRef}
-              onChange={handleFileUpload}
-              className="hidden"
-              accept="image/png, image/jpeg"
-            />
-            <div className="mt-4 flex justify-center">
-              {fileSeatPreviews.length > 0 ? (
-                <div className="relative">
-                  <img
-                    src={fileSeatPreviews[0]}
-                    alt="Preview"
-                    className="w-full h-80 object-cover rounded-lg border border-border/50 mx-auto"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(0)}
-                    className="absolute top-1 right-1 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
-                  >
-                    <XMarkIcon className="h-3 w-3 text-white" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileSeatInputRef.current.click()}
-                  className="flex flex-col items-center justify-center w-4/5 h-80 border-2 border-gray-300 border-dashed border-border/50 rounded-lg hover:border-primary/50 transition-colors mx-auto"
-                >
-                  <PhotoIcon className="h-8 w-8 text-text/40" />
-                  <p className="mt-2 text-sm text-text/60">Click to upload a photo</p>
+      {eventData.event_type === "registration" && (
+  <div>
+    <div className="flex items-center gap-2 mb-3">
+      <h3 className="text-lg font-medium">Weight Classes</h3>
+      <button onClick={() => handleAddWeightClass()} className="p-1 rounded-full bg-rose-500 text-white">
+        <PlusIcon className="h-5 w-5" />
+      </button>
+    </div>
+    <table className="w-full border-collapse border rounded-lg text-sm">
+      <thead>
+        <tr className="bg-gray-200 dark:text-gray-900">
+          <th className="p-2 border">Type</th>
+          <th className="p-2 border">Weight Name</th>
+          <th className="p-2 border">Min Weight</th>
+          <th className="p-2 border">Max Weight</th>
+          <th className="p-2 border">Max Enrollment</th>
+          <th className="p-2 border">Price</th>
+          <th className="p-2 border">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {weightClasses.length === 0 ? (
+          <tr>
+            <td colSpan="7" className="p-2 border text-center text-gray-500">
+              No weight classes added yet. Please add a weight class.
+            </td>
+          </tr>
+        ) : (
+          weightClasses.map((wc) => (
+            <tr key={wc.id} className="text-center ">
+              <td className="p-2 border">{wc.type}</td>
+              <td className="p-2 border">{wc.weigh_name}</td>
+              <td className="p-2 border">{wc.min_weight}</td>
+              <td className="p-2 border">{wc.max_weight}</td>
+              <td className="p-2 border">{wc.max_enrollment}</td>
+              <td className="p-2 border">{wc.price ? new Intl.NumberFormat().format(wc.price) : "Free"}</td>
+              <td className="p-2 border">
+                <button className="text-blue-500 mr-2" onClick={() => handleEditWeightClass(wc)}>
+                  <PencilIcon className="h-4 w-4" />
                 </button>
-              )}
-            </div>
+                <button className="text-red-500" onClick={() => handleDeleteWeightClass(wc.id)}>
+                  <TrashIcon className="h-4 w-4" />
+                </button>
+              </td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </div>
+)}
+
+{eventData.event_type === "ticket_sales" && (
+  <div>
+    <div className="flex items-center gap-2 mb-3">
+      <h3 className="text-lg font-medium">Seat Zones</h3>
+      <button onClick={() => handleAddSeat()} className="p-1 rounded-full bg-rose-500 text-white">
+        <PlusIcon className="h-5 w-5" />
+      </button>
+    </div>
+    <table className="w-full border-collapse border rounded-lg text-sm">
+      <thead>
+        <tr className="bg-gray-200 dark:text-gray-900">
+          <th className="p-2 border">Zone</th>
+          <th className="p-2 border">Quantity</th>
+          <th className="p-2 border">Price</th>
+          <th className="p-2 border">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {seatZones.map((seat) => (
+          <tr key={seat.id} className="text-center">
+            <td className="p-2 border">{seat.zone_name}</td>
+            <td className="p-2 border">{seat.number_of_seat}</td>
+            <td className="p-2 border">{seat.price ? new Intl.NumberFormat().format(seat.price) : "Free"}</td>
+            <td className="p-2 border">
+              <button className="text-blue-500 mr-2" onClick={() => handleEditSeat(seat)}>
+                <PencilIcon className="h-4 w-4" />
+              </button>
+              <button className="text-red-500" onClick={() => handleDeleteSeat(seat.id)}>
+                <TrashIcon className="h-4 w-4" />
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <div>
+      <label className="block mb-1">Seat Zone</label>
+      <input
+        type="file"
+        ref={fileSeatInputRef}
+        onChange={handleFileUpload}
+        className="hidden"
+        accept="image/png, image/jpeg"
+      />
+      <div className="mt-4 flex justify-center">
+        {fileSeatPreviews.length > 0 ? (
+          <div className="relative">
+            <img
+              src={fileSeatPreviews[0]}
+              alt="Preview"
+              className="w-full h-80 object-cover rounded-lg border border-border/50 mx-auto"
+            />
+            <button
+              type="button"
+              onClick={() => handleRemoveImage(0)}
+              className="absolute top-1 right-1 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+            >
+              <XMarkIcon className="h-3 w-3 text-white" />
+            </button>
           </div>
-        </div>
-        
-      )}
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileSeatInputRef.current.click()}
+            className="flex flex-col items-center justify-center w-4/5 h-80 border-2 border-gray-300 border-dashed border-border/50 rounded-lg hover:border-primary/50 transition-colors mx-auto"
+          >
+            <PhotoIcon className="h-8 w-8 text-text/40" />
+            <p className="mt-2 text-sm text-text/60">Click to upload a photo</p>
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 
@@ -1346,7 +1730,14 @@ const handleAddWeightClass = () => {
         setEditingSeat={setEditingSeat}
         isEditMode={isEditMode}  // ส่ง isEditMode ไป
       />
+       <PlaceModal places={places} 
+        isOpen={isPlaceModalOpen}
+        setIsOpen={setPlaceModalOpen}
+        setPlaceModalOpen={setPlaceModalOpen}
+        location={location}
+        setLocation={setLocation}
 
+       />
     </div>
   );
 };

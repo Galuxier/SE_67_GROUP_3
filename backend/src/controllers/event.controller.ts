@@ -82,3 +82,61 @@ export const deleteEventController = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error deleting event', error: err });
   }
 };
+
+export const searchEventsController = async (req: Request, res: Response) => {
+  try {
+    // Extract query parameters
+    const { 
+      query = '', 
+      level, 
+      province, // เพิ่ม province
+      location_name, // เปลี่ยนจาก location_id เป็น location_name
+      min_date, 
+      max_date,
+      page = '1',
+      limit = '10',
+      sort
+    } = req.query;
+    
+    // Parse numeric parameters
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 10;
+    
+    // Parse date parameters
+    const minDate = min_date ? new Date(min_date as string) : undefined;
+    const maxDate = max_date ? new Date(max_date as string) : undefined;
+    
+    // Search for events with filters
+    const { events, total } = await EventsService.searchEvents(
+      query as string,
+      province as string | undefined, // เพิ่ม province
+      location_name as string | undefined, // เปลี่ยนเป็น location_name
+      minDate,
+      maxDate,
+      level as string | undefined,
+      pageNum,
+      limitNum,
+      sort as string | undefined
+    );
+    
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limitNum);
+    
+    res.status(200).json({
+      success: true,
+      count: events.length,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+      data: events
+    });
+  } catch (err) {
+    console.error('Error searching events:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error searching events', 
+      error: err 
+    });
+  }
+};

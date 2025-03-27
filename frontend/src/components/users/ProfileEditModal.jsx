@@ -19,6 +19,10 @@ import {
 } from "react-icons/fa";
 
 import Authenticator from "./Authenticator";
+import { getImage } from "../../services/api/ImageApi";
+
+
+
 const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -71,14 +75,26 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
         contact_info: {
           line: userData.contact_info?.line || "",
           facebook: userData.contact_info?.facebook || "",
-          phone: userData.phone || "",  
+          phone: userData.phone || "",
         },
       });
-
-      // Initialize profile picture if available
-      if (userData.profile_picture_url) {
-        setImage(userData.profile_picture_url);
-      }
+  
+      // ดึงภาพโปรไฟล์ด้วย getImage
+      const fetchProfilePicture = async () => {
+        if (userData.profile_picture_url) {
+          try {
+            const profilePictureUrl = await getImage(userData.profile_picture_url);
+            setImage(profilePictureUrl);
+          } catch (error) {
+            console.error("Failed to load profile picture:", error);
+            setImage(defaultAvatar); // Fallback ถ้าดึงภาพไม่สำเร็จ
+          }
+        } else {
+          setImage(defaultAvatar);
+        }
+      };
+  
+      fetchProfilePicture();
     }
   }, [userData]);
 
@@ -257,11 +273,11 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
   const applyCrop = async () => {
     const result = await createCroppedImage();
     if (result) {
-      setImage(result.preview);
       setFormData((prev) => ({
         ...prev,
         profile_picture_url: result.file,
       }));
+      setImage(result.preview); // ใช้ preview ชั่วคราว
       setIsCropping(false);
       setTempImage(null);
     }
@@ -301,7 +317,20 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
 
       // ส่งข้อมูลไป API เพื่ออัปเดตข้อมูล
       const result = await updateUser(userData._id, submitData);
-      setImage(result.profile_picture_url);
+      
+      let profilePictureUrl = defaultAvatar;
+      if(result.profile_picture_url){
+        try{
+          profilePictureUrl = await getImage(result.profile_picture_url);
+        }catch (error){
+          console.error("Failed to  load update profile picture:", error);
+          profilePictureUrl = defaultAvatar;
+        }
+      }
+
+      //
+
+
       // แสดงข้อความสำเร็จ
       toast.success("Profile updated successfully!");
 

@@ -1,28 +1,16 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  FaMapMarkerAlt,
-  FaPhone,
-  FaEnvelope,
-  FaFacebook,
-  FaLine,
-} from "react-icons/fa";
-import {
-  PencilSquareIcon,
-  CalendarIcon,
-  UserGroupIcon,
-  ClockIcon,
-} from "@heroicons/react/24/outline";
+import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaFacebook, FaLine } from "react-icons/fa";
+import { PencilSquareIcon, CalendarIcon, UserGroupIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { getGymFromId } from "../../services/api/GymApi";
-import { getCoursesByGymId } from "../../services/api/CourseApi";
 import { getImage } from "../../services/api/ImageApi";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 import EditGymModal from "../../components/gyms/EditGymModal";
-import TrainerList from "../../components/TrainerCard";
+import TrainerList from "../../components/Trainer";
 import { useInView } from "react-intersection-observer";
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
@@ -39,66 +27,60 @@ const GymDetail = () => {
   const [activeTab, setActiveTab] = useState("about");
   const stickyRef = useRef(null);
   const { user } = useAuth();
-
+  
   // Image viewer state
   const [viewerOpen, setViewerOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
+  
+  // Courses state
   const [upcomingCourses, setUpcomingCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [coursesError, setCoursesError] = useState(null);
-
+  
   // Animation for sections
   const [aboutRef, aboutInView] = useInView({
     triggerOnce: true,
-    threshold: 0.1,
+    threshold: 0.1
   });
-
+  
   const [trainersRef, trainersInView] = useInView({
     triggerOnce: true,
-    threshold: 0.1,
+    threshold: 0.1
   });
-
+  
   const [facilitiesRef, facilitiesInView] = useInView({
     triggerOnce: true,
-    threshold: 0.1,
+    threshold: 0.1
   });
 
   // Check if user is the owner of the gym
   const isGymOwner = user && gym && user._id === gym.owner_id;
-
-  // Fetch gym data
+  
+  // Fetch gym data and courses
   useEffect(() => {
-    const fetchGym = async () => {
+    const fetchGymData = async () => {
       try {
         setLoading(true);
         const response = await getGymFromId(id);
-        console.log("Gym response:", response); // Debug: ดู response จาก API
         setGym(response);
 
-        // ตรวจสอบ gym_image_url
-        console.log("Gym image URLs:", response.gym_image_urls); // Debug: ดู gym_image_url
-
+        // Fetch image URLs
         if (response.gym_image_urls && response.gym_image_urls.length > 0) {
           const urls = await Promise.all(
             response.gym_image_urls.map(async (imageUrl) => {
               try {
-                console.log(`Fetching image: ${imageUrl}`); // Debug: ดู imageUrl ที่เรียก
-                const image = await getImage(imageUrl);
-                console.log(`Image fetched successfully: ${image}`); // Debug: ดู URL ที่ได้จาก getImage
-                return image;
+                return await getImage(imageUrl);
               } catch (error) {
                 console.error("Error fetching image:", error);
-                return "https://placehold.co/800x500?text=Image+Not+Available";
+                return "https://via.placeholder.com/800x500?text=Image+Not+Available";
               }
             })
           );
           setImageUrls(urls);
         } else {
-          console.warn("No gym images available, using placeholders"); // Debug: ถ้าไม่มีรูปภาพ
           setImageUrls([
-            "https://placehold.co/800x500?text=No+Images+Available",
-            "https://placehold.co/800x500?text=Muay+Thai+Gym",
+            "https://via.placeholder.com/800x500?text=No+Images+Available",
+            "https://via.placeholder.com/800x500?text=Muay+Thai+Gym"
           ]);
         }
       } catch (error) {
@@ -109,117 +91,79 @@ const GymDetail = () => {
       }
     };
 
-    fetchGym();
-  }, [id]);
-
-  // Fetch upcoming courses
-  useEffect(() => {
     const fetchCourses = async () => {
-      if (!id) {
-        console.error("Gym ID is undefined or missing");
-        setCoursesError(
-          "Gym ID is missing. Please ensure the URL contains a valid gym ID."
-        );
-        setCoursesLoading(false);
-        return;
-      }
-
       try {
-        //console.log(`Fetching courses for gym_id: ${id}`);
         setCoursesLoading(true);
-        const response = await getCoursesByGymId(id);
-        // console.log("Courses response:", response);
-
-        const coursesData = response.data;
-
-        if (!Array.isArray(coursesData)) {
-          throw new Error("API response data is not an array");
-        }
-
-        console.log("Courses data:", coursesData);
-
-        const upcoming = coursesData
-          .filter((course) => {
-            if (!course.status) {
-              console.warn("Course missing status:", course);
-              return false;
-            }
-
-            console.log(`Course status: ${course.status}`);
-            return course.status.toLowerCase() === "preparing";
-          })
-          .map((course) => {
-            if (
-              !course._id ||
-              !course.course_name ||
-              !course.start_date ||
-              !course.end_date ||
-              !course.level
-            ) {
-              console.warn("Course missing required fields:", course);
-            }
-
-            return {
-              id: course._id,
-              name: course.course_name,
-              startDate: new Date(course.start_date).toLocaleDateString(
-                "en-GB",
-                {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                }
-              ),
-              endDate: new Date(course.end_date).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              }),
-              price: course.price || 0,
-              spots: course.spots || 0,
-              level: course.level,
-            };
-          });
-
-        console.log("Upcoming courses after filtering:", upcoming);
-        setUpcomingCourses(upcoming);
-        setCoursesError(null);
+        // Simulate API call - replace with actual API call when available
+        const sampleCourses = [
+          {
+            id: 1,
+            name: "Beginner Muay Thai",
+            startDate: "April 15, 2025",
+            endDate: "May 30, 2025",
+            price: 2500,
+            spots: 5,
+            level: "Beginner"
+          },
+          {
+            id: 2,
+            name: "Advanced Clinching Techniques",
+            startDate: "April 20, 2025",
+            endDate: "June 10, 2025",
+            price: 3500,
+            spots: 3,
+            level: "Advanced"
+          },
+          {
+            id: 3,
+            name: "Kids Muay Thai",
+            startDate: "May 1, 2025",
+            endDate: "June 30, 2025",
+            price: 2000,
+            spots: 8,
+            level: "Beginner"
+          }
+        ];
+        
+        // Simulate delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setUpcomingCourses(sampleCourses);
       } catch (error) {
-        console.error("Error fetching courses:", error.message);
-        setCoursesError(`Failed to load upcoming courses: ${error.message}`);
+        console.error("Error fetching courses:", error);
+        setCoursesError("Failed to load courses. Please try again.");
       } finally {
-        console.log("Setting courses loading to false");
         setCoursesLoading(false);
       }
     };
 
+    fetchGymData();
     fetchCourses();
   }, [id]);
-
+  
   const handleSave = (updatedGym) => {
     setGym(updatedGym);
     setIsModalOpen(false);
   };
-
+  
   const handleCourseClick = (courseId) => {
     navigate(`/course/${courseId}`);
   };
-
+  
   const handleImageClick = (index) => {
     setCurrentImageIndex(index);
     setViewerOpen(true);
   };
-
+  
   const getLevelBadgeColor = (level) => {
-    switch (level.toLowerCase()) {
-      case "beginner":
-        return "bg-green-100 text-green-800";
-      case "intermediate":
-        return "bg-blue-100 text-blue-800";
-      case "advanced":
-        return "bg-red-100 text-red-800";
+    switch(level.toLowerCase()) {
+      case 'beginner':
+        return 'bg-green-100 text-green-800';
+      case 'intermediate':
+        return 'bg-blue-100 text-blue-800';
+      case 'advanced':
+        return 'bg-red-100 text-red-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -236,8 +180,8 @@ const GymDetail = () => {
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-text">
         <div className="text-5xl text-red-500 mb-4">⚠️</div>
         <h2 className="text-2xl font-bold mb-4">{error}</h2>
-        <button
-          onClick={() => navigate("/gym")}
+        <button 
+          onClick={() => navigate('/gym')}
           className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors"
         >
           Back to Gyms
@@ -250,7 +194,7 @@ const GymDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Image Slider - Smaller size */}
+      {/* Image Slider */}
       <div className="relative w-full h-[40vh] md:h-[50vh] max-w-7xl mx-auto mt-4 rounded-lg overflow-hidden">
         <Swiper
           modules={[Navigation, Pagination]}
@@ -260,25 +204,26 @@ const GymDetail = () => {
         >
           {imageUrls.map((url, index) => (
             <SwiperSlide key={index}>
-              <div
+              <div 
                 className="w-full h-full cursor-pointer"
                 onClick={() => handleImageClick(index)}
               >
-                <img
-                  src={url}
-                  alt={`${gym.gym_name} - Image ${index + 1}`}
+                <img 
+                  src={url} 
+                  alt={`${gym.gym_name} - Image ${index + 1}`} 
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 flex items-center justify-center opacity-0 hover:opacity-50 transition-opacity duration-300">
-                  <span className="text-white bg-grey bg-opacity-10 px-4 py-2 rounded-lg shadow-lg"></span>
+                  <span className="text-white bg-grey bg-opacity-10 px-4 py-2 rounded-lg shadow-lg">
+                  </span>
                 </div>
               </div>
             </SwiperSlide>
           ))}
         </Swiper>
       </div>
-
-      {/* Gym Name and Location - Moved below the images */}
+      
+      {/* Gym Name and Location */}
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="flex justify-between items-start">
           <div>
@@ -292,16 +237,15 @@ const GymDetail = () => {
               </p>
             </div>
           </div>
-
-          {/* Only show edit button for gym owner */}
-          {/* {isGymOwner && (
+          
+          {isGymOwner && (
             <button
               onClick={() => setIsModalOpen(true)}
               className="p-2 bg-primary text-white rounded-md hover:bg-secondary transition-colors"
             >
               <PencilSquareIcon className="h-5 w-5" />
             </button>
-          )} */}
+          )}
         </div>
       </div>
 
@@ -333,15 +277,25 @@ const GymDetail = () => {
                 >
                   Trainers
                 </button>
+                {/* <button
+                  onClick={() => setActiveTab("facilities")}
+                  className={`py-4 px-1 font-medium text-lg text-text border-b-2 ${
+                    activeTab === "facilities"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-text/70 hover:text-text hover:border-border"
+                  } transition-colors`}
+                >
+                  Facilities
+                </button> */}
               </nav>
             </div>
-
+            
             {/* About Section */}
-            <div
+            <div 
               ref={aboutRef}
               className={`${activeTab === "about" ? "block" : "hidden"}`}
             >
-              <motion.div
+              <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={aboutInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.5 }}
@@ -351,20 +305,17 @@ const GymDetail = () => {
                   About Us
                   <span className="absolute -bottom-2 left-0 w-20 h-1 bg-primary"></span>
                 </h2>
-
+                
                 <div className="prose prose-lg max-w-none text-text dark:prose-invert">
                   <p className="text-lg">
-                    {gym.description ||
-                      "No description available for this gym."}
+                    {gym.description || "No description available for this gym."}
                   </p>
                 </div>
-
+                
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Contact Information */}
                   <div className="bg-card rounded-lg p-6 shadow-md border border-border/20 hover:shadow-lg transition-shadow">
-                    <h3 className="text-xl font-semibold mb-4 text-text">
-                      Contact Information
-                    </h3>
+                    <h3 className="text-xl font-semibold mb-4 text-text">Contact Information</h3>
                     <div className="space-y-3">
                       {gym.contact?.tel && (
                         <div className="flex items-center">
@@ -381,9 +332,7 @@ const GymDetail = () => {
                       {gym.contact?.facebook && (
                         <div className="flex items-center">
                           <FaFacebook className="text-primary w-5 h-5 mr-3" />
-                          <span className="text-text">
-                            {gym.contact.facebook}
-                          </span>
+                          <span className="text-text">{gym.contact.facebook}</span>
                         </div>
                       )}
                       {gym.contact?.line && (
@@ -394,41 +343,36 @@ const GymDetail = () => {
                       )}
                     </div>
                   </div>
-
+                  
                   {/* Location */}
                   <div className="bg-card rounded-lg p-6 shadow-md border border-border/20 hover:shadow-lg transition-shadow">
-                    <h3 className="text-xl font-semibold mb-4 text-text">
-                      Location
-                    </h3>
+                    <h3 className="text-xl font-semibold mb-4 text-text">Location</h3>
                     <div className="space-y-2">
                       <div className="flex items-start">
                         <FaMapMarkerAlt className="text-primary w-5 h-5 mr-3 mt-1" />
                         <div>
                           <p className="text-text">
-                            {gym.address?.street || ""}{" "}
-                            {gym.address?.subdistrict || ""}
-                            <br />
-                            {gym.address?.district}, {gym.address?.province}{" "}
-                            {gym.address?.postal_code}
+                            {gym.address?.street || ""} {gym.address?.subdistrict || ""}<br />
+                            {gym.address?.district}, {gym.address?.province} {gym.address?.postal_code}
                           </p>
                           {gym.address?.information && (
-                            <p className="text-text/70 text-sm mt-1 dark:text-text">
-                              {gym.address.information}
-                            </p>
+                            <p className="text-text/70 text-sm mt-1">{gym.address.information}</p>
                           )}
                         </div>
                       </div>
                     </div>
-                    {/* <div className="mt-4 bg-gray-200 dark:bg-gray-700 h-48 rounded-lg flex items-center justify-center">
-                      <div className="text-text/70">Map placeholder</div>
-                    </div> */}
+                    <div className="mt-4 bg-gray-200 dark:bg-gray-700 h-48 rounded-lg flex items-center justify-center">
+                      <div className="text-text/70">
+                        Map placeholder
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
             </div>
-
+            
             {/* Trainers Section */}
-            <div
+            <div 
               ref={trainersRef}
               className={`${activeTab === "trainers" ? "block" : "hidden"}`}
             >
@@ -442,18 +386,15 @@ const GymDetail = () => {
                   Our Trainers
                   <span className="absolute -bottom-2 left-0 w-20 h-1 bg-primary"></span>
                 </h2>
-
+                
                 <div className="mt-6">
                   <TrainerList />
                 </div>
-
+                
                 <div className="mt-8 p-6 bg-card border border-border/20 rounded-lg shadow-md">
-                  <h3 className="text-xl font-semibold mb-4 text-text">
-                    Looking for more trainers?
-                  </h3>
-                  <p className="text-text/80 mb-4 dark:text-text">
-                    Interested in joining our team as a trainer? Contact us to
-                    learn more about opportunities.
+                  <h3 className="text-xl font-semibold mb-4 text-text">Looking for more trainers?</h3>
+                  <p className="text-text/80 mb-4">
+                    Interested in joining our team as a trainer? Contact us to learn more about opportunities.
                   </p>
                   <button className="inline-flex items-center px-4 py-2 bg-primary hover:bg-secondary text-white rounded-lg transition-colors">
                     Apply as Trainer
@@ -461,21 +402,62 @@ const GymDetail = () => {
                 </div>
               </motion.div>
             </div>
+            
+            {/* Facilities Section */}
+            <div 
+              ref={facilitiesRef}
+              className={`${activeTab === "facilities" ? "block" : "hidden"}`}
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={facilitiesInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5 }}
+                className="mb-10"
+              >
+                <h2 className="text-3xl font-bold text-text mb-6 relative">
+                  Facilities
+                  <span className="absolute -bottom-2 left-0 w-20 h-1 bg-primary"></span>
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div key={index} className="bg-card border border-border/20 rounded-lg p-5 shadow-md hover:shadow-lg transition-shadow">
+                      <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                        <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-text mb-2">
+                        {["Ring Area", "Heavy Bags", "Fitness Corner", "Shower Rooms", "Lockers", "Air Conditioning"][index]}
+                      </h3>
+                      <p className="text-text/70">
+                        {[
+                          "Professional full-size boxing ring for training and sparring",
+                          "Multiple heavy bags for striking practice",
+                          "Strength and conditioning equipment",
+                          "Clean shower facilities with hot water",
+                          "Secure storage for personal belongings",
+                          "Climate controlled training environment"
+                        ][index]}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
           </div>
-
+          
           {/* Right Column - Sticky Upcoming Courses */}
           <div className="w-full lg:w-1/3">
-            <div
+            <div 
               ref={stickyRef}
               className="sticky top-28 bg-card border border-border/20 rounded-lg shadow-lg overflow-hidden"
             >
               <div className="bg-gradient-to-r from-primary to-secondary px-6 py-4">
-                <h2 className="text-2xl font-bold text-white">
-                  Upcoming Courses
-                </h2>
+                <h2 className="text-2xl font-bold text-white">Upcoming Courses</h2>
                 <p className="text-white/80">Join our next training sessions</p>
               </div>
-
+              
               <div className="p-6">
                 {coursesLoading ? (
                   <div className="text-center py-8">
@@ -487,8 +469,7 @@ const GymDetail = () => {
                     <p className="text-red-500">{coursesError}</p>
                   </div>
                 ) : upcomingCourses.length > 0 ? (
-                  <div className="space-y-4">
-                    {/* upcomingCourses.slice(0,5).map((course) */}
+                  <div className="space-y-4 max-h-[360px] overflow-y-auto" style={{ paddingRight: "12px" }}>
                     {upcomingCourses.map((course) => (
                       <div
                         key={course.id}
@@ -496,33 +477,23 @@ const GymDetail = () => {
                         className="bg-background border border-border/10 rounded-lg p-4 cursor-pointer hover:shadow-md transition-all transform hover:-translate-y-1"
                       >
                         <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-text">
-                            {course.name}
-                          </h3>
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full ${getLevelBadgeColor(
-                              course.level
-                            )}`}
-                          >
+                          <h3 className="font-semibold text-text">{course.name}</h3>
+                          <span className={`text-xs px-2 py-1 rounded-full ${getLevelBadgeColor(course.level)}`}>
                             {course.level}
                           </span>
                         </div>
-
+                        
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center text-text/70">
                             <CalendarIcon className="w-4 h-4 mr-2 text-primary" />
-                            <span className="dark:text-text">
-                              {course.startDate} - {course.endDate}
-                            </span>
+                            <span>{course.startDate} - {course.endDate}</span>
                           </div>
-
+                          
                           <div className="flex items-center text-text/70">
                             <UserGroupIcon className="w-4 h-4 mr-2 text-primary" />
-                            <span className="dark:text-text">
-                              {course.spots} spots available
-                            </span>
+                            <span>{course.spots} spots available</span>
                           </div>
-
+                          
                           <div className="mt-3 flex items-end justify-between">
                             <div className="text-text font-bold">
                               ฿{course.price.toLocaleString()}
@@ -540,17 +511,9 @@ const GymDetail = () => {
                     <div className="mb-4 text-primary">
                       <ClockIcon className="h-12 w-12 mx-auto opacity-50" />
                     </div>
-                    <p className="text-text/70">
-                      No upcoming courses available for this gym.
-                    </p>
+                    <p className="text-text/70">No upcoming courses available</p>
                   </div>
                 )}
-
-                <div className="mt-6 text-center">
-                  <button className="w-full px-4 py-3 bg-primary hover:bg-secondary text-white rounded-lg transition-colors">
-                    View All Courses
-                  </button>
-                </div>
               </div>
             </div>
           </div>
@@ -578,6 +541,6 @@ const GymDetail = () => {
       )}
     </div>
   );
-};
+};  
 
 export default GymDetail;

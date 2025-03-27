@@ -116,12 +116,12 @@ const EditGymModal = ({ isOpen, onClose, gymData, onSave }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl max-h-[90vh] p-6 shadow-lg bg-white rounded-md overflow-y-auto relative">
-        <button onClick={onClose} className="absolute top-4 right-4 p-2 text-gray-600 hover:text-gray-900">
+      <div className="w-full max-w-2xl max-h-[90vh] p-6 shadow-lg bg-white rounded-md overflow-y-auto relative dark:bg-background">
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 text-gray-600 hover:text-gray-900 dark:bg-background">
           <XMarkIcon className="h-6 w-6" />
         </button>
 
-        <h2 className="text-lg font-bold mb-4 text-center">Edit Gym</h2>
+        <h2 className="text-lg font-bold mb-4 text-center dark:text-text">Edit Gym</h2>
         <hr className="mb-6" />
 
         <form onSubmit={handleSubmit}>
@@ -133,7 +133,7 @@ const EditGymModal = ({ isOpen, onClose, gymData, onSave }) => {
               name="gym_name"
               value={editedGym.gym_name || ""}
               onChange={(e) => setEditedGym({ ...editedGym, gym_name: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-rose-500"
+              className="w-full border border-border bg-background  rounded-lg py-2 px-4 focus:outline-none focus:border-rose-500"
               required
             />
           </div>
@@ -145,7 +145,7 @@ const EditGymModal = ({ isOpen, onClose, gymData, onSave }) => {
               name="description"
               value={editedGym.description || ""}
               onChange={(e) => setEditedGym({ ...editedGym, description: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-rose-500"
+              className="w-full border  rounded-lg py-2 px-4 focus:outline-none focus:border-rose-500 dark:bg-background border-border"
               rows="4"
               required
             />
@@ -156,7 +156,7 @@ const EditGymModal = ({ isOpen, onClose, gymData, onSave }) => {
             <label className="block text-lg font-medium mb-2">Contact</label>
             <div className="space-y-4">
               <div className="flex items-center">
-                <label className="w-24 text-gray-700">Email:</label>
+                <label className="w-24 text-gray-700 text-text">Email:</label>
                 <input
                   type="email"
                   name="email"
@@ -167,12 +167,12 @@ const EditGymModal = ({ isOpen, onClose, gymData, onSave }) => {
                       contact: { ...editedGym.contact, email: e.target.value },
                     })
                   }
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4"
+                  className="flex-1 border border-border rounded-lg py-2 px-4 bg-background"
                   required
                 />
               </div>
               <div className="flex items-center">
-                <label className="w-24 text-gray-700">Tel:</label>
+                <label className="w-24 text-gray-700 text-text">Tel:</label>
                 <input
                   type="tel"
                   name="tel"
@@ -183,12 +183,12 @@ const EditGymModal = ({ isOpen, onClose, gymData, onSave }) => {
                       contact: { ...editedGym.contact, tel: e.target.value },
                     })
                   }
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4"
+                  className="flex-1 border border-border rounded-lg py-2 px-4 bg-background"
                   required
                 />
               </div>
               <div className="flex items-center">
-                <label className="w-24 text-gray-700">Facebook:</label>
+                <label className="w-24 text-gray-700 text-text">Facebook:</label>
                 <input
                   type="text"
                   name="facebook"
@@ -199,12 +199,12 @@ const EditGymModal = ({ isOpen, onClose, gymData, onSave }) => {
                       contact: { ...editedGym.contact, facebook: e.target.value },
                     })
                   }
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4"
+                  className="flex-1 border border-border rounded-lg py-2 px-4 bg-background"
                   placeholder="(optional)"
                 />
               </div>
               <div className="flex items-center">
-                <label className="w-24 text-gray-700">Line:</label>
+                <label className="w-24 text-gray-700 text-text">Line:</label>
                 <input
                   type="text"
                   name="line"
@@ -215,7 +215,7 @@ const EditGymModal = ({ isOpen, onClose, gymData, onSave }) => {
                       contact: { ...editedGym.contact, line: e.target.value },
                     })
                   }
-                  className="flex-1 border border-gray-300 rounded-lg py-2 px-4"
+                  className="flex-1 border rounded-lg py-2 px-4 bg-background border-border"
                   placeholder="(optional)"
                 />
               </div>
@@ -236,7 +236,7 @@ const EditGymModal = ({ isOpen, onClose, gymData, onSave }) => {
               name="facilities"
               value={editedGym.facilities || ""}
               onChange={(e) => setEditedGym({ ...editedGym, facilities: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:border-red-500"
+              className="w-full border border-border rounded-lg py-2 px-4 focus:outline-none focus:border-red-500 bg-background"
               rows="2"
               placeholder="List gym facilities separated by commas"
             />

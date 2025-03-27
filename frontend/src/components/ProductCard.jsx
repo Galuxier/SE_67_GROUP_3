@@ -27,7 +27,7 @@ function ProductCard({ products = [], size = "default" }) {
         return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5";
       case "default":
       default:
-        return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"; // ปรับเป็น 4 คอลัมน์ที่ lg
+        return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6";
     }
   };
 
@@ -49,6 +49,7 @@ const ProductCardItem = ({ product, size = "default" }) => {
   const [productImage, setProductImage] = useState("");
   const [variants, setVariants] = useState([]);
   const [isLoadingVariants, setIsLoadingVariants] = useState(false);
+  const [isLoadingImage, setIsLoadingImage] = useState(true); // Added for image loading state
 
   // Set animation variants and styles based on size
   const getCardStyles = () => {
@@ -103,6 +104,7 @@ const ProductCardItem = ({ product, size = "default" }) => {
   // Fetch product image
   useEffect(() => {
     const fetchProductImage = async () => {
+      setIsLoadingImage(true);
       try {
         const fallbackImage = new URL("../assets/images/product-001.webp", import.meta.url).href;
         
@@ -122,6 +124,8 @@ const ProductCardItem = ({ product, size = "default" }) => {
       } catch (error) {
         console.error("Error in image handling:", error);
         setProductImage(new URL("../assets/images/product-001.webp", import.meta.url).href);
+      } finally {
+        setIsLoadingImage(false);
       }
     };
 
@@ -230,15 +234,34 @@ const ProductCardItem = ({ product, size = "default" }) => {
     >
       {/* Product image with overlay */}
       <div className={`relative overflow-hidden ${styles.imageClasses}`}>
-        <img
-          src={productImage || null}
-          alt={product.product_name || "Product"}
-          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-        />
+        {isLoadingImage ? (
+          <div className="w-full h-full bg-gray-200 animate-pulse">
+            <div className="w-full h-full flex items-center justify-center">
+              <svg
+                className="w-10 h-10 text-gray-300"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+          </div>
+        ) : (
+          <img
+            src={productImage || null}
+            alt={product.product_name || "Product"}
+            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+            onLoad={() => setIsLoadingImage(false)}
+          />
+        )}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"></div>
         
         {/* Quick action buttons */}
-        {styles.showActions && (
+        {styles.showActions && !isLoadingImage && (
           <motion.div 
             className="absolute bottom-4 inset-x-0 flex justify-center space-x-2"
             initial="initial"

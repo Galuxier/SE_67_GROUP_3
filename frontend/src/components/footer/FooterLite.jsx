@@ -19,7 +19,7 @@ const FooterLite = () => {
             <p className="text-sm text-text/80 mb-4 max-w-md">
               Your premier destination for Muay Thai training, events, and equipment.
             </p>
-            <div className="flex space-x-5 mt-3">
+            {/* <div className="flex space-x-5 mt-3">
               <a href="#" className="text-text hover:text-primary transition-colors">
                 <BsFacebook className="h-5 w-5" />
               </a>
@@ -29,7 +29,7 @@ const FooterLite = () => {
               <a href="#" className="text-text hover:text-primary transition-colors">
                 <BsTwitter className="h-5 w-5" />
               </a>
-            </div>
+            </div> */}
           </div>
 
           {/* Quick Links - Minimal Version */}

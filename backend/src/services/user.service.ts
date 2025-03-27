@@ -89,19 +89,34 @@ class UserService extends BaseService<UserDocument> {
     return user;
   }
 
+  async getTrainersInGym(gymId: string): Promise<UserDocument[]> {
+    try {
+      // Find all users with role 'trainer' who are associated with this gym
+      return await User.find({
+        role: { $in: ['trainer'] },
+        gym_id: new Types.ObjectId(gymId)
+      });
+    } catch (error) {
+      console.error('Error fetching trainers by gym ID:', error);
+      throw error;
+    }
+  }
+  
   async getTrainersNotInGym(gymId: string): Promise<UserDocument[]> {
     try {
-      const trainers = await User.find({
+      // Find all users with role 'trainer' who are either:
+      // 1. Not associated with any gym ($exists: false), or
+      // 2. Associated with a different gym ($ne: gymId)
+      return await User.find({
         role: { $in: ['trainer'] },
         $or: [
-          { gym_id: { $ne: new Types.ObjectId(gymId) } },
-          { gym_id: { $exists: false } }
+          { gym_id: { $exists: false } },
+          { gym_id: { $eq: null } },
+          { gym_id: { $ne: new Types.ObjectId(gymId) } }
         ]
       });
-      
-      return trainers;
     } catch (error) {
-      console.error("Error fetching trainers not in gym:", error);
+      console.error('Error fetching trainers not in gym:', error);
       throw error;
     }
   }

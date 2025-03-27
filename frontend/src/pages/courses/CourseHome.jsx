@@ -1,14 +1,14 @@
-  import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
   import { Link, useNavigate } from "react-router-dom";
   import { PlusCircleIcon, Cog6ToothIcon, FireIcon, CalendarIcon, UsersIcon, AcademicCapIcon, SparklesIcon } from "@heroicons/react/24/outline";
   import { motion } from "framer-motion";
   // import { getAllCourses } from "../../services/api/CourseApi"; 
-  import CourseCard from "../../components/CourseCard";
+  import CourseList from "../../components/CourseCard";
   import provinceData from "../../data/thailand/address/provinces.json";
   import { useAuth } from "../../context/AuthContext";
   import { useTheme } from "../../context/ThemeContext";
   import CourseFilter from "../../components/courses/CourseFilter";
-  import { getAllCourses } from "../../services/api/CourseApi";
+  import { getAllCourses,searchCourses } from "../../services/api/CourseApi";
 
   function CourseHome() {
     const navigate = useNavigate();
@@ -24,32 +24,38 @@
     const searchInputRef = useRef(null);
     const { user } = useAuth();
     const { isDarkMode } = useTheme();
-
+    const toTitleCase = (str) => {
+      if (!str || str === "All") return str;
+      return str
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    };
     // Categories for quick filtering
     const categories = ["All", "Beginner", "Advanced", "For Kids"];
-
     // Fetch courses data
     useEffect(() => {
-      // In a real app, you would use this:
       const fetchCourses = async () => {
         try {
           setIsLoading(true);
-          const response = await getAllCourses();
-          setCourses(response);
-          setFilteredCourses(response);
+          const response = await getAllCourses(); // ดึงข้อมูลคอร์สจาก API
+          setCourses(response); // เก็บข้อมูลคอร์สใน state courses
+          setFilteredCourses(response); // เก็บข้อมูลคอร์สที่กรองแล้วใน state filteredCourses
           
-          // Set featured courses
+          // กรองคอร์สที่เป็น Featured
           const featured = response.filter(course => course.featured);
           setFeaturedCourses(featured);
-          
+    
           setIsLoading(false);
         } catch (error) {
           console.error("Failed to fetch courses:", error);
           setIsLoading(false);
         }
       };
+    
       fetchCourses();
-    }, []);
+    }, []); // จะทำงานครั้งเดียวเมื่อ component ถูก mount
+    
 
     // Apply all filters: province, search query, and category
     useEffect(() => {
@@ -465,7 +471,7 @@
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <CourseCard courses={filteredCourses.slice(0, visibleCourses)} />
+                  <CourseList courses={filteredCourses.slice(0, visibleCourses)} />
                   
                   {/* Load More button */}
                   {filteredCourses.length > visibleCourses && (
@@ -513,23 +519,7 @@
           </div>
         </div>
     
-        {/* Add Course button for gym owners and trainers */}
-        {user && user.role && (user.role.includes("gym_owner") || user.role.includes("trainer")) && (
-          <motion.div 
-            className="fixed bottom-6 right-6 z-30"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 15 }}
-          >
-            <Link
-              to="/course/create"
-              className="flex items-center gap-2 bg-primary hover:bg-secondary text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
-            >
-              <PlusCircleIcon className="h-5 w-5" />
-              <span>Add New Course</span>
-            </Link>
-          </motion.div>
-        )}
+        
     
         {/* Modal for Filter on Mobile */}
         {isFilterModalOpen && (
