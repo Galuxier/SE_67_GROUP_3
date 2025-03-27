@@ -21,6 +21,9 @@ import CoursePackage from "../pages/gyms/managements/CoursePackage";
 // import CourseList from "../pages/gyms/managements/CourseList";
 import CourseList from "../pages/gyms/managements/CourseList";
 import EditCourseForm from "../pages/courses/managements/EditCourseForm";
+import CourseEnrollmentAll from "../pages/gyms/managements/CourseEnrollmentAll";
+import CourseEnrollmentPending from "../pages/gyms/managements/CourseEnrollmentPending";
+import CourseEnrollmentCompleted from "../pages/gyms/managements/CourseEnrollmentCompleted";
 
 
 function GymRoutes() {
@@ -57,6 +60,9 @@ function GymRoutes() {
         <Route path=":gym_id/coursePackage" element={<CoursePackage />} />
         <Route path=":gym_id/courses/list" element={<CourseList/>}/>
         <Route path=":gym_id/course/edit/:course_id" element={<EditCourseForm />} />
+        <Route path=":gym_id/courseEnrollment/all" element={<CourseEnrollmentAll />} />
+        <Route path=":gym_id/courseEnrollment/pending" element={<CourseEnrollmentPending />} />
+        <Route path=":gym_id/courseEnrollment/completed" element={<CourseEnrollmentCompleted />} />
       </Route>
 
       {/* Course Routes */}
