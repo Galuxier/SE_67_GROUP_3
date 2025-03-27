@@ -88,6 +88,23 @@ class UserService extends BaseService<UserDocument> {
 
     return user;
   }
+
+  async getTrainersNotInGym(gymId: string): Promise<UserDocument[]> {
+    try {
+      const trainers = await User.find({
+        role: { $in: ['trainer'] },
+        $or: [
+          { gym_id: { $ne: new Types.ObjectId(gymId) } },
+          { gym_id: { $exists: false } }
+        ]
+      });
+      
+      return trainers;
+    } catch (error) {
+      console.error("Error fetching trainers not in gym:", error);
+      throw error;
+    }
+  }
 }
 
 export default new UserService();

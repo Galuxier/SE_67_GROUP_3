@@ -22,6 +22,7 @@ import BoxerList from "../pages/gyms/managements/BoxerList";
 import GymInfo from "../pages/gyms/managements/GymInfo";
 import UserProfile from "../pages/users/UserProfile";
 import CoursePackage from "../pages/gyms/managements/CoursePackage";
+import CourseList from "../pages/gyms/managements/CourseList";
 
 function GymRoutes() {
   return (
@@ -55,7 +56,7 @@ function GymRoutes() {
         <Route path=":gym_id/trainers/list" element={<TrainerList />} />
         <Route path="user/:username" element={<UserProfile />} />
         <Route path=":gym_id/coursePackage" element={<CoursePackage />} />
-        
+        <Route path=":gym_id/course/list" element={<CourseList/>}/>
       </Route>
 
       {/* Course Routes */}

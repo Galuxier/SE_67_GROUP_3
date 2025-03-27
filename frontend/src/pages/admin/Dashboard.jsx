@@ -1,7 +1,7 @@
 import React from "react";
 import { shops } from "../../data/ShopsData";
-import { trainer } from "../../components/Trainer";
-
+//import { trainer } from "../../components/TrainerCard";
+import TrainerCard from "../../components/TrainerCard";
 function UserIcon() {
     return (
       <svg
