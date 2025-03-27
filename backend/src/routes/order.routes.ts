@@ -3,7 +3,7 @@ import {
   createOrderController,
   getOrdersController,
   getOrderByIdController,
-  updateOrderController,
+  // updateOrderController,
   deleteOrderController,
   getOrdersByShopIdController,
   getOrdersByUserIdController,
@@ -15,7 +15,7 @@ const router = express.Router();
 router.post('/orders', createOrderController);
 router.get('/orders', getOrdersController);
 router.get('/order/:id', getOrderByIdController);
-router.put('/order/:id', updateOrderController);
+// router.put('/order/:id', updateOrderController);
 router.delete('/order/:id', deleteOrderController);
 router.get('/shop/:shop_id/orders', getOrdersByShopIdController);
 router.get('/user/:user_id/orders', getOrdersByUserIdController);
