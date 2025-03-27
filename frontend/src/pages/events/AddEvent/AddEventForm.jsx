@@ -31,20 +31,9 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
   const fetchImage = async (url) => {
     try {
       const imageUrl = await getImage(url); // รับค่า imageUrl
-      console.log(imageUrl); // ดูผลลัพธ์ที่ได้
-  
-      // ถ้า imageUrl เป็น Blob (ตรวจสอบประเภทข้อมูล)
-      if (imageUrl && imageUrl instanceof Blob) {
-        const objectUrl = URL.createObjectURL(imageUrl); // สร้าง URL จาก Blob
-        return objectUrl;
-      }
+      console.log(imageUrl);
       
-      // ถ้าเป็น URL ที่ใช้ได้เลย (เช่น URL ภายนอก)
-      if (imageUrl && typeof imageUrl === 'string') {
-        return imageUrl; // ใช้ URL ที่ได้เลย
-      }
-  
-      return "/default-event-image.jpg"; // ใช้ default ถ้าไม่มีการคืนค่า
+      return imageUrl;
     } catch (error) {
       console.error("Error fetching image:", error);
       return "/default-event-image.jpg"; // ใช้ default ในกรณีเกิดข้อผิดพลาด

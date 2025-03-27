@@ -16,6 +16,7 @@ import EventManageDashboard from "../pages/events/managements/EventManageDashboa
 import EventList from "../pages/events/managements/EventList";
 import BuyTicket from "../pages/events/BuyTicket";
 import TicketPayment from "../pages/events/TicketPayment";
+import OnGoingEvent from "../pages/events/managements/OnGoingEvent";
 
 
 function EventRoutes() {
@@ -47,6 +48,7 @@ function EventRoutes() {
           <Route path="/management/create/seat" element={<FormAddSeat />}/>
           <Route path="/management/create/match" element={<FormAddFighter />}/>
           <Route path="/management/create/weightClass" element={<FormAddWeightClass />}/>
+          <Route path="/management/onGoing" element={<OnGoingEvent />}/>
         </Route>
 
         {/* ไม่มี Layout(Navbar) */}
