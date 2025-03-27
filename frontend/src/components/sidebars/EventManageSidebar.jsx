@@ -6,7 +6,7 @@ import {
   ClipboardDocumentListIcon,
   FireIcon,
   ChevronDownIcon,
-  PlusCircleIcon
+  PlusCircleIcon ,ClockIcon 
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
@@ -92,6 +92,17 @@ const EventManageSidebar = () => {
               </div>
             )}
           </div>
+
+          {/* Schedule */}
+          <Link
+            to="/event/management/onGoing"
+            className={`p-2 rounded-md hover:bg-primary/10 ${
+              isActive("/onGoing") ? "bg-primary/10 text-primary font-medium" : "text-text"
+            } flex items-center group transition-colors`}
+          >
+            <ClockIcon    className="h-5 w-5 mr-3 group-hover:text-primary" />
+            On Going
+          </Link>
 
           {/* Schedule */}
           <Link
