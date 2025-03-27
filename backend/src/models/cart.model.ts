@@ -2,7 +2,7 @@ import { Schema, model, Document, Types } from 'mongoose';
 
 interface CartItem {
   product_id: Types.ObjectId; // อ้างอิงไปที่ Products
-  variant_id: Types.ObjectId; // อ้างอิงไปที่ Variants (ถ้ามี)
+  variant_id?: Types.ObjectId; // อ้างอิงไปที่ Variants (ถ้ามี)
   quantity: number;
 }
 

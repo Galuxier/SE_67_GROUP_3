@@ -9,3 +9,12 @@ export async function getTrainersInGym(gym_id) {
     throw new error;
   }
 }
+
+export async function getTeachHistoriesByUserId(user_id) {
+  try{
+    const response = await api.get(`/user/${user_id}/teachHistories`);
+    return response;
+  }catch (error){
+    throw new error;
+  }
+}

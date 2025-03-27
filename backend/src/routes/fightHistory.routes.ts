@@ -4,7 +4,8 @@ import {
     updateFightHistoryController,
     getFightHistoriesController,
     getFightHistoryByIdController,
-    deleteFightHistoryController
+    deleteFightHistoryController,
+    getFightHistoriesByUserIdController,
 } from '../controllers/fightHistory.controller'
 
 const route = express.Router();
@@ -23,5 +24,7 @@ route.put('/fightHistory/:id', updateFightHistoryController);
 
 // ลบ FightHistory
 route.delete('/fightHistory/:id', deleteFightHistoryController);
+
+route.get('/user/:userId/fightHistories', getFightHistoriesByUserIdController);
 
 export default route;
