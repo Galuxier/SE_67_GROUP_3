@@ -358,6 +358,62 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                 </div>
               )}
             </div>
+            {/* Course Enrollment Section */}
+<div className="space-y-1">
+  <button
+    onClick={() => toggleMenu("enrollments")}
+    className={`w-full p-2 rounded-md hover:bg-primary/10 ${
+      isActive("/enrollments")
+        ? "bg-primary/10 text-primary font-medium"
+        : "text-text"
+    } flex items-center justify-between group transition-colors`}
+  >
+    <div className="flex items-center">
+      <ClipboardDocumentListIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
+      Course Enrollment
+    </div>
+    <ChevronDownIcon
+      className={`h-4 w-4 transition-transform ${
+        expandedMenus.enrollments ? "rotate-180" : ""
+      }`}
+    />
+  </button>
+
+  {expandedMenus.enrollments && (
+    <div className="pl-10 space-y-1">
+      <Link
+        to={gymData ? `/gym/management/${gymData._id}/courseEnrollment/all` : `gym/management/create`}
+        className={`block p-2 rounded-md hover:bg-primary/10 ${
+          location.pathname.includes("/courseEnrollment/all")
+            ? "text-primary"
+            : "text-text"
+        } text-sm transition-colors`}
+      >
+        All Enrollments
+      </Link>
+      <Link
+        to={gymData ? `/gym/management/${gymData._id}/courseEnrollment/pending` : `gym/management/create`}
+        className={`block p-2 rounded-md hover:bg-primary/10 ${
+          location.pathname.includes("/courseEnrollment/pending")
+            ? "text-primary"
+            : "text-text"
+        } text-sm transition-colors`}
+      >
+        Pending
+      </Link>
+      <Link
+        to={gymData ? `/gym/management/${gymData._id}/courseEnrollment/completed` : `gym/management/create`}
+        className={`block p-2 rounded-md hover:bg-primary/10 ${
+          location.pathname.includes("/courseEnrollment/completed")
+            ? "text-primary"
+            : "text-text"
+        } text-sm transition-colors`}
+      >
+        Completed
+      </Link>
+    </div>
+  )}
+</div>
             <Link
             to={gymData? `/gym/management/${gymData._id}/coursePackage` : `gym/management/create`}
             className="p-2 rounded-md hover:bg-primary hover:text-white text-text"
