@@ -13,7 +13,7 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import LoadingSpinner from "../../components/LoadingSpinner";
-// import { getUserOrders } from "../../services/api/OrderApi";
+import { getUserOrders } from "../../services/api/OrderApi";
 import { format } from "date-fns";
 
 const OrderStatusBadge = ({ status }) => {

@@ -104,6 +104,18 @@ class OrderService extends BaseService<OrderDocument> {
       throw error;
     }
   }
+
+  async getOrdersByUserId(userId: string): Promise<OrderDocument[]> {
+    try {
+      // Find orders where at least one item in the shops array has the matching shop_id
+      return await Order.find({ 
+        "user_id": new Types.ObjectId(userId) 
+      }).populate('user_id', 'username first_name last_name');
+    } catch (error) {
+      console.error('Error fetching orders by shop ID:', error);
+      throw error;
+    }
+  }
 }
 
 export default new OrderService();

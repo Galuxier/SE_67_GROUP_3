@@ -73,3 +73,21 @@ export const getOrdersByShopIdController = async (req: Request, res: Response) =
     res.status(500).json({ message: 'Error fetching shop orders', error: err });
   }
 };
+
+export const getOrdersByUserIdController = async (req: Request, res: Response) => {
+  try {
+    const { user_id } = req.params;
+    
+    // Validate shop_id
+    if (!user_id) {
+      res.status(400).json({ message: 'User ID is required' });
+    }
+    
+    // Find orders where items contain the specified shop_id
+    const orders = await OrderService.getOrdersByUserId(user_id);
+    
+    res.status(200).json(orders);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching shop orders', error: err });
+  }
+};
