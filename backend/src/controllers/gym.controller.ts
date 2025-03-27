@@ -131,3 +131,33 @@ export const deleteGymController = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error deleting gym', error: err });
   }
 };
+
+export const checkGymNameController = async (req: Request, res: Response) => {
+  try {
+    const { gymName } = req.params;
+    
+    if (!gymName) {
+      res.status(400).json({ 
+        success: false, 
+        message: 'Gym name is required' 
+      });
+      return;
+    }
+    
+    const exists = await GymService.checkGymNameExists(gymName);
+    
+    // Send result back
+    res.status(200).json({
+      success: true,
+      exists: exists,
+      message: exists ? 'Gym name already exists' : 'Gym name is available'
+    });
+  } catch (err) {
+    console.error('Error checking gym name:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error checking gym name', 
+      error: err 
+    });
+  }
+};

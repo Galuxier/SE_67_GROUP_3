@@ -13,11 +13,13 @@ const CreateCourseForm = () => {
   const navigate = useNavigate();
   const { gymData } = useOutletContext() || {};
   const { gym_id } = useParams();
+  // console.log(gym_id);
 
   useEffect(() => {
     if (!gymData && !gym_id) {
       toast.error("No gym data available. Please select a gym first.");
       navigate("/gym/management/gymlist");
+      console.log(gym_id);
     }
   }, [gymData, gym_id, navigate]);
 
@@ -198,25 +200,58 @@ const CreateCourseForm = () => {
     const formData = new FormData();
     formData.append("course_name", courseData.course_name);
     formData.append("description", courseData.description);
-    formData.append("level", courseData.level);
+
+    // แปลง level ให้ตรงกับที่ backend คาดหวัง
+    if (courseData.level === "For Kids") {
+      formData.append("level", "for_kid");
+    } else if (courseData.level === "Beginner") {
+      formData.append("level", "beginner");
+    } else {
+      formData.append("level", "advance");
+    }
+
     formData.append("price", courseData.price);
     formData.append("max_participants", courseData.max_participants);
-    formData.append("start_date", courseData.start_date);
-    formData.append("end_date", courseData.end_date);
-    formData.append("gym_id", courseData.gym_id);
 
+    // แปลง start_date และ end_date เป็น Date object ที่สามารถส่งไปยัง backend ได้
+    formData.append(
+      "start_date",
+      new Date(courseData.start_date).toISOString()
+    );
+    formData.append("end_date", new Date(courseData.end_date).toISOString());
+
+    formData.append("gym_id", courseData.gym_id);
+    // formData.append("status", "preparing");
+    // formData.append("status", "ongoing");
+    formData.append("status", "finished");
+    
     if (courseData.image_url) {
       formData.append("course_image_url", courseData.image_url);
     }
+    console.log("Activities:", activities);
+    // แก้ไขให้ 'time' แสดงในรูปแบบ "startTime - endTime" และลบ startTime, endTime ออกจากข้อมูล
+    const formattedActivities = activities.map((activity) => {
+      return {
+        description: activity.description, // Keep the description as it is
+        date: new Date(activity.date).toISOString(), // Convert date to ISO string
+        start_time: activity.startTime,
+        end_time: activity.endTime,
+        startTime: undefined, // Remove original startTime
+        endTime: undefined, // Remove original endTime
+        id: undefined, // Remove original id
+        trainer_list: activity.trainer.map((trainer) => ({
+          trainer_id: trainer.id, // Map trainer.id to trainer_id
+          status: trainer.statuses, 
+        })),
+      };
+    });
 
-    // Ensure trainer field contains only IDs
-    const formattedActivities = activities.map((activity) => ({
-      ...activity,
-      trainer: activity.trainer.map((trainer) =>
-        typeof trainer === "object" && trainer._id ? trainer._id : trainer
-      ),
-    }));
     formData.append("activities", JSON.stringify(formattedActivities));
+    console.log("File to send:", courseData.image_url);
+    // วิธีการแสดงข้อมูลใน FormData
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
 
     try {
       const response = await createCourse(formData);
@@ -328,9 +363,9 @@ const CreateCourseForm = () => {
             onChange={handleInputChange}
             className="w-full border border-border rounded-lg py-2 px-3 bg-background text-text focus:outline-none focus:ring-1 focus:ring-primary"
           >
-            <option value="for_kid">For Kids</option>
             <option value="beginner">Beginner</option>
             <option value="advance">Advanced</option>
+            <option value="for_kid">For Kids</option>
           </select>
         </div>
         <div>
@@ -553,28 +588,18 @@ const CreateCourseForm = () => {
                         </p>
                       </div>
                       <div className="flex items-center space-x-2">
-                        {/* <div className="flex -space-x-2">
-                          {activity.trainer &&
-                            activity.trainer.map((trainerId, trainerIndex) => (
-                              <div
-                                key={trainerIndex}
-                                className="w-6 h-6 rounded-full bg-rose-500 dark:bg-rose-600 flex items-center justify-center text-white text-xs -ml-2 border-2 border-white dark:border-gray-800"
-                              >
-                                {typeof trainerId === "object" && trainerId.Nickname
-                                  ? trainerId.Nickname.slice(0, 1)
-                                  : "?"}
-                              </div>
-                            ))}
-                        </div> */}
-
+                        {/* Coaches with Gym */}
                         <div className="flex flex-col mt-2">
                           <div className="mb-2">
                             <h4 className="text-xs font-bold text-gray-800 dark:text-gray-200">
-                              Coaches with Gym
+                              Coaches in Gym
                             </h4>
                             <div className="flex space-x-2">
                               {activity.trainer
-                                .filter((trainer) => trainer.gym)
+                                .filter(
+                                  (trainer) =>
+                                     trainer.gym_id === gym_id
+                                ) // Check if gym_id matches
                                 .map((trainerItem) => (
                                   <div
                                     key={trainerItem._id}
@@ -588,13 +613,17 @@ const CreateCourseForm = () => {
                             </div>
                           </div>
 
+                          {/* Coaches without Gym */}
                           <div>
                             <h4 className="text-xs font-bold text-gray-800 dark:text-gray-200">
-                              Coaches without Gym
+                              Coaches out Gym
                             </h4>
                             <div className="flex space-x-2">
                               {activity.trainer
-                                .filter((trainer) => !trainer.gym)
+                                .filter(
+                                  (trainer) =>
+                                    !trainer.gym_id || trainer.gym_id !== gym_id
+                                ) // Check if gym_id doesn't match or if no gym
                                 .map((trainerItem) => (
                                   <div
                                     key={trainerItem._id}

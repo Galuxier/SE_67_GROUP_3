@@ -66,6 +66,18 @@ class GymService extends BaseService<GymDocument> {
       throw error;
     }
   }
+
+  async checkGymNameExists(gymName: string): Promise<boolean> {
+    try {
+      // Use RegExp for case-insensitive search
+      const regex = new RegExp(`^${gymName}$`, 'i');
+      const gym = await Gym.findOne({ gym_name: regex });
+      return !!gym; // return true if gym found, false if not
+    } catch (error) {
+      console.error('Error checking gym name existence:', error);
+      throw error;
+    }
+  }
 }
 
 export default new GymService();

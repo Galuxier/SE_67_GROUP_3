@@ -10,63 +10,12 @@ import {
   ArrowsUpDownIcon,
   MagnifyingGlassIcon,
   CalendarIcon,
-  CurrencyDollarIcon, // เปลี่ยนจาก CurrencyBahtIcon เป็น CurrencyDollarIcon
+  CurrencyDollarIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-
-// Mock API function (unchanged)
-const mockGetAllPlaces = async (userId) => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return [
-    {
-      _id: "place1",
-      name: "Muay Thai Training Space",
-      price: 2500,
-      address: {
-        province: "Bangkok",
-        district: "Watthana",
-        subdistrict: "Khlong Toei Nuea",
-        street: "123 Sukhumvit Rd.",
-        postal_code: "10110",
-      },
-      google_map_link: "https://maps.google.com/?q=13.7563,100.5018",
-      images: ["places/image1.jpg", "places/image2.jpg"],
-      bookings: 12,
-      created_at: "2023-10-25",
-    },
-    {
-      _id: "place2",
-      name: "Boxing Gym Event Space",
-      price: 3200,
-      address: {
-        province: "Chiang Mai",
-        district: "Mueang Chiang Mai",
-        subdistrict: "Chang Phueak",
-        street: "456 Huay Kaew Rd.",
-        postal_code: "50300",
-      },
-      google_map_link: "https://maps.google.com/?q=18.8013,98.9724",
-      images: ["places/image3.jpg"],
-      bookings: 8,
-      created_at: "2023-11-14",
-    },
-    {
-      _id: "place3",
-      name: "Fight Promotion Venue",
-      price: 5000,
-      address: {
-        province: "Phuket",
-        district: "Mueang Phuket",
-        subdistrict: "Patong",
-        street: "789 Beach Rd.",
-        postal_code: "83150",
-      },
-      google_map_link: "https://maps.google.com/?q=7.8965,98.3018",
-      images: ["places/image4.jpg", "places/image5.jpg", "places/image6.jpg"],
-      bookings: 20,
-      created_at: "2023-12-05",
-    },
-  ];
-};
+import { getPlacesByOwnerId } from "../../../services/api/PlaceApi";
+import { getImage } from "../../../services/api/ImageApi";
 
 const PlaceList = () => {
   const navigate = useNavigate();
@@ -77,9 +26,10 @@ const PlaceList = () => {
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
   const [imageCache, setImageCache] = useState({});
+  const [currentImageIndex, setCurrentImageIndex] = useState({});
 
   useEffect(() => {
-    const fetchPlaces = async () => {
+    const fetchPlacesAndImages = async () => {
       if (!user?._id) {
         toast.error("You must be logged in to view your places");
         navigate("/login");
@@ -88,28 +38,36 @@ const PlaceList = () => {
 
       try {
         setLoading(true);
-        const response = await mockGetAllPlaces(user._id);
-        setPlaces(response);
+        const response = await getPlacesByOwnerId(user._id);
+        const placesData = response.data;
+        setPlaces(placesData);
 
-        const imagePromises = response.map(async (place) => {
-          if (place.images?.length > 0) {
-            try {
-              const imageUrl = `https://example.com/${place.images[0]}`; // Mock URL
-              return { placeId: place._id, imageUrl };
-            } catch (error) {
-              console.error(`Error fetching image for place ${place._id}:`, error);
-              return { placeId: place._id, imageUrl: null };
-            }
+        const imagePromises = placesData.map(async (place) => {
+          if (place.place_image_urls && place.place_image_urls.length > 0) {
+            const urls = await Promise.all(
+              place.place_image_urls.map(async (imgPath) => {
+                try {
+                  return await getImage(imgPath);
+                } catch (error) {
+                  console.error(`Error fetching image ${imgPath}:`, error);
+                  return null;
+                }
+              })
+            );
+            return { id: place._id, urls: urls.filter((url) => url !== null) };
           }
-          return { placeId: place._id, imageUrl: null };
+          return { id: place._id, urls: [] };
         });
 
-        const imageResults = await Promise.all(imagePromises);
-        const newImageCache = imageResults.reduce((acc, { placeId, imageUrl }) => {
-          acc[placeId] = imageUrl;
+        const images = await Promise.all(imagePromises);
+        const newImageCache = images.reduce((acc, { id, urls }) => {
+          if (urls.length > 0) acc[id] = urls;
           return acc;
         }, {});
         setImageCache(newImageCache);
+        setCurrentImageIndex(
+          placesData.reduce((acc, place) => ({ ...acc, [place._id]: 0 }), {})
+        );
       } catch (error) {
         console.error("Error fetching places:", error);
         toast.error("Failed to fetch places");
@@ -118,7 +76,7 @@ const PlaceList = () => {
       }
     };
 
-    fetchPlaces();
+    fetchPlacesAndImages();
   }, [user, navigate]);
 
   const handleSort = (field) => {
@@ -132,6 +90,20 @@ const PlaceList = () => {
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
+  };
+
+  const handleNextImage = (placeId, totalImages) => {
+    setCurrentImageIndex((prev) => ({
+      ...prev,
+      [placeId]: (prev[placeId] + 1) % totalImages,
+    }));
+  };
+
+  const handlePrevImage = (placeId, totalImages) => {
+    setCurrentImageIndex((prev) => ({
+      ...prev,
+      [placeId]: (prev[placeId] - 1 + totalImages) % totalImages,
+    }));
   };
 
   const filteredPlaces = places
@@ -151,7 +123,7 @@ const PlaceList = () => {
       } else if (sortBy === "location") {
         comparison = a.address.province.localeCompare(b.address.province);
       } else if (sortBy === "bookings") {
-        comparison = a.bookings - b.bookings;
+        comparison = (a.bookings || 0) - (b.bookings || 0);
       } else if (sortBy === "created_at") {
         comparison = new Date(a.created_at) - new Date(b.created_at);
       }
@@ -162,6 +134,16 @@ const PlaceList = () => {
     if (window.confirm("Are you sure you want to delete this place?")) {
       try {
         setPlaces((prev) => prev.filter((place) => place._id !== placeId));
+        setImageCache((prev) => {
+          const newCache = { ...prev };
+          delete newCache[placeId];
+          return newCache;
+        });
+        setCurrentImageIndex((prev) => {
+          const newIndex = { ...prev };
+          delete newIndex[placeId];
+          return newIndex;
+        });
         toast.success("Place deleted successfully");
       } catch (error) {
         console.error("Error deleting place:", error);
@@ -209,7 +191,7 @@ const PlaceList = () => {
       <div className="flex flex-wrap gap-2 mb-4">
         {[
           { key: "name", label: "Name" },
-          { key: "price", label: "Price", Icon: CurrencyDollarIcon }, // เปลี่ยนเป็น CurrencyDollarIcon
+          { key: "price", label: "Price", Icon: CurrencyDollarIcon },
           { key: "location", label: "Location", Icon: MapPinIcon },
           { key: "bookings", label: "Bookings" },
           { key: "created_at", label: "Date Added", Icon: CalendarIcon },
@@ -249,69 +231,95 @@ const PlaceList = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredPlaces.map((place) => (
-            <div
-              key={place._id}
-              className="bg-background border border-border/40 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
-            >
-              <div className="h-40 overflow-hidden relative">
-                {imageCache[place._id] ? (
-                  <img
-                    src={imageCache[place._id]}
-                    alt={place.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => (e.target.src = "/fallback-image.jpg")}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                    <MapPinIcon className="h-8 w-8 text-gray-400" />
+          {filteredPlaces.map((place) => {
+            const images = imageCache[place._id] || [];
+            const currentIndex = currentImageIndex[place._id] || 0;
+
+            return (
+              <div
+                key={place._id}
+                className="bg-background border border-border/40 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+              >
+                <div className="h-56 overflow-hidden relative"> {/* Increased from h-40 to h-56 */}
+                  {images.length > 0 ? (
+                    <>
+                      <img
+                        src={images[currentIndex]}
+                        alt={`${place.name} - Image ${currentIndex + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => (e.target.src = "/fallback-image.jpg")}
+                      />
+                      {images.length > 1 && (
+                        <div className="absolute inset-x-0 top-0 h-full flex items-center justify-between px-2">
+                          <button
+                            onClick={() => handlePrevImage(place._id, images.length)}
+                            className="bg-white/90 dark:bg-gray-800/90 p-2 rounded-full hover:bg-primary/90 hover:text-white transition-colors"
+                          >
+                            <ChevronLeftIcon className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleNextImage(place._id, images.length)}
+                            className="bg-white/90 dark:bg-gray-800/90 p-2 rounded-full hover:bg-primary/90 hover:text-white transition-colors"
+                          >
+                            <ChevronRightIcon className="h-5 w-5" />
+                          </button>
+                        </div>
+                      )}
+                      <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                        {currentIndex + 1}/{images.length}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                      <MapPinIcon className="h-8 w-8 text-gray-400" />
+                    </div>
+                  )}
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    <Link
+                      to={`/place/management/${place._id}/edit`}
+                      className="bg-white/90 dark:bg-gray-800/90 p-1.5 rounded-full hover:bg-primary/90 hover:text-white transition-colors"
+                    >
+                      <PencilIcon className="h-4 w-4" />
+                    </Link>
+                    <button
+                      onClick={() => handleDeletePlace(place._id)}
+                      className="bg-white/90 dark:bg-gray-800/90 p-1.5 rounded-full hover:bg-red-500 hover:text-white transition-colors"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
                   </div>
-                )}
-                <div className="absolute top-2 right-2 flex gap-1">
-                  <Link
-                    to={`/place/management/${place._id}/edit`}
-                    className="bg-white/90 dark:bg-gray-800/90 p-1.5 rounded-full hover:bg-primary/90 hover:text-white transition-colors"
-                  >
-                    <PencilIcon className="h-4 w-4" />
-                  </Link>
-                  <button
-                    onClick={() => handleDeletePlace(place._id)}
-                    className="bg-white/90 dark:bg-gray-800/90 p-1.5 rounded-full hover:bg-red-500 hover:text-white transition-colors"
-                  >
-                    <TrashIcon className="h-4 w-4" />
-                  </button>
                 </div>
-              </div>
-              <div className="p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium text-text">{place.name}</h3>
-                    <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      <MapPinIcon className="h-4 w-4 mr-1" />
-                      <span>
-                        {place.address.province}, {place.address.district}
-                      </span>
+                <div className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium text-text">{place.name}</h3>
+                      <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        <MapPinIcon className="h-4 w-4 mr-1" />
+                        <span>
+                          {place.address.province}, {place.address.district}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-primary">฿{place.price.toLocaleString()}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">per day</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-primary">฿{place.price.toLocaleString()}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">per day</p>
+                  <div className="mt-4 pt-4 border-t border-border/30 flex justify-between items-center">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <span className="font-medium text-text">{place.bookings || 0}</span> bookings
+                    </div>
+                    <Link
+                      to={`/place/management/${place._id}/detail`}
+                      className="text-sm font-medium text-primary hover:text-secondary"
+                    >
+                      View Details
+                    </Link>
                   </div>
-                </div>
-                <div className="mt-4 pt-4 border-t border-border/30 flex justify-between items-center">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    <span className="font-medium text-text">{place.bookings}</span> bookings
-                  </div>
-                  <Link
-                    to={`/place/management/${place._id}`}
-                    className="text-sm font-medium text-primary hover:text-secondary"
-                  >
-                    View Details
-                  </Link>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

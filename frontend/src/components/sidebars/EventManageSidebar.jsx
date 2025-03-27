@@ -125,6 +125,12 @@ const EventManageSidebar = () => {
             <ClipboardDocumentListIcon className="h-5 w-5 mr-3 group-hover:text-primary" />
             Reports
           </Link>
+          <Link
+            to="/event/management/eventPackage"
+            className="p-2 rounded-md hover:bg-primary hover:text-white text-text"
+          >
+            Event Package
+          </Link>
         </nav>
 
         {/* Bottom section with return link */}

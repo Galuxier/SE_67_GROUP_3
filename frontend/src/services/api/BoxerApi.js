@@ -15,8 +15,7 @@ export async function getBoxers() {
   try{
     const response = await api.get('/boxers');
     return response.data;
-  } catch (error){
-    console.error('cannot get boxers: ', error);
+  } catch (error) {
     throw new error;
   }
 }

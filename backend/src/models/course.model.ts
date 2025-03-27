@@ -59,6 +59,7 @@ export interface CourseDocument extends Document {
   price: number;
   description?: string;
   course_image_url: string[];
+  available_slot: number;
   status: CourseStatus;
   activities: Activity[];
   packages: Package[];
@@ -74,6 +75,7 @@ const CourseSchema = new Schema<CourseDocument>({
   price: { type: Number, required: true },
   description: { type: String },
   course_image_url: { type: [String], required: true },
+  available_slot: { type: Number, required: true },
   status: { type: String, enum: Object.values(CourseStatus), required: true, default: CourseStatus.Preparing },
   activities: [{
     description: { type: String, required: true },

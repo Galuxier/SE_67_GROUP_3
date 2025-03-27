@@ -25,3 +25,12 @@ export async function getEvents() {
     }
     
 }
+
+export async function getEventsByOrganozerId(organizer_id) {
+    try{
+        const response = await api.get(`/organizer/${organizer_id}/events`)
+        return response.data;
+    }catch (error){
+        throw new error;
+    } 
+}

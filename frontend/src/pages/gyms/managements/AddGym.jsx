@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { PlusCircleIcon, PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import AddressForm from "../../../components/forms/AddressForm";
 import ContactForm from "../../../components/forms/ContactForm";
-import { CreateGym } from "../../../services/api/GymApi";
+import { CreateGym, checkGymNameExists } from "../../../services/api/GymApi";
+import { toast } from "react-toastify";
 
 const AddGym = () => {
   const navigate = useNavigate();
@@ -57,19 +58,16 @@ const AddGym = () => {
     const files = Array.from(e.target.files);
 
     if (fieldName === "gym_image_url") {
-      // Limit number of images (max 10)
       if (files.length + gymData.gym_image_url.length > 10) {
         alert("You can upload a maximum of 10 images.");
         return;
       }
       
-      // Update state with the new files
       setGymData({
         ...gymData,
         gym_image_url: [...gymData.gym_image_url, ...files]
       });
       
-      // Create preview URLs for the uploaded images
       const newPreviews = files.map(file => URL.createObjectURL(file));
       setFilePreviews([...filePreviews, ...newPreviews]);
       setFileSelected(true);
@@ -79,7 +77,6 @@ const AddGym = () => {
         gym_siteplan_url: files[0],
       });
       
-      // Create preview URL for the site plan
       if (files[0]) {
         const previewUrl = URL.createObjectURL(files[0]);
         setSiteplanPreview(previewUrl);
@@ -88,13 +85,11 @@ const AddGym = () => {
   };
 
   const handleRemoveImage = (index) => {
-    // Remove from previews
     const newPreviews = [...filePreviews];
-    URL.revokeObjectURL(newPreviews[index]); // Clean up the URL object
+    URL.revokeObjectURL(newPreviews[index]);
     newPreviews.splice(index, 1);
     setFilePreviews(newPreviews);
     
-    // Remove from files
     const newFiles = [...gymData.gym_image_url];
     newFiles.splice(index, 1);
     setGymData({
@@ -119,7 +114,6 @@ const AddGym = () => {
     });
   };
   
-  // Handle Form Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -132,10 +126,17 @@ const AddGym = () => {
     setIsSubmitting(true);
     
     try {
-      // Create FormData
+      // Step 1: Check if gym name already exists
+      const name = await checkGymNameExists(gymData.gym_name);
+      if (name.exists) {
+        toast.error("Gym name already exists. Please choose a different name.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // If name is unique, proceed with form submission
       const formData = new FormData();
       
-      // Get user ID from localStorage (assumes user is logged in and ID is stored)
       const user = JSON.parse(localStorage.getItem("user"));
       if (user && user._id) {
         formData.append('owner_id', user._id);
@@ -143,30 +144,16 @@ const AddGym = () => {
         throw new Error("User not logged in or user ID not found");
       }
       
-      // Add basic information
       formData.append('gym_name', gymData.gym_name);
       formData.append('description', gymData.description);
-      // if (gymData.price) {
-      //   formData.append('price', gymData.price);
-      // }
       
-      // Add contact information
       formData.append('contact', JSON.stringify(gymData.contact));
-      
-      // Add address information
       formData.append('address', JSON.stringify(gymData.address));
       
-      // Add all gym images
       gymData.gym_image_url.forEach((file) => {
         formData.append('gym_image_urls', file);
       });
       
-      // Add site plan if available
-      // if (gymData.gym_siteplan_url) {
-      //   formData.append('site_plan', gymData.gym_siteplan_url);
-      // }
-      
-      // Log FormData for debugging
       console.log("Preparing to submit form data:");
       for (let [key, value] of formData.entries()) {
         if (value instanceof File) {
@@ -176,13 +163,13 @@ const AddGym = () => {
         }
       }
       
-      // Submit to backend
       const response = await CreateGym(formData);
       console.log("Gym created successfully:", response);
+      toast.success("Gym created successfully!");
       navigate("/gym/management/gymlist");
     } catch (error) {
       console.error("Error creating gym:", error);
-      alert("Failed to create gym. Please try again.");
+      toast.error("Failed to create gym. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -191,7 +178,6 @@ const AddGym = () => {
   return (
     <div className="flex justify-center items-start min-h-screen bg-background pt-10 pb-10">
       <div className="w-full max-w-2xl p-8 shadow-lg bg-card rounded-lg overflow-y-auto border border-border/30">
-        {/* Header with back button */}
         <div className="flex items-center mb-8">
           <button
             onClick={handleBack}
@@ -202,11 +188,10 @@ const AddGym = () => {
             </svg>
           </button>
           <h1 className="text-2xl font-bold text-text flex-1 text-center">Add Gym</h1>
-          <div className="w-9"></div> {/* Spacer for alignment */}
+          <div className="w-9"></div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Gym Name */}
           <div>
             <label className="block text-sm font-medium mb-2 text-text">Gym Name</label>
             <input
@@ -220,7 +205,6 @@ const AddGym = () => {
             />
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-sm font-medium mb-2 text-text">Description</label>
             <textarea
@@ -234,7 +218,6 @@ const AddGym = () => {
             />
           </div>
 
-          {/* Contact Information */}
           <div>
             <label className="block text-sm font-medium mb-2 text-text">Contact Information</label>
             <div className="bg-background/50 p-4 rounded-lg border border-border/50">
@@ -245,7 +228,6 @@ const AddGym = () => {
             </div>
           </div>
 
-          {/* Gym Photos Upload */}
           <div>
             <label className="block text-sm font-medium mb-2 text-text">Gym Photos</label>
             <div className="border-2 border-dashed border-border rounded-lg p-6 text-center bg-background/50">
@@ -304,50 +286,6 @@ const AddGym = () => {
             </div>
           </div>
 
-          {/* Site Plan Upload */}
-          {/* <div>
-            <label className="block text-sm font-medium mb-2 text-text">Site Plan</label>
-            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center bg-background/50">
-              <input
-                type="file"
-                ref={siteplanInputRef}
-                className="hidden"
-                onChange={(e) => handleImageUpload(e, "gym_siteplan_url")}
-                id="siteplanInput"
-                accept="image/*"
-              />
-              
-              {siteplanPreview ? (
-                <div className="relative inline-block">
-                  <img
-                    src={siteplanPreview}
-                    alt="Site Plan Preview"
-                    className="max-h-48 rounded-lg border border-border/50"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRemoveSiteplan}
-                    className="absolute top-2 right-2 p-1 bg-red-500 rounded-full hover:bg-red-600 text-white"
-                  >
-                    <XMarkIcon className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => siteplanInputRef.current.click()}
-                  className="flex flex-col items-center justify-center w-full py-6 hover:bg-background/80 transition-colors"
-                >
-                  <PhotoIcon className="h-12 w-12 text-text/30" />
-                  <p className="mt-2 text-sm text-text/60">
-                    Click to upload site plan
-                  </p>
-                </button>
-              )}
-            </div>
-          </div> */}
-
-          {/* Address */}
           <div>
             <label className="block text-sm font-medium mb-2 text-text">Location</label>
             <div className="bg-background/50 p-4 rounded-lg border border-border/50">
@@ -355,22 +293,6 @@ const AddGym = () => {
             </div>
           </div>
 
-          {/* Price */}
-          {/* <div>
-            <label className="block text-sm font-medium mb-2 text-text">
-              Price (Baht)
-            </label>
-            <input
-              type="number"
-              name="price"
-              value={gymData.price}
-              onChange={handleInputChange}
-              className="w-full border border-border rounded-lg py-3 px-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-background text-text"
-              placeholder="Enter price per session/month"
-            />s
-          </div> */}
-
-          {/* Submit button */}
           <div className="pt-4">
             <button
               type="submit"

@@ -1,0 +1,280 @@
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
+import { toast } from "react-toastify";
+import {
+  PhotoIcon,
+  ArrowUpTrayIcon,
+  ChevronLeftIcon,
+} from "@heroicons/react/24/outline";
+import AddressForm from "../../../components/forms/AddressForm";
+import { getPlaceById } from "../../../services/api/PlaceApi";
+import { getImage } from "../../../services/api/ImageApi";
+
+const EditPlace = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { place_id } = useParams();
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const [images, setImages] = useState([]);
+  const [imagePreview, setImagePreview] = useState([]);
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    price: 0,
+    googleMapsLink: "",
+    address: {
+      province: "",
+      district: "",
+      subdistrict: "",
+      postal_code: "",
+      street: "",
+      information: "",
+    },
+  });
+
+  useEffect(() => {
+    const fetchPlaceData = async () => {
+      if (!user || !user._id) {
+        toast.error("You must be logged in to edit a place");
+        navigate("/login");
+        return;
+      }
+
+      try {
+        setFetching(true);
+        const response = await getPlaceById(place_id);
+        const place = response.data;
+
+        setFormData({
+          name: place.name,
+          price: place.price,
+          googleMapsLink: place.google_map_link || "",
+          address: place.address,
+        });
+
+        // Fetch existing images
+        if (place.place_image_urls && place.place_image_urls.length > 0) {
+          const fetchedImages = await Promise.all(
+            place.place_image_urls.map(async (imgPath) => await getImage(imgPath))
+          );
+          setImagePreview(fetchedImages);
+          setImages(place.place_image_urls); // Keep original paths for reference
+        }
+      } catch (error) {
+        console.error("Error fetching place:", error);
+        toast.error("Failed to load place data");
+        navigate("/place/management/list");
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    fetchPlaceData();
+  }, [place_id, user, navigate]);
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "price" ? (value === "" ? 0 : parseFloat(value)) : value,
+    }));
+  }, []);
+
+  const handleAddressChange = useCallback((addressData) => {
+    setFormData((prev) => ({
+      ...prev,
+      address: addressData,
+    }));
+  }, []);
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      setImages((prev) => [...prev, ...files]);
+      const newPreviews = files.map((file) => URL.createObjectURL(file));
+      setImagePreview((prev) => [...prev, ...newPreviews]);
+    }
+  };
+
+  const removeImage = (index) => {
+    const updatedImages = [...images];
+    const updatedPreviews = [...imagePreview];
+    URL.revokeObjectURL(updatedPreviews[index]);
+    updatedImages.splice(index, 1);
+    updatedPreviews.splice(index, 1);
+    setImages(updatedImages);
+    setImagePreview(updatedPreviews);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!user || !user._id) {
+      toast.error("You must be logged in to update a place");
+      return;
+    }
+
+    if (images.length === 0) {
+      toast.error("Please upload at least one image");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const placeFormData = new FormData();
+      placeFormData.append("owner_id", user._id);
+      placeFormData.append("name", formData.name);
+      placeFormData.append("price", formData.price);
+      placeFormData.append("google_map_link", formData.googleMapsLink);
+      placeFormData.append("address", JSON.stringify(formData.address));
+      images.forEach((image) => placeFormData.append("place_image_urls", image));
+
+    //   await updatePlace(place_id, placeFormData);
+      toast.success("Place updated successfully!");
+      navigate("/place/management/list");
+    } catch (error) {
+      console.error("Error updating place:", error);
+      toast.error(error.message || "Failed to update place");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (fetching) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 bg-card rounded-lg shadow-md">
+      <h1 className="text-2xl font-bold mb-6 text-text">Edit Place</h1>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium mb-1 text-text">Place Name</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full border border-border rounded-lg py-2 px-3 bg-background text-text focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="Enter place name"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-text">Price per Day (THB)</label>
+            <input
+              type="number"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
+              className="w-full border border-border rounded-lg py-2 px-3 bg-background text-text focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="Enter price"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-text">Google Maps Link <span className="text-gray-500 text-xs">(Optional)</span></label>
+            <input
+              type="url"
+              name="googleMapsLink"
+              value={formData.googleMapsLink}
+              onChange={handleChange}
+              className="w-full border border-border rounded-lg py-2 px-3 bg-background text-text focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="e.g. https://maps.google.com/?q=..."
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium mb-2 text-text">Place Images <span className="text-primary">*</span></label>
+            <div className="flex items-center justify-center w-full">
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-border border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-gray-700/30 dark:hover:bg-gray-700/50">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <PhotoIcon className="w-8 h-8 mb-2 text-gray-500 dark:text-gray-400" />
+                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                    <span className="font-semibold">Click to upload</span> or drag and drop
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">JPG, PNG, GIF (MAX. 5MB each)</p>
+                </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                />
+              </label>
+            </div>
+            {imagePreview.length > 0 && (
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {imagePreview.map((src, index) => (
+                  <div key={index} className="relative group h-24 w-full">
+                    <div className="h-full w-full overflow-hidden rounded-md border border-border">
+                      <img src={src} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="md:col-span-2">
+            <div className="border border-border rounded-lg p-6 bg-card/50">
+              <h3 className="text-lg font-medium mb-4 text-text">Address Information</h3>
+              <AddressForm onChange={handleAddressChange} initialData={formData.address} />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between mt-8">
+          <button
+            type="button"
+            onClick={() => navigate("/place/management/list")}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary flex items-center"
+          >
+            <ChevronLeftIcon className="h-5 w-5 mr-1" />
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 text-sm font-medium text-white bg-primary border border-transparent rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+          >
+            {loading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Updating...
+              </>
+            ) : (
+              <>
+                <ArrowUpTrayIcon className="h-5 w-5 mr-1" />
+                Update Place
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default EditPlace;

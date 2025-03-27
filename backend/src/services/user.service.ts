@@ -23,6 +23,15 @@ class UserService extends BaseService<UserDocument> {
     }
   }
 
+  async getUsersByRole(role: string): Promise<UserDocument[]> {
+    try {
+      return await User.find({ role: { $in: [role] } });
+    } catch (error) {
+      console.error(`Error getting users with role ${role}:`, error);
+      throw error;
+    }
+  }
+
   async getUserRoles(userId: string): Promise<UserDocument | null> {
     try {
       // ตรวจสอบว่า userId เป็น ObjectId ที่ถูกต้อง
