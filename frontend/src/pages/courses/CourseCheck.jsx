@@ -9,17 +9,17 @@ export default function Checkout() {
 
   // สร้าง FormData ใหม่
   const formData = new FormData();
-  formData.append("order_id", "34569888");
+  formData.append("order_id", "fff34569888");
   formData.append("user_id", "2222211100");
   formData.append("order_type", "course");
-
+  formData.append("total_price", totalprice);
   // เพิ่มข้อมูล item ในรูปแบบ JSON string
   formData.append(
     "Item",
     JSON.stringify({
-      ref_id: course.id,
+      ref_id:course._id,
       refModel: "Course",
-      price_at_order: totalprice,
+      price_at_order: course.price,
       quantity: quantity,
     })
   );
@@ -33,9 +33,9 @@ export default function Checkout() {
       <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-6xl flex flex-col md:flex-row gap-8">
         {/* Left Side - Payment Form */}
         <div className="w-full md:w-2/3 md:pr-8">
-          <PaymentForm DatafromOrder ={formDataObject} />
+          <PaymentForm type={formData?.type || "course"}  DatafromOrder ={formDataObject} />
         </div>
-
+        
         {/* Right Side - Order Summary */}
         <div className="w-full md:w-1/3 md:border-l md:pl-8 mt-8 md:mt-0">
           <h2 className="text-2xl font-semibold mb-4">รายการสินค้า</h2>

@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { Plus, X, Users, Clock, Calendar, Info } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useParams } from "react-router-dom";
 import {
   getTrainersInGym,
@@ -23,11 +23,25 @@ export default function ActivityModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [trainers, setTrainers] = useState([]); // State to hold the trainers
   const { gym_id } = useParams(); // gym_id from the route params
-
+  //  console.log("Activitiesffffffffff:", activities); // This will log the activities passed as props
   // Load existing activities on component mount
   useEffect(() => {
-    setExistingActivities(activities); // Use activities passed as props instead of localStorage
-  }, [activities]); // Reload when activities change
+    setExistingActivities(activities);
+  }, [activities]);
+  console.log("Activities:", existingActivities);
+
+  // useEffect(() => {
+  //   // แปลงข้อมูลใน activities และเปลี่ยน date ให้อยู่ในรูปแบบ "YYYY-MM-DD"
+  //   const updatedActivities = activities.map((activity) => {
+  //     const formattedDate = new Date(activity.date).toLocaleDateString("en-CA"); // แปลงเป็น "YYYY-MM-DD"
+  //     return {
+  //       ...activity,
+  //       date: formattedDate,  // เปลี่ยน date ให้เป็น "YYYY-MM-DD"
+  //     };
+  //   });
+
+  //     // อัพเดต existingActivities
+  // }, [activities]);  // useEffect จะทำงานเมื่อ activities เปลี่ยนแปลง// Reload when activities change
   const fetchImage = async (imageUrl) => {
     try {
       const response = await fetch(`/api/images/${imageUrl}`);
@@ -40,6 +54,42 @@ export default function ActivityModal({
     }
   };
   const [imageURLs, setImageURLs] = useState({}); // สร้าง state สำหรับเก็บ URLs ของภาพ
+  // useEffect(() => {
+  //   console.log("Activities:", activities);
+  //   console.log("Current Date:", currentDate);
+
+  //   if (activities && currentDate) {
+  //     // กรองกิจกรรมที่มีวันที่ตรงกับ currentDate โดยการแปลง activity.date ให้เป็น YYYY-MM-DD
+  //     const sameDateActivities = activities.filter((activity) => {
+  //       // แปลง activity.date ให้เป็นวันที่ในรูปแบบ YYYY-MM-DD
+  //       const formattedActivityDate = new Date(activity.date).toLocaleDateString("en-CA");  // แปลงเป็น YYYY-MM-DD
+  //       console.log("Original Activity Date:", activity.date);  // ตรวจสอบค่า activity.date
+  //       console.log("Formatted Activity Date (YYYY-MM-DD):", formattedActivityDate);  // ปริ้นค่าหลังแปลง
+  //       return formattedActivityDate === currentDate;
+  //     });
+
+  //     // ตรวจสอบค่า sameDateActivities
+  //     console.log("Same Date Activities:", sameDateActivities);
+
+  //     // สร้างรายการของเวลาที่ไม่สามารถเลือกได้ (unavailable slots)
+  //     const unavailableSlots = sameDateActivities.map((activity) => ({
+  //       start: activity.startTime,   // ใช้เวลาเริ่มต้น
+  //       end: activity.endTime,       // ใช้เวลาสิ้นสุด
+  //       description: activity.description,  // ใช้คำอธิบาย
+  //     }));
+
+  //     console.log("Unavailable Slots:", unavailableSlots); // แสดง unavailableSlots ที่ได้
+
+  //     // อัพเดต busyTimeSlots ด้วย unavailableSlots ที่ได้
+  //     setBusyTimeSlots(unavailableSlots);
+
+  //   } else {
+  //     console.log("Activities or currentDate is not available.");
+  //   }
+  // }, [activities, currentDate]);  // useEffect จะทำงานเมื่อ activities หรือ currentDate เปลี่ยนแปลง
+  //     //แสดง busyTimeSlots ที่ได้
+
+  //      console.log("Busy Time Slots:",existingActivities);
 
   useEffect(() => {
     const loadImages = async () => {
@@ -83,20 +133,6 @@ export default function ActivityModal({
   }, [isOpen, gym_id]);
 
   // Categorize trainers based on their gym_id (same gym or different gym)
-  const trainersByGym = Array.isArray(trainers)
-    ? trainers.reduce(
-        (acc, trainer) => {
-          // Check if trainer's gym_id matches the gym_id from useParams
-          if (trainer.gym_id === gym_id) {
-            acc.trainerInGym.push({ ...trainer, statuss: "ready" }); // Same gym, status = ready
-          } else {
-            acc.trainerOutGym.push({ ...trainer, statuss: "pending" }); // Different gym, status = pending
-          }
-          return acc;
-        },
-        { trainerInGym: [], trainerOutGym: [] }
-      )
-    : { trainerInGym: [], trainerOutGym: [] };
 
   // Calculate busy time slots when activities change
   useEffect(() => {
@@ -117,7 +153,22 @@ export default function ActivityModal({
     }
   }, [existingActivities, currentDate]);
 
-  // Make sure newActivity has the current date
+  //     useEffect(() => {
+  //   // ทำการกรองกิจกรรมตามวันที่ที่เลือก (currentDate)
+  //   if (activities && currentDate) {
+
+  //     // สร้างรายการของเวลาที่ไม่สามารถเลือกได้จากกิจกรรมที่มีอยู่
+  //     const unavailableSlots = sameDateActivities.map((activity) => ({
+  //       start: activity.startTime,
+  //       end: activity.endTime,
+  //       description: activity.description,
+  //     }));
+
+  //     // อัพเดต state ของ busyTimeSlots
+  //     setBusyTimeSlots(unavailableSlots);
+  //   }
+  // }, [activities]); // Runs whenever activities or currentDate changes
+
   useEffect(() => {
     if (newActivity?.date !== currentDate) {
       setNewActivity((prev) => ({ ...prev, date: currentDate }));
@@ -149,9 +200,9 @@ export default function ActivityModal({
       // สร้างข้อมูลโค้ช
       const coachInfo = {
         id: trainerItem._id,
-        name: trainerItem.nickname,
-        Nickname: trainerItem.nickname,
-        gym_id: trainerItem.gym_id,
+        name: trainerItem.nickname ? trainerItem.nickname : " ",
+        Nickname: trainerItem.nickname ? trainerItem.nickname : " ", // ใช้ชื่อเล่นถ้ามี
+        gym_id: trainerItem.gym_id ? trainerItem.gym_id : " ", // ใช้ gym_id ถ้ามี
         statuses: statuss, // ใช้ค่าที่กำหนดใน statuss
       };
       console.log("Coach Info:", coachInfo); // แสดงข้อมูลโค้ช
@@ -218,7 +269,6 @@ export default function ActivityModal({
   const handleAddActivitySubmit = (e) => {
     e.preventDefault();
 
-    // Validate required fields
     if (
       !newActivity.startTime ||
       !newActivity.endTime ||
@@ -228,7 +278,7 @@ export default function ActivityModal({
       return;
     }
 
-    // Validate that end time is after start time
+    // Validate end time is after start time
     if (
       convertTimeToMinutes(newActivity.endTime) <=
       convertTimeToMinutes(newActivity.startTime)
@@ -255,20 +305,18 @@ export default function ActivityModal({
       endTime: newActivity.endTime,
       description: newActivity.description,
       date: currentDate,
-      // Use full objects to prevent data loss
       trainer: newActivity.trainer.map((coach) => ({
         ...coach,
         Nickname: coach.nickname || coach.name, // Ensure Nickname exists
       })),
     };
 
-    // Update activities state via setActivities
+    // Update the activities state with the new activity
     setActivities((prevActivities) => {
-      const updatedActivities = [...prevActivities, newActivityData];
-      return updatedActivities; // Simply set activities to updated list
+      return [...prevActivities, newActivityData];
     });
 
-    // Reset input values
+    // Clear the form and close the modal
     setNewActivity({
       startTime: "",
       endTime: "",
@@ -304,7 +352,7 @@ export default function ActivityModal({
 
   // Filter trainers based on search query
   const filteredTrainers = trainers.filter((t) => {
-    console.log("searchQuery: ", searchQuery);
+    // console.log("searchQuery: ", searchQuery);
     const nickname = t.nickname || ""; // Default to an empty string if undefined
     const firstName = t.firstName || ""; // Default to an empty string if undefined
     const lastName = t.lastName || ""; // Default to an empty string if undefined
@@ -665,7 +713,7 @@ export default function ActivityModal({
                     <button
                       key={trainerItem._id}
                       type="button"
-                      className="flex items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors text-left"
+                      className="flex flex-col items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors text-left"
                       onClick={() => handleAddCoach(trainerItem)}
                       disabled={newActivity.trainer?.some(
                         (t) => t.id === trainerItem._id
@@ -674,12 +722,12 @@ export default function ActivityModal({
                       <img
                         src={
                           imageURLs[trainerItem._id] ||
-                          "/path/to/placeholder-image.jpg" // Placeholder image if no image is loaded
-                        }
+                          "/path/to/placeholder-image.jpg"
+                        } // Placeholder image if no image is loaded
                         alt={trainerItem.nickname}
-                        className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
                       />
-                      <div className="ml-3">
+                      <div className="mt-2">
                         <p className="font-medium text-gray-800">
                           {trainerItem.nickname}
                         </p>
@@ -708,7 +756,7 @@ export default function ActivityModal({
                     <button
                       key={trainerItem._id}
                       type="button"
-                      className="flex items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors text-left"
+                      className="flex flex-col items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors text-left"
                       onClick={() => handleAddCoach(trainerItem)}
                       disabled={newActivity.trainer?.some(
                         (t) => t.id === trainerItem._id
@@ -717,12 +765,12 @@ export default function ActivityModal({
                       <img
                         src={
                           imageURLs[trainerItem._id] ||
-                          "/path/to/placeholder-image.jpg" // Placeholder image if no image is loaded
-                        }
+                          "/path/to/placeholder-image.jpg"
+                        } // Placeholder image if no image is loaded
                         alt={trainerItem.nickname}
-                        className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
                       />
-                      <div className="ml-3">
+                      <div className="mt-2">
                         <p className="font-medium text-gray-800">
                           {trainerItem.nickname}
                         </p>
