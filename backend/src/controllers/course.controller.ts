@@ -178,3 +178,33 @@ export const deleteCourseController = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error deleting course', error: err });
   }
 };
+
+export const getCoursesByUserOwnershipController = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Validate userId
+    if (!Types.ObjectId.isValid(userId)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid user ID format'
+      });
+      return;
+    }
+    
+    const courses = await CourseService.getCoursesByUserOwnership(userId);
+    
+    res.status(200).json({
+      success: true,
+      count: courses.length,
+      data: courses
+    });
+  } catch (err) {
+    console.error('Error fetching user owned courses:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching user owned courses', 
+      error: err 
+    });
+  }
+};
