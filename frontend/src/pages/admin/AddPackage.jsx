@@ -26,28 +26,23 @@ function AddPackage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+  
     try {
-      console.log("Submitting package data:", packageData);
-      
       const formData = new FormData();
+      
       formData.append("type", packageData.type);
       formData.append("name", packageData.name);
       formData.append("detail", packageData.detail);
-      formData.append("duration", packageData.duration);
-      formData.append("price", packageData.price);
-
-      // Log FormData content
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
-      }
-
-      const createdPackage = await createAdsPackage(packageData);
+      formData.append("duration", packageData.duration.toString());
+      formData.append("price", packageData.price.toString());
+      formData.append("status", "active"); // เพิ่มฟิลด์นี้ตามที่ API ต้องการ
+  
+      const createdPackage = await createAdsPackage(formData);
       console.log("Package created successfully:", createdPackage);
-      
+      alert(`Package "${packageData.name}" created successfully!`);
     } catch (error) {
       console.error("Error creating package:", error);
-      alert(`เกิดข้อผิดพลาด: ${error.message}`);
+      alert(`Error: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
