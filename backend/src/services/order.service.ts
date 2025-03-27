@@ -189,12 +189,40 @@ class OrderService extends BaseService<OrderDocument> {
   //   await event.save();
   // }
 
-  async getOrdersByShopId(shopId: string): Promise<OrderDocument[]> {
+  async getOrdersByShopId(shopId: string, status?: string): Promise<OrderDocument[]> {
     try {
-      // Find orders where at least one item in the shops array has the matching shop_id
-      return await Order.find({ 
-        "shops.shop_id": new Types.ObjectId(shopId) 
-      }).populate('user_id', 'username first_name last_name');
+      // Find all products that belong to this shop
+      const products = await Product.find({ shop_id: new Types.ObjectId(shopId) }).select('_id');
+      
+      // Extract product IDs
+      const productIds = products.map(product => product._id);
+      
+      if (productIds.length === 0) {
+        return []; // No products found for this shop, return empty array
+      }
+      
+      // Create base query to find orders with products from this shop
+      const query: any = { 
+        order_type: OrderType.Product,
+        "items.ref_id": { $in: productIds },
+        "items.ref_model": "Product"
+      };
+      
+      // Add status filter if provided
+      if (status) {
+        query.status = status;
+      }
+      
+      // Execute the query with population of user data and related items
+      return await Order.find(query)
+        .populate('user_id', 'username first_name last_name email')
+        .populate({
+          path: 'items.ref_id',
+          model: 'Product',
+          select: 'product_name product_image_urls shop_id'
+        })
+        .populate('items.variant_id')
+        .sort({ _id: -1 }); // Sort by newest first
     } catch (error) {
       console.error('Error fetching orders by shop ID:', error);
       throw error;

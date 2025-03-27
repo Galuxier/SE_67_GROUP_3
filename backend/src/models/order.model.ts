@@ -13,6 +13,7 @@ export enum OrderStatus {
   Pending = 'pending',
   Completed = 'completed',
   Cancelled = 'cancelled',
+  Paid = 'paid',
   Failed = 'failed' 
 }
 
@@ -43,6 +44,7 @@ export interface OrderDocument extends Document {
   total_price: number;
   shipping_address: ShippingAddress;
   status: OrderStatus;
+  create_at: Date;
 }
 
 const OrderSchema = new Schema<OrderDocument>({
@@ -69,6 +71,7 @@ const OrderSchema = new Schema<OrderDocument>({
       information: { type: String },
     },
     status: { type: String, enum: Object.values(OrderStatus), required: true },
+    create_at: { type: Date, required: true, default: Date.now },
   });
 
 // OrderSchema.pre('validate', validateOrderItems);

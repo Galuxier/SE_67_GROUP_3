@@ -152,6 +152,14 @@ export const getCourseByIdController = async (req: Request, res: Response) => {
 // อัปเดตข้อมูลคอร์ส
 export const updateCourseController = async (req: Request, res: Response) => {
   try {
+    if (req.body.activities) {
+      req.body.activities = JSON.parse(req.body.activities);
+    }
+
+    if (req.body.trainer_in_course){
+      req.body.trainer_in_course = JSON.parse(req.body.trainer_in_course);
+    }
+    console.log(req.body);
     const updatedCourse = await CourseService.update(req.params.id, req.body);
     res.status(200).json(updatedCourse);
   } catch (err) {

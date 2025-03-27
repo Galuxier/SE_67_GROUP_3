@@ -21,7 +21,7 @@ route.get('/course/:id', getCourseByIdController);
 
 route.post('/course',courseImagesUpload ,createCourseController);
 
-route.put('/course/:id', updateCourseController);
+route.put('/course/:id', courseImagesUpload, updateCourseController);
 
 route.delete('/course/:id', deleteCourseController);
 

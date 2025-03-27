@@ -5,7 +5,7 @@ import { OrderStatus } from '../models/order.model';
 
 export const createOrderController = async (req: Request, res: Response) => {
   try {
-    // console.log("req.body: ", req.body);
+    console.log("req.body: ", req.body);
     
     const newOrder = await OrderService.createOrder(req.body);
     res.status(201).json(newOrder);
@@ -60,18 +60,41 @@ export const deleteOrderController = async (req: Request, res: Response) => {
 export const getOrdersByShopIdController = async (req: Request, res: Response) => {
   try {
     const { shop_id } = req.params;
+    const { status } = req.query; // Get status from query parameters
     
     // Validate shop_id
     if (!shop_id) {
-      res.status(400).json({ message: 'Shop ID is required' });
+      res.status(400).json({ 
+        success: false, 
+        message: 'Shop ID is required' 
+      });
+      return ;
     }
     
-    // Find orders where items contain the specified shop_id
-    const orders = await OrderService.getOrdersByShopId(shop_id);
+    // Validate status if provided
+    if (status && !Object.values(OrderStatus).includes(status as OrderStatus)) {
+      res.status(400).json({
+        success: false,
+        message: `Invalid status. Valid values are: ${Object.values(OrderStatus).join(', ')}`
+      });
+      return ;
+    }
     
-    res.status(200).json(orders);
+    // Get orders for the shop with optional status filter
+    const orders = await OrderService.getOrdersByShopId(shop_id, status as string | undefined);
+    
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      data: orders
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching shop orders', error: err });
+    console.error('Error fetching shop orders:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching shop orders', 
+      error: err 
+    });
   }
 };
 
