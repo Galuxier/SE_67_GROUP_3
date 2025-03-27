@@ -1,175 +1,219 @@
 import { useState, useEffect } from "react";
-import { Trash2, Pencil } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { CheckCircle } from "lucide-react"; // Importing checkmark icon
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
-import { GrLinkNext, GrLinkPrevious } from "react-icons/gr";
+import { getUser } from "../../services/api/UserApi";
 
 export default function FormAddResult() {
-  const { state } = useLocation();
+  const location = useLocation();
   const navigate = useNavigate();
-
-  // รับค่าข้อมูลอีเวนต์จาก state หรือ localStorage
-  const eventData = state?.formData || JSON.parse(localStorage.getItem("eventData"));
-
+  const { eventId } = useParams();
+  const [event, setEvent] = useState(location.state?.event || null);
   const [matches, setMatches] = useState([]);
-  const [eventDates] = useState([]);
-  const [selectedDateIndex, setSelectedDateIndex] = useState(0); // ใช้ index เพื่อจัดการ Prev/Next
+  const [eventDates, setEventDates] = useState([]);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [filteredMatches, setFilteredMatches] = useState([]);
 
-  // State สำหรับ Modal ยืนยันการลบ
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [matchToDelete, setMatchToDelete] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [matchToSave, setMatchToSave] = useState(null);
 
-  // โหลดข้อมูล fighters จาก localStorage
   useEffect(() => {
-    const savedFighters = JSON.parse(localStorage.getItem("fighters")) || [];
-    setMatches(savedFighters);
-  }, []);
+    if (!event) {
+      const fetchEventById = async () => {
+        try {
+          const response = await fetch(`/api/events/${eventId}`);
+          if (!response.ok) throw new Error("Failed to fetch event");
+          let data = await response.json();
+          setEvent(data);
+        } catch (error) {
+          console.error("Error fetching event:", error);
+        }
+      };
+      fetchEventById();
+    }
+  }, [eventId, event]);
 
-  const handleDeleteFighter = () => {
-    if (matchToDelete) {
-      const updatedFighters = matches.filter((match) => match.id !== matchToDelete.id);
-      setMatches(updatedFighters);
-      localStorage.setItem("fighters", JSON.stringify(updatedFighters));
-      setIsDeleteModalOpen(false);
-      setMatchToDelete(null);
+  useEffect(() => {
+    if (event) {
+      // ดึงวันที่ทั้งหมดจากการแข่งขันทุก weight class
+      const allDates = event.weight_classes?.flatMap(wc => 
+        wc.matches?.map(match => match.match_date)
+      ) || [];
+      
+      // กรองวันที่ที่ไม่ซ้ำกัน
+      const uniqueDates = [...new Set(allDates)];
+      setEventDates(uniqueDates);
+      
+      // ตั้งค่าเริ่มต้นเป็นวันที่แรกถ้ามี
+      if (uniqueDates.length > 0 && !selectedDate) {
+        setSelectedDate(uniqueDates[0]);
+      }
+    }
+  }, [event]);
+
+  useEffect(() => {
+    // เมื่อ event หรือ selectedDate เปลี่ยน ให้กรองการแข่งขันตามวันที่
+    if (event && selectedDate) {
+      const filtered = event.weight_classes?.flatMap(wc => 
+        wc.matches?.filter(match => match.match_date === selectedDate)
+          .map(match => ({
+            ...match,
+            weight: wc.weigh_name // เพิ่ม weight class เข้าไปในข้อมูลการแข่งขัน
+          }))
+      ) || [];
+      console.log(filtered);
+      
+      setFilteredMatches(filtered);
+    }
+  }, [event, selectedDate]);
+
+  const getBoxer = async (id) => {
+    try {
+      const response = await getUser(id);
+      console.log(response);
+      return response; // แสดงชื่อของ boxer
+    } catch (error) {
+      console.error(error);
+      return "Unknown";
     }
   };
+  
+  const [boxer1Name, setBoxer1Name] = useState("");
+  const [boxer2Name, setBoxer2Name] = useState("");
+  const [boxer1, setBoxer1] = useState([]);
+  const [boxer2, setBoxer2] = useState([]);
+  
+  // ใช้ useEffect เพื่อดึงข้อมูล boxer 1 และ boxer 2
+  useEffect(() => {
+    const fetchBoxerNames = async () => {
+      console.log("filter",filteredMatches);
+      
+      if (filteredMatches.length > 0) {
+        const boxer1 = await getBoxer(filteredMatches[0].boxer1_id);
+        const boxer2 = await getBoxer(filteredMatches[0].boxer2_id);
+        console.log("boxer",boxer1);
+        
+        // setBoxer1Name(boxer1);
+        // setBoxer2Name(boxer2);
+        setBoxer1(boxer1);
+        setBoxer2(boxer2);
+      }
+    };
+    fetchBoxerNames();
+  }, [filteredMatches]); // เมื่อ filteredMatches เปลี่ยนแปลง
 
   const handleSaveFighter = () => {
-    const matchesData = {
-      ...eventData,
-      matches: matches,
-    };
-    localStorage.setItem("matches", JSON.stringify(matchesData));
-    navigate("/event");
+    localStorage.setItem("matches", JSON.stringify({ matches }));
+    navigate("/event/management/onGoing");
   };
+
+  const handleSaveConfirmation = (match) => {
+    setMatchToSave(match);
+    setIsModalOpen(true);
+  };
+  
+  const handleConfirmSave = () => {
+    if (matchToSave) {
+      console.log("Confirmed save:", matchToSave);
+      setIsModalOpen(false);
+      setMatchToSave(null);
+    }
+  };
+  
 
   const handleUpdateResult = (matchId, result) => {
-    const updatedMatches = matches.map((match) =>
-      match.id === matchId ? { ...match, result } : match
+
+    const updatedMatches = filteredMatches.map((match) =>
+      match._id === matchId ? { ...match, result } : match
     );
     setMatches(updatedMatches);
-    localStorage.setItem("fighters", JSON.stringify(updatedMatches));
   };
-
-  const handleDeleteConfirmation = (match) => {
-    setMatchToDelete(match);
-    setIsDeleteModalOpen(true);
+  
+  const handleCancelSave = () => {
+    setIsModalOpen(false);
+    setMatchToSave(null);
   };
-
-  const handleCancelDelete = () => {
-    setIsDeleteModalOpen(false);
-    setMatchToDelete(null);
-  };
-
-  const handlePrevDate = () => {
-    if (selectedDateIndex > 0) {
-      setSelectedDateIndex(selectedDateIndex - 1);
-    }
-  };
-
-  const handleNextDate = () => {
-    if (selectedDateIndex < eventDates.length - 1) {
-      setSelectedDateIndex(selectedDateIndex + 1);
-    }
-  };
-
-  const filteredFighters = matches.filter((match) => match.date === eventDates[selectedDateIndex]);
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-white">
-      <div className="w-[1000px] p-10 shadow-lg bg-white rounded-lg relative">
+    <div className="flex justify-center items-centeพ">
+      <div className="w-4/5 p-10 shadow-lg bg-white dark:bg-gray-800 border border-white rounded-lg relative">
         <div className="flex flex-col items-center mb-6">
-          <label className="block text-lg font-semibold text-gray-700">
-            Event : {eventData?.eventName || "ไม่พบชื่ออีเวนต์"}
+          <label className="block text-lg font-semibold text-gray-700 dark:text-white">
+            Event : {event?.event_name || "ไม่พบชื่ออีเวนต์"}
           </label>
-          <label className="block text-sm text-gray-600">
-            Date : {eventData?.startDate} - {eventData?.endDate}
+          <label className="block text-sm text-gray-600 dark:text-gray-300">
+            Date : {event?.start_date} - {event?.end_date}
           </label>
-          <label className="block text-sm text-gray-600">
-            Location : {eventData?.location}
-          </label>
-        </div>
-        <br></br>
-        <div className="flex items-center gap-2">
-          <h3 className="text-2xl font-Bold">Match Result</h3>
         </div>
 
-        {/* เลือกวันที่ */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Match Result</h3>
+        </div>
+
         <div className="flex items-center justify-between my-5">
-          <button
-            onClick={handlePrevDate}
-            disabled={selectedDateIndex === 0}
-            className={`flex p-2 ${selectedDateIndex === 0 ? "text-gray-400" : "text-rose-500"} hover:text-rose-600`}
-          >
-            <GrLinkPrevious size={20} className="mr-2" />prev
-          </button>
           <div className="mx-4 w-48">
-            <label className="block text-sm font-medium text-gray-700">Select Date</label>
-            <input
-              type="date"
-              min={eventData?.startDate}
-              max={eventData?.endDate}
-              value={eventDates[selectedDateIndex]}
-              onChange={(e) => {
-                const selectedIndex = eventDates.indexOf(e.target.value);
-                setSelectedDateIndex(selectedIndex);
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <label className="block text-gray-700 dark:text-gray-300 font-medium">Select Date</label>
+            <select
+              className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-300"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            >
+              <option value="">Choose a date</option>
+              {eventDates.map((date, index) => {
+                const formattedDate = new Date(date).toISOString().split('T')[0];
+                return (
+                  <option key={index} value={date}>
+                    {formattedDate}
+                  </option>
+                );
+              })}
+            </select>
           </div>
-          <button
-            onClick={handleNextDate}
-            disabled={selectedDateIndex === eventDates.length - 1}
-            className={`flex p-2 ${selectedDateIndex === eventDates.length - 1 ? "text-gray-400" : "text-rose-500"} hover:text-rose-600`}
-          >
-            next<GrLinkNext size={20} className="ml-2" />
-          </button>
         </div>
 
         <div className="space-y-4">
-          {/* ตาราง */}
-          <table className="w-full border-collapse border rounded-lg text-sm">
+          <table className="w-full border-collapse border rounded-lg text-sm dark:border-gray-600">
             <thead>
-              <tr className="bg-gray-200">
-                <th className="p-2 border">Weight</th>
-                <th className="p-2 border">Boxer 1</th>
-                <th className="p-2 border">Boxer 2</th>
-                <th className="p-2 border">Winner</th>
-                <th className="p-2 border">Edit</th>
+              <tr className="bg-gray-200 dark:bg-gray-700">
+                <th className="p-2 border dark:border-gray-600">Weight</th>
+                <th className="p-2 border dark:border-gray-600">Boxer 1</th>
+                <th className="p-2 border dark:border-gray-600">Boxer 2</th>
+                <th className="p-2 border dark:border-gray-600">Winner</th>
+                <th className="p-2 border dark:border-gray-600">Edit</th>
               </tr>
             </thead>
             <tbody>
-              {filteredFighters.length === 0 ? (
+              {filteredMatches.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-2 border text-center text-gray-500">
-                    No matches found. Please add the match.
+                  <td colSpan="5" className="p-2 border text-center text-gray-500 dark:text-gray-400">
+                    {selectedDate ? "No matches found for selected date" : "Please select a date"}
                   </td>
                 </tr>
               ) : (
-                filteredFighters.map((match) => (
-                  <tr key={match.id} className="text-center">
-                    <td className="p-2 border">{match.weight}</td>
-                    <td className="p-2 border">{match.boxer1}</td>
-                    <td className="p-2 border">{match.boxer2}</td>
-                    <td className="p-2 border">
+                filteredMatches.map((match) => (
+                  <tr key={match._id} className="text-center">
+                    <td className="p-2 border dark:border-gray-600">{match.weight}</td>
+                    <td className="p-2 border dark:border-gray-600">{boxer1.first_name} {boxer1.last_name} ({boxer1.nickname})</td> 
+                    <td className="p-2 border dark:border-gray-600">{boxer2.first_name} {boxer2.last_name} ({boxer2.nickname})</td> 
+                    <td className="p-2 border dark:border-gray-600">
                       <select
-                        value={match.result || ""}
-                        onChange={(e) => handleUpdateResult(match.id, e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={match.result}
+                        onChange={(e) => handleUpdateResult(match._id, e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
                       >
                         <option value="">Select Winner</option>
-                        <option value={match.boxer1}>{match.boxer1}</option>
-                        <option value={match.boxer2}>{match.boxer2}</option>
+                        <option value="boxer1_win">{boxer1.first_name} {boxer1.last_name} ({boxer1.nickname})</option>
+                        <option value="boxer2_win">{boxer2.first_name} {boxer2.last_name} ({boxer2.nickname})</option>
+                        <option value="draw">Draw</option>
                       </select>
                     </td>
-                    <td className="p-2 border">
+                    <td className="p-2 border dark:border-gray-600">
                       <button
-                        className="text-red-500"
-                        onClick={() => handleDeleteConfirmation(match)}
+                        className="text-green-500 dark:text-green-400"
+                        onClick={() => handleSaveConfirmation(match)}
                       >
-                        <Trash2 size={16} />
+                        <CheckCircle size={16} />
                       </button>
                     </td>
                   </tr>
@@ -178,33 +222,37 @@ export default function FormAddResult() {
             </tbody>
           </table>
 
-          <div className="flex justify-end mt-4">
-            <Button onClick={() => navigate(-1)} variant="secondary">
-              Cancel
-            </Button>
-            <Button className="ml-2" onClick={handleSaveFighter}>
+          <div className="flex justify-between mt-4">
+            <button 
+              onClick={() => navigate(-1)} 
+              className="px-4 py-2 mr-2 border border-gray-600 rounded-lg text-gray-300"
+            >
+              Back
+            </button>
+            <button 
+              onClick={handleSaveFighter} 
+              className="px-4 py-2 bg-primary text-white rounded-lg"
+            >
               Save
-            </Button>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Modal สำหรับยืนยันการลบ */}
-      {isDeleteModalOpen && (
-        <Modal
-          title="Confirm Delete"
-          onClose={handleCancelDelete}
-        >
-          <div className="space-y-4">
-            <p className="text-gray-700">Are you sure you want to delete this match?</p>
-            <div className="flex justify-end mt-4">
-              <Button onClick={handleCancelDelete} variant="secondary">Cancel</Button>
-              <Button className="ml-2" onClick={handleDeleteFighter} variant="danger">
-                Delete
-              </Button>
-            </div>
+      {isModalOpen && (
+        <Modal title="Confirm Result" onClose={handleCancelSave}>
+        <div className="space-y-4">
+          <p className="text-gray-700 dark:text-white">Are you sure you want to select this result?</p>
+          <div className="flex justify-end mt-4">
+            <button onClick={handleCancelSave} className="px-4 py-2 mr-2 border border-gray-600 rounded-lg text-gray-300">
+              Cancel
+            </button>
+            <button  className="px-4 py-2 bg-primary text-white rounded-lg" onClick={handleConfirmSave}>
+              Delete
+            </button>
           </div>
-        </Modal>
+        </div>
+      </Modal>
       )}
     </div>
   );

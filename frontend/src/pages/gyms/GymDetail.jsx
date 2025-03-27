@@ -487,8 +487,8 @@ const GymDetail = () => {
                     <p className="text-red-500">{coursesError}</p>
                   </div>
                 ) : upcomingCourses.length > 0 ? (
-                  <div className="space-y-4">
-                    {/* upcomingCourses.slice(0,5).map((course) */}
+                  <div className="space-y-4 max-h-[360px] overflow-y-auto" style={{ paddingRight: "12px" }}>
+                    {/* แสดงแค่ 3 รายการแรก และเพิ่ม scrollbar ถ้ามีมากกว่านั้น */}
                     {upcomingCourses.map((course) => (
                       <div
                         key={course.id}
@@ -534,6 +534,12 @@ const GymDetail = () => {
                         </div>
                       </div>
                     ))}
+                    {/* ถ้ามีคอร์สมากกว่า 3 ให้แสดงข้อความหรือปุ่มเพิ่มเติม */}
+                    {/* {upcomingCourses.length > 3 && (
+                      <p className="text-text/70 text-center mt-4">
+                        Scroll down to see more courses
+                      </p>
+                    )} */}
                   </div>
                 ) : (
                   <div className="text-center py-8">
@@ -546,11 +552,11 @@ const GymDetail = () => {
                   </div>
                 )}
 
-                <div className="mt-6 text-center">
+                {/* <div className="mt-6 text-center">
                   <button className="w-full px-4 py-3 bg-primary hover:bg-secondary text-white rounded-lg transition-colors">
                     View All Courses
                   </button>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

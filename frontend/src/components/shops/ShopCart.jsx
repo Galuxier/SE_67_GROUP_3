@@ -1,9 +1,24 @@
 import CartItem from "./CartItem";
 
 export default function ShopCart({ shop, onRemoveItem, onUpdateQuantity, onSelectItem, selectedItems }) {
+
+  if (!shop?.items?.length) return null;
+
+  if (!shop?.items?.length) {
+    return (
+      <div className="bg-white p-4 shadow rounded mb-4">
+        <h2 className="text-lg font-bold mb-4">
+          {shop.shop_name || "Unknown Shops"}
+        </h2>
+        <p>No items in this shop's cart</p>
+      </div>
+    );
+  }
   return (
     <div className="bg-white p-4 shadow rounded mb-4">
-      <h2 className="text-lg font-bold mb-4">{shop.shop_name || "Unknown Shop"}</h2>
+      <h2 className="text-lg font-bold mb-4">
+        {shop.shop_name || "Unknown Shop"}
+      </h2>
       <table className="w-full">
         <thead>
           <tr className="border-b">
