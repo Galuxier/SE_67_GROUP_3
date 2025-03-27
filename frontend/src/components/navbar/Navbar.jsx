@@ -5,7 +5,7 @@ import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import NotificationBell from "./NotificationBell";
-import { getImage } from "../../services/api/ImageApi";
+import { getImage } from "../../services/api/ImageApi";  
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -324,7 +324,7 @@ function Navbar() {
         </ul>
       </header>
 
-      {!isHomePage && (
+      {!isHomePage && !location.pathname.startsWith("/user") && (
         <div className="absolute w-full z-10 left-0 py-4">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="flex" aria-label="Breadcrumb">
@@ -341,7 +341,7 @@ function Navbar() {
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
-                      <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
+                      <path d="m19.707  9.293-2-2-7-7a1  1  0  0  0-1.414  0l-7  7-2  2a1  1  0  0  0  1.414  1.414L2  10.414V18a2  2  0  0  0  2  2h3a2  2  0  0  0  2-2v-4a2  2  0  0  1  2-2h2a2  2  0  0  1  2  2v4a2  2  0  0  0  2  2h3a2  2  0  0  0  2-2v-7.586l.293.293a1  1  0  0  0  1.414-1.414Z" />
                     </svg>
                     Home
                   </Link>

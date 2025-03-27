@@ -15,6 +15,7 @@ const CreateCourseForm = () => {
   const { gym_id } = useParams();
   // console.log(gym_id);
 
+
   useEffect(() => {
     if (!gymData && !gym_id) {
       toast.error("No gym data available. Please select a gym first.");
@@ -46,7 +47,7 @@ const CreateCourseForm = () => {
     startTime: "",
     endTime: "",
     description: "",
-    trainer: [], // Stores array of trainer IDs
+    trainer: [], 
     date: "",
   });
 
@@ -221,9 +222,9 @@ const CreateCourseForm = () => {
     formData.append("end_date", new Date(courseData.end_date).toISOString());
 
     formData.append("gym_id", courseData.gym_id);
-    // formData.append("status", "preparing");
+    formData.append("status", "preparing");
     // formData.append("status", "ongoing");
-    formData.append("status", "finished");
+    // formData.append("status", "finished");
     
     if (courseData.image_url) {
       formData.append("course_image_url", courseData.image_url);
@@ -241,27 +242,38 @@ const CreateCourseForm = () => {
         id: undefined, // Remove original id
         trainer_list: activity.trainer.map((trainer) => ({
           trainer_id: trainer.id, // Map trainer.id to trainer_id
-          status: trainer.statuses, 
+          // status: trainer.statuses, 
         })),
       };
     });
+    const trainer_in_course = activities.flatMap((activity) => {
+      return activity.trainer.map((trainer) => ({
+        trainer_id: trainer.id, // Map trainer.id to trainer_id
+        status: trainer.statuses, // Map trainer status
+        isMenber: trainer.statuses === 'ready' ? true : false, // Conditional logic for isMenber
+      }));
+    });
+    formData.append("trainer_in_course", JSON.stringify(trainer_in_course));
+    
+    // console.log("trainnerINcourse",trainer_in_course);
+    
 
     formData.append("activities", JSON.stringify(formattedActivities));
-    console.log("File to send:", courseData.image_url);
+    // console.log("File to send:", courseData.image_url);
     // วิธีการแสดงข้อมูลใน FormData
     for (let [key, value] of formData.entries()) {
       console.log(`${key}: ${value}`);
     }
 
-    try {
-      const response = await createCourse(formData);
-      console.log("Course created:", response);
-      toast.success("Course created successfully!");
-      navigate(`/gym/management/${gym_id}`);
-    } catch (error) {
-      console.error("Error creating course:", error);
-      toast.error("Failed to create course. Please try again.");
-    }
+    // try {
+    //   const response = await createCourse(formData);
+    //   console.log("Course created:", response);
+    //   toast.success("Course created successfully!");
+    //   navigate(`/gym/management/${gym_id}`);
+    // } catch (error) {
+    //   console.error("Error creating course:", error);
+    //   toast.error("Failed to create course. Please try again.");
+    // }
   };
 
   const handleAddActivity = (date, day) => {

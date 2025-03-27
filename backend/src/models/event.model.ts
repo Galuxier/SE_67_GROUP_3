@@ -120,15 +120,15 @@ export interface EventDocument extends Document {
 
 // สร้าง schema สำหรับ Event
 const EventSchema = new Schema<EventDocument>({
-  organizer_id: { type: Schema.Types.ObjectId, required: true },
-  location_id: { type: Schema.Types.ObjectId, required: true },
+  organizer_id: { type: Schema.Types.ObjectId, required: true, ref: 'User' }, // ref ถึง User
+  location_id: { type: Schema.Types.ObjectId, required: true, ref: 'Place' }, // เพิ่ม ref: 'Place'
   event_name: { type: String, required: true },
   description: { type: String, required: false },
   level: { type: String, enum: Object.values(Level), required: true },
   start_date: { type: Date, required: true },
   end_date: { type: Date, required: true },
   poster_url: { type: String, required: true },
-  event_type: { type: String, enum: Object.values(EventType), required: true }, // ✅ เพิ่มตรงนี้
+  event_type: { type: String, enum: Object.values(EventType), required: true },
   weight_classes: [{
     type: { type: String, required: true },
     weigh_name: { type: String, required: true },
