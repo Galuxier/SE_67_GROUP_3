@@ -1,21 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AddressForm from "../forms/AddressForm";
+import { createProductOrder } from "../../services/api/OrderApi";
 
-const PaymentForm = ({ type, DatafromOrder }) => {
+const PaymentForm = ({ type, DatafromOrder, user }) => {
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState("promptpay");
   const [formStep, setFormStep] = useState(1);
   const [errors, setErrors] = useState({});
   const [addressData, setAddressData] = useState({});
   const [isProcessing, setIsProcessing] = useState(false);
+  const [timeoutId, setTimeoutId] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState("pending");
   
   const [formData, setFormData] = useState({
     email: "",
     firstName: "",
     lastName: "",
-    phone: "", // เพิ่มฟิลด์ phone
+    phone: "",
     cardNumber: "",
     expiry: "",
     cvc: "",
@@ -26,6 +29,15 @@ const PaymentForm = ({ type, DatafromOrder }) => {
     payment_status: "pending",
     paid_at: null,
   });
+
+  // Clear timeout when component unmounts
+  useEffect(() => {
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [timeoutId]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -47,7 +59,6 @@ const PaymentForm = ({ type, DatafromOrder }) => {
       if (!formData.firstName) newErrors.firstName = "กรุณากรอกชื่อ";
       if (!formData.lastName) newErrors.lastName = "กรุณากรอกนามสกุล";
       
-      // เพิ่มการตรวจสอบเบอร์โทรศัพท์เมื่อเป็น product
       if (type === "product" && !formData.phone) {
         newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์";
       } else if (type === "product" && !/^[0-9]{10}$/.test(formData.phone)) {
@@ -67,7 +78,9 @@ const PaymentForm = ({ type, DatafromOrder }) => {
   };
 
   const createOrderData = () => {
-    // เช็ค event_type ว่าเป็น ticket หรือไม่
+    if (!user || !user._id) {
+      throw new Error("User information is missing or invalid");
+    }
     if (type === 'ticket') {
       return {
         user_id: formData.user_id,
@@ -94,9 +107,8 @@ const PaymentForm = ({ type, DatafromOrder }) => {
         status: "pending"
       };
     } else if (type === 'product') {
-      // สำหรับกรณีอื่นๆ ที่ไม่ใช่ ticket (เช่น Product)
       return {
-        user_id: formData.user_id,
+        user_id: user?._id,
         order_type: type,
         items: [{
           ref_id: DatafromOrder.product.product_id,
@@ -108,7 +120,7 @@ const PaymentForm = ({ type, DatafromOrder }) => {
         total_price: DatafromOrder.total,
         shipping_address: {
           receiver_name: `${formData.firstName} ${formData.lastName}`,
-          receiver_phone: formData.phone, // ใช้ค่า phone จาก formData
+          receiver_phone: formData.phone,
           province: addressData.province || "",
           district: addressData.district || "",
           subdistrict: addressData.subdistrict || "",
@@ -118,7 +130,7 @@ const PaymentForm = ({ type, DatafromOrder }) => {
         },
         status: "pending"
       };
-    } else  if (type === 'ads_package') {
+    } else if (type === 'ads_package') {
       return {
         user_id: formData.user_id,
         order_type: 'ads_package',
@@ -129,54 +141,36 @@ const PaymentForm = ({ type, DatafromOrder }) => {
           quantity: 1,
         }],
         total_price: DatafromOrder.package.price,
-        status: "pending" // ตั้งค่าเริ่มต้นเป็น pending
+        status: "pending"
+      };
+    } else if (type === 'cart') {
+      return {
+        user_id: user._id, // ใช้ user._id
+        order_type: 'product',
+        items: DatafromOrder.selectedProducts.map(item => ({
+          ref_id: item.product_id,
+          ref_model: "Product",
+          variant_id: item.variant_id,
+          price_at_order: item.price,
+          quantity: item.quantity
+        })),
+        total_price: DatafromOrder.total,
+        shipping_address: {
+          receiver_name: `${formData.firstName} ${formData.lastName}`,
+          receiver_phone: formData.phone,
+          province: addressData.province || "",
+          district: addressData.district || "",
+          subdistrict: addressData.subdistrict || "",
+          street: addressData.information || "",
+          postal_code: addressData.postal_code || "",
+          information: addressData.information || "",
+        },
+        status: "pending"
       };
     }
-
-  };
-  
-
-  // ส่วนที่เหลือของฟังก์ชันไม่เปลี่ยนแปลง
-  const createPaymentData = () => {
-    // ตรวจสอบและดึง order_id จากแหล่งข้อมูลต่างๆ
-    const orderId = DatafromOrder?.order_id || 
-                   DatafromOrder?.product?.product_id || 
-                   DatafromOrder?.package?._id;
-  
-    // ตรวจสอบและดึง amount จาก package.price หรือ formData.amount
-    const amount = DatafromOrder?.package?.price || 
-                  DatafromOrder?.total || 
-                  formData.amount;
-  
-    if (!orderId) {
-      console.error('No order_id found:', DatafromOrder);
-      throw new Error('Missing order_id for payment');
-    }
-  
-    return {
-      order_id: orderId,
-      user_id: formData.user_id,
-      amount: amount, // ใช้ค่าที่คำนวณได้จากด้านบน
-      payment_method: paymentMethod,
-      payment_status: "pending",
-      paid_at: null
-    };
   };
 
-  const saveToLocalStorage = (orderData, paymentData) => {
-    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-    const payments = JSON.parse(localStorage.getItem("payments") || "[]");
-    
-    orders.push(orderData);
-    payments.push(paymentData);
-    
-    localStorage.setItem("orders", JSON.stringify(orders));
-    localStorage.setItem("payments", JSON.stringify(payments));
-    
-    return { orders, payments };
-  };
-
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!validateForm(2)) {
       toast.error("กรุณากรอกข้อมูลให้ถูกต้องครบถ้วน");
       return;
@@ -186,24 +180,60 @@ const PaymentForm = ({ type, DatafromOrder }) => {
     
     try {
       const orderData = createOrderData();
-      const paymentData = createPaymentData();
       
-      // Debug logging
-      console.log('[Debug] Saving payment data:', {
-        order_id: paymentData.order_id,
-        package_id: paymentData.package_id,
-        amount: paymentData.amount
-      });
+      // ตรวจสอบข้อมูลก่อนส่ง
+      if (!orderData.user_id) {
+        throw new Error("Missing user_id");
+      }
       
-      saveToLocalStorage(orderData, paymentData);
+      if (!orderData.items || orderData.items.length === 0) {
+        throw new Error("No items in order");
+      }
+      
+      for (const item of orderData.items) {
+        if (!item.ref_id || !item.quantity) {
+          throw new Error("Invalid item data");
+        }
+      }
+  
+      console.log("Submitting order data:", orderData); // สำหรับ debug
+      
+      // Create order in the database
+
+      const createdOrder = await createProductOrder(orderData);
+      
+      // Reduce stock for each variant
+      const itemsToUpdate = type === 'cart' 
+        ? DatafromOrder.selectedProducts 
+        : [DatafromOrder.product];
+      
+      // Track stock updates for rollback if needed
+      const stockUpdates = [];
+      
       
       setFormStep(3);
-      toast.success("บันทึกข้อมูลการสั่งซื้อเรียบร้อย");
+      toast.success("Order created successfully. Please complete your payment.");
     } catch (error) {
-      console.error("Error saving data:", error);
-      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      console.error("Error creating order:", error);
+      toast.error(error.response?.data?.message || error.message || "Failed to create order");
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const completePayment = async () => {
+    try {
+      // In a real app, you would verify the payment with your payment provider here
+      setPaymentStatus("completed");
+      
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      toast.success("Payment completed successfully!");
+    } catch (error) {
+      console.error("Error completing payment:", error);
+      toast.error("Failed to complete payment");
     }
   };
 
@@ -273,7 +303,7 @@ const PaymentForm = ({ type, DatafromOrder }) => {
       </div>
 
       {/* เพิ่มช่องกรอกเบอร์โทรศัพท์เมื่อเป็น product */}
-      {type === "product" && (
+      {(type === "product"||type === "cart") && (
         <div>
           <label className="block mb-2 font-medium">เบอร์โทรศัพท์*</label>
           <input
@@ -288,7 +318,7 @@ const PaymentForm = ({ type, DatafromOrder }) => {
         </div>
       )}
 
-      {type === "product" && (
+      {(type === "product"||type === "cart") && (
         <div className="mt-4">
           <h3 className="text-lg font-semibold mb-2">ที่อยู่จัดส่ง</h3>
           <AddressForm onChange={setAddressData} />
@@ -448,23 +478,33 @@ const PaymentForm = ({ type, DatafromOrder }) => {
     <div className="text-center py-8 space-y-6">
       <div className="text-green-500 text-5xl mb-4">✓</div>
       <h2 className="text-2xl font-semibold mb-2">บันทึกการสั่งซื้อเรียบร้อย</h2>
-      <p className="text-gray-600 mb-6">สถานะปัจจุบัน: {formData.payment_status === "completed" ? "สำเร็จ" : "รอดำเนินการ"}</p>
+      <p className="text-gray-600 mb-6">สถานะปัจจุบัน: {paymentStatus === "completed" ? "สำเร็จ" : "รอดำเนินการ"}</p>
       
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={() => updatePaymentStatus("completed")}
-          className="bg-green-500 hover:bg-green-600 text-white py-2 px-6 rounded"
-          disabled={formData.payment_status === "completed"}
-        >
-          เปลี่ยนสถานะเป็นสำเร็จ
-        </button>
+      {paymentStatus === "pending" && (
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={completePayment}
+            className="bg-green-500 hover:bg-green-600 text-white py-2 px-6 rounded"
+          >
+            ยืนยันการชำระเงินเสร็จสิ้น
+          </button>
+          <button
+            onClick={() => navigate("/")}
+            className="bg-rose-500 hover:bg-rose-600 text-white py-2 px-6 rounded"
+          >
+            กลับสู่หน้าหลัก
+          </button>
+        </div>
+      )}
+      
+      {paymentStatus === "completed" && (
         <button
           onClick={() => navigate("/")}
           className="bg-rose-500 hover:bg-rose-600 text-white py-2 px-6 rounded"
         >
           กลับสู่หน้าหลัก
         </button>
-      </div>
+      )}
     </div>
   );
 

@@ -51,16 +51,18 @@ export const addItemToCart = async ({ user_id, shop_id, product_id, variant_id, 
  * @returns {Promise} - Updated cart
  */
 export const removeItemFromCart = async ({ user_id, shop_id, variant_id }) => {
-    try {
-      const response = await api.delete('/cart/remove', {
-        data: { user_id, shop_id, variant_id }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error removing item from cart:', error);
-      throw error;
-    }
-  };
+  try {
+    const response = await api.post('/cart/remove', {
+      user_id,
+      shop_id,
+      variant_id
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error removing item from cart:', error);
+    throw error;
+  }
+};
   
 
 /**
@@ -74,7 +76,7 @@ export const removeItemFromCart = async ({ user_id, shop_id, variant_id }) => {
  */
 export const updateCartItemQuantity = async ({ user_id, shop_id, variant_id, quantity }) => {
     try {
-      const response = await api.patch('/cart/update-quantity', {
+      const response = await api.post('/cart/update-quantity', {
         user_id,
         shop_id,
         variant_id,
