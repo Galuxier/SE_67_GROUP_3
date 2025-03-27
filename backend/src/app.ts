@@ -20,6 +20,7 @@ import authRoutes from './routes/auth.routes';
 import imageRoutes from './routes/image.routes';
 import enrollmentRoutes from './routes/enrollment.routes';
 import variantRoutes from './routes/variant.routes';
+import ownPackageRoutes from './routes/ownPackage.routes';
 
 const app: Application = express();
 
@@ -45,6 +46,7 @@ app.use('/api', authRoutes);
 app.use('/api', imageRoutes);
 app.use('/api', enrollmentRoutes);
 app.use('/api', variantRoutes);
+app.use('/api', ownPackageRoutes); // Add this line
 
 import { testUpload, testMultiUpload } from './middlewares/uploads/test.upload';
 app.post('/test/single', testUpload, (req, res) => {

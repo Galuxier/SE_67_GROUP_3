@@ -1,7 +1,64 @@
 import { Request, Response } from 'express';
 import OrderService from '../services/order.service';
 import { Types } from 'mongoose';
-import { OrderStatus } from '../models/order.model';
+import { OrderStatus, OrderType } from '../models/order.model';
+import OwnPackageService from '../services/ownPackage.service';
+
+export const updateOrderStatusController = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    if (!status || !Object.values(OrderStatus).includes(status)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid status provided'
+      });
+      return;
+    }
+    
+    const updatedOrder = await OrderService.updateOrderStatus(id, status);
+    
+    if (!updatedOrder) {
+      res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+      return;
+    }
+    
+    // If order is an ads package and status is now paid, create own packages
+    if (updatedOrder.order_type === OrderType.AdsPackage && status === OrderStatus.Paid) {
+      try {
+        const createdPackages = await OwnPackageService.createFromOrder(id);
+        res.status(200).json({
+          success: true,
+          message: `Order status updated to ${status}. Created ${createdPackages.length} packages.`,
+          data: updatedOrder,
+          packages: createdPackages
+        });
+        return;
+      } catch (packageErr) {
+        console.error('Error creating packages after order payment:', packageErr);
+        // Continue with regular response, but log the error
+        // We still want to acknowledge the status update even if package creation fails
+      }
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: `Order status updated to ${status}`,
+      data: updatedOrder
+    });
+  } catch (err) {
+    console.error('Error updating order status:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating order status',
+      error: err
+    });
+  }
+};
 
 export const createOrderController = async (req: Request, res: Response) => {
   try {
@@ -35,15 +92,6 @@ export const getOrderByIdController = async (req: Request, res: Response) => {
     res.status(200).json(order);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching order', error: err });
-  }
-};
-
-export const updateOrderController = async (req: Request, res: Response) => {
-  try {
-    const updatedOrder = await OrderService.update(req.params.id, req.body);
-    res.status(200).json(updatedOrder);
-  } catch (err) {
-    res.status(500).json({ message: 'Error updating order', error: err });
   }
 };
 
@@ -116,40 +164,40 @@ export const getOrdersByUserIdController = async (req: Request, res: Response) =
   }
 };
 
-export const updateOrderStatusController = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
+// export const updateOrderStatusController = async (req: Request, res: Response) => {
+//   try {
+//     const { id } = req.params;
+//     const { status } = req.body;
     
-    if (!status || !Object.values(OrderStatus).includes(status)) {
-      res.status(400).json({
-        success: false,
-        message: 'Invalid status provided'
-      });
-      return;
-    }
+//     if (!status || !Object.values(OrderStatus).includes(status)) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Invalid status provided'
+//       });
+//       return;
+//     }
     
-    const updatedOrder = await OrderService.updateOrderStatus(id, status);
+//     const updatedOrder = await OrderService.updateOrderStatus(id, status);
     
-    if (!updatedOrder) {
-      res.status(404).json({
-        success: false,
-        message: 'Order not found'
-      });
-      return;
-    }
+//     if (!updatedOrder) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'Order not found'
+//       });
+//       return;
+//     }
     
-    res.status(200).json({
-      success: true,
-      message: `Order status updated to ${status}`,
-      data: updatedOrder
-    });
-  } catch (err) {
-    console.error('Error updating order status:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Error updating order status',
-      error: err
-    });
-  }
-};
+//     res.status(200).json({
+//       success: true,
+//       message: `Order status updated to ${status}`,
+//       data: updatedOrder
+//     });
+//   } catch (err) {
+//     console.error('Error updating order status:', err);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error updating order status',
+//       error: err
+//     });
+//   }
+// };
