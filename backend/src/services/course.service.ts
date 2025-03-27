@@ -7,6 +7,8 @@ class CourseService extends BaseService<CourseDocument> {
     super(Course);
   }
 
+   
+
   async getCoursesByGymId(gymId: string): Promise<CourseDocument[]> {
     return await Course.find({ gym_id: new Types.ObjectId(gymId) });
   }

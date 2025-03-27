@@ -78,7 +78,7 @@ interface Qualifier {
 
 // กำหนด interface สำหรับ seat_zones
 interface SeatZone {
-  seat_zone_id: Schema.Types.ObjectId;
+  _id: Schema.Types.ObjectId;
   zone_name: string;
   price: number;
   seats: Seat[];

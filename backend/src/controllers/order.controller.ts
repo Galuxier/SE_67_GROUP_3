@@ -4,9 +4,12 @@ import { Types } from 'mongoose';
 
 export const createOrderController = async (req: Request, res: Response) => {
   try {
-    const newOrder = await OrderService.add(req.body);
+    // console.log("req.body: ", req.body);
+    
+    const newOrder = await OrderService.createOrder(req.body);
     res.status(201).json(newOrder);
   } catch (err) {
+    console.log(err);
     res.status(400).json({ message: 'Error creating order', error: err });
   }
 };
@@ -19,6 +22,7 @@ export const getOrdersController = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error fetching orders', error: err });
   }
 };
+
 
 export const getOrderByIdController = async (req: Request, res: Response) => {
   try {
