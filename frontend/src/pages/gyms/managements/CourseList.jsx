@@ -8,7 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { getCoursesByGymId } from "../../../services/api/CourseApi";
 import { useParams } from "react-router-dom";
-
+import { Link } from "react-router-dom";
 function CourseList() {
   const { gym_id } = useParams();
   const [courses, setCourses] = useState([]);
@@ -186,7 +186,23 @@ function CourseList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex gap-2">
+                        
+                      <Link
+                        to={
+                          gym_id
+                            ? `/gym/management/${gym_id}/course/edit/${course._id}`
+                            : `gym/management/edit/${course._id}`
+                           
+                        }
+                        className={`block p-2 rounded-md hover:bg-primary/10 ${
+                          location.pathname === "/gym/management/course/edit"
+                            ? "text-primary"
+                            : "text-text"
+                        } text-sm transition-colors`}
+                      >
                         <PencilSquareIcon className="h-5 w-5 cursor-pointer" />
+                      </Link>
+                        
                         <TrashIcon className="h-5 w-5 cursor-pointer" />
                       </div>
                     </td>
