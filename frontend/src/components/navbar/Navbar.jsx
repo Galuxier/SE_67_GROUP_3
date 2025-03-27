@@ -187,6 +187,16 @@ function Navbar() {
                               </Link>
                             </MenuItem>
                           )}
+                          {user.role.includes('trainer') && (
+                            <MenuItem>
+                              <Link
+                                to="/trainer/management"
+                                className="block px-4 py-1 text-sm text-text hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                              >
+                                Trainer
+                              </Link>
+                            </MenuItem>
+                          )}
                           {(user.role.includes('organizer') || user.role.includes('gym_owner')) && (
                             <MenuItem>
                               <Link
