@@ -13,6 +13,7 @@ import {
   CalendarIcon,
   ArrowLongLeftIcon,
 } from "@heroicons/react/24/outline";
+import { getImage } from "../../services/api/ImageApi";
 
 function Setting() {
   const [setting, setSetting] = useState(null);
@@ -40,7 +41,7 @@ function Setting() {
     weight: false,
   });
   const [currentField, setCurrentField] = useState(null);
-  const { user } = useParams();
+  const { user } = useAuth();
   // console.log("_id", JSON.parse(user._id));
   
   const birthdayInputRef = useRef(null);
@@ -63,7 +64,11 @@ function Setting() {
         
         const settingData = await getUser(user._id);
         setSetting(settingData);
-        setImage(settingData.profile_picture_url || defaultAvatar);
+        setImage(defaultAvatar)
+        if(settingData.profile_picture_url){
+          const profile = await getImage(settingData.profile_picture_url)
+          setImage(profile);
+        }
         setLoading(false);
       } catch (error) {
         console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error);

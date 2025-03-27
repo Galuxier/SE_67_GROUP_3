@@ -5,7 +5,8 @@ import {
   getEventByIdController,
   updateEventController,
   deleteEventController,
-  getEventsByOrganizerIdController
+  getEventsByOrganizerIdController,
+  searchEventsController
 } from '../controllers/event.controller';
 
 import { eventImageUpload } from '../middlewares/uploads/event.upload';
@@ -18,5 +19,6 @@ router.get('/event/:id', getEventByIdController);
 router.put('/event/:id', updateEventController);
 router.delete('/event/:id', deleteEventController);
 router.get('/organizer/:organizer_id/events', getEventsByOrganizerIdController);
+router.get('/events/search', searchEventsController);
 
 export default router;

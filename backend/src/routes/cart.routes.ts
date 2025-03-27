@@ -6,6 +6,7 @@ import {
   removeItemFromCartController,
   updateItemQuantityController
 } from '../controllers/cart.controller';
+import multerMiddleware from '../middlewares/multerMiddleware';
 
 const router = express.Router();
 

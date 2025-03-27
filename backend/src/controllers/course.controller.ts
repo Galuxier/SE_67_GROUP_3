@@ -8,6 +8,10 @@ export const createCourseController = async (req: Request, res: Response) => {
     if (req.body.activities) {
       req.body.activities = JSON.parse(req.body.activities);
     }
+
+    if (req.body.trainer_in_course){
+      req.body.trainer_in_course = JSON.parse(req.body.trainer_in_course);
+    }
     console.log(req.body);
     
     const newCourse = await CourseService.add(req.body);
@@ -24,10 +28,77 @@ export const createCourseController = async (req: Request, res: Response) => {
   }
 };
 
+export const searchCoursesController = async (req: Request, res: Response) => {
+  try {
+    // Extract query parameters
+    const { 
+      query = '', 
+      status, 
+      gym_id, 
+      province, // เพิ่ม province
+      min_price, 
+      max_price,
+      level,
+      page = '1',
+      limit = '10',
+      sort
+    } = req.query;
+    
+    // Parse numeric parameters
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 10;
+    const minPrice = min_price ? parseFloat(min_price as string) : undefined;
+    const maxPrice = max_price ? parseFloat(max_price as string) : undefined;
+    
+    // Search for courses with filters
+    const { courses, total } = await CourseService.searchCourses(
+      query as string,
+      status as string | undefined,
+      gym_id as string | undefined,
+      province as string | undefined, // เพิ่ม province
+      minPrice,
+      maxPrice,
+      level as string | undefined,
+      pageNum,
+      limitNum,
+      sort as string | undefined
+    );
+    
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limitNum);
+    
+    res.status(200).json({
+      success: true,
+      count: courses.length,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+      data: courses
+    });
+  } catch (err) {
+    console.error('Error searching courses:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error searching courses', 
+      error: err 
+    });
+  }
+};
+
 // ดึงข้อมูลคอร์สทั้งหมด
 export const getCoursesController = async (req: Request, res: Response) => {
   try {
     const courses = await CourseService.getAll();
+    res.status(200).json(courses);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching courses', error: err });
+  }
+};
+
+export const getPrepaingCourseController = async (req: Request, res: Response) => {
+  try {
+    const courses = await CourseService.getPrepaingCourse();
     res.status(200).json(courses);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching courses', error: err });
