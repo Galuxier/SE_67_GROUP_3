@@ -9,7 +9,7 @@ export enum OrderType {
   AdsPackage = 'ads_package',
 }
 
-enum OrderStatus {
+export enum OrderStatus {
   Pending = 'pending',
   Completed = 'completed',
   Cancelled = 'cancelled',

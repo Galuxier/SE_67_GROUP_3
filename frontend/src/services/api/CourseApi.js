@@ -44,17 +44,6 @@ export async function getAllCourses() {
     }
 }
 
-export async function getCourseById(course_id) {
-    try{
-        const response = await api.get(`/course/${course_id}`);
-        return response.data;
-    }catch (error){
-        console.error(error);
-        throw new error;
-        
-    }
-}
-
 /**
  * Search for courses with various filter options
  * @param {Object} params - Search parameters

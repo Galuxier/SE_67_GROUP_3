@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { getCoursesByGymId } from "../../../services/api/CourseApi";
-import { useParams } from "react-router-dom";
-import { Link } from "react-router-dom";
 
 function CourseList() {
   const { gym_id } = useParams();
