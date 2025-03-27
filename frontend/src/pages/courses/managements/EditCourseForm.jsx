@@ -7,14 +7,14 @@ import {
 } from "@heroicons/react/24/outline";
 import { toast } from "react-toastify";
 import ActivityModal from "../../../components/courses/ActivityModal";
-import { createCourse } from "../../../services/api/CourseApi";
+import { getCourseById } from "../../../services/api/CourseApi";
 import { X } from "lucide-react";
 const CreateCourseForm = () => {
   const navigate = useNavigate();
   const { gymData } = useOutletContext() || {};
-  const { gym_id } = useParams();
+  const { gym_id,course_id} = useParams();
   // console.log(gym_id);
-
+  console.log(course_id);
 
   useEffect(() => {
     if (!gymData && !gym_id) {
@@ -27,22 +27,138 @@ const CreateCourseForm = () => {
   // ใช้ location เพื่อให้การเช็ค path เป็นไปตามการเปลี่ยนแปลง URL
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
-
+  const [courseFromList,setcourseFromList] = useState([]);
   const [courseData, setCourseData] = useState({
     course_name: "",
     description: "",
-    level: "Beginner",
+    level: "beginner",
     price: "",
     max_participants: "",
     start_date: "",
     end_date: "",
-    gym_id: gym_id || (gymData ? gymData._id : ""),
-    gym_name: gymData ? gymData.gym_name : "",
+    gym_id: gym_id,
     image_url: null,
     previewImage: null,
   });
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        const course = await getCourseById(course_id);
+        console.log(course);
+        setcourseFromList(course);
 
-  const [activities, setActivities] = useState([]);
+      } catch (error) {
+        console.error("Error fetching course:", error);
+      }
+    };
+  
+    if (course_id) {
+      fetchCourse();
+    }
+    
+  }, [course_id]);
+
+//   activities
+//   : 
+//   Array(1)
+//   0
+//   : 
+//   date
+//   : 
+//   "2025-03-25T00:00:00.000Z"
+//   description
+//   : 
+//   "กกก"
+//   end_time
+//   : 
+//   "16:00"
+//   start_time
+//   : 
+//   "08:00"
+//   trainer_list
+//   : 
+//   [{…}]
+//   _id
+//   : 
+//   "67e50f2bb009a270db9cac68"
+//   [[Prototype]]
+//   : 
+//   Object
+//   length
+//   : 
+//   1
+//   [[Prototype]]
+//   : 
+//   Array(0)
+//   course_image_url
+//   : 
+//   ['courses/1743064875965-course_image_url.jfif']
+//   course_name
+//   : 
+//   "สอนมวนเริ่มต้น(เทคนิค)"
+//   description
+//   : 
+//   "เป็นการสอนง่ายด้านเทคนิค"
+//   end_date
+//   : 
+//   "2025-03-25T00:00:00.000Z"
+//   gym_id
+//   : 
+//   "67e41494a6a720488f39555b"
+//   level
+//   : 
+//   "beginner"
+//   max_participants
+//   : 
+//   6
+//   packages
+//   : 
+//   []
+//   price
+//   : 
+//   1500
+//   start_date
+//   : 
+//   "2025-03-25T00:00:00.000Z"
+//   status
+//   : 
+//   "preparing"
+const [activities, setActivities] = useState([]);
+useEffect(() => {
+  if (courseFromList) {
+    const formatDate = (date) => {
+      // ตรวจสอบว่า date มีค่าเป็น string ที่สามารถแปลงเป็น Date ได้หรือไม่
+      const parsedDate = new Date(date);
+      return parsedDate.toLocaleDateString("th-TH", {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    };
+
+    setCourseData({
+      course_name: courseFromList.course_name || "",
+      description: courseFromList.description || "",
+      level: courseFromList.level || "beginner",
+      price: courseFromList.price || "",
+      max_participants: courseFromList.max_participants || "",
+      start_date: courseFromList.start_date ? formatDate(courseFromList.start_date) : "",
+      end_date: courseFromList.end_date ? formatDate(courseFromList.end_date) : "",
+      gym_id: courseFromList.gym_id || gym_id,
+      image_url: courseFromList.course_image_url || null,
+      previewImage: courseFromList.course_image_url && courseFromList.course_image_url[0]
+        ? `http://10.35.145.93:3000/api/images/${courseFromList.course_image_url[0]}` : null
+    });
+    setActivities(courseFromList.activities || []);
+  }
+}, [courseFromList, gym_id]);
+
+//    console.log("dataaaaaa",courseData);
+   console.log("activity",activities);
+
+
+  
+   
   const [newActivity, setNewActivity] = useState({
     startTime: "",
     endTime: "",

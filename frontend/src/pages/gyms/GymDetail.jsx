@@ -444,10 +444,20 @@ const GymDetail = () => {
               </div>
               
               <div className="p-6">
-                {upcomingCourses.length > 0 ? (
-                  <div className="space-y-4">
-                    {upcomingCourses.map(course => (
-                      <div 
+                {coursesLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto"></div>
+                    <p className="text-text/70 mt-2">Loading courses...</p>
+                  </div>
+                ) : coursesError ? (
+                  <div className="text-center py-8">
+                    <p className="text-red-500">{coursesError}</p>
+                  </div>
+                ) : upcomingCourses.length > 0 ? (
+                  <div className="space-y-4 max-h-[360px] overflow-y-auto" style={{ paddingRight: "12px" }}>
+                    {/* แสดงแค่ 3 รายการแรก และเพิ่ม scrollbar ถ้ามีมากกว่านั้น */}
+                    {upcomingCourses.map((course) => (
+                      <div
                         key={course.id}
                         onClick={() => handleCourseClick(course.id)}
                         className="bg-background border border-border/10 rounded-lg p-4 cursor-pointer hover:shadow-md transition-all transform hover:-translate-y-1"
@@ -481,6 +491,12 @@ const GymDetail = () => {
                         </div>
                       </div>
                     ))}
+                    {/* ถ้ามีคอร์สมากกว่า 3 ให้แสดงข้อความหรือปุ่มเพิ่มเติม */}
+                    {/* {upcomingCourses.length > 3 && (
+                      <p className="text-text/70 text-center mt-4">
+                        Scroll down to see more courses
+                      </p>
+                    )} */}
                   </div>
                 ) : (
                   <div className="text-center py-8">
@@ -490,12 +506,12 @@ const GymDetail = () => {
                     <p className="text-text/70">No upcoming courses available</p>
                   </div>
                 )}
-                
-                <div className="mt-6 text-center">
+
+                {/* <div className="mt-6 text-center">
                   <button className="w-full px-4 py-3 bg-primary hover:bg-secondary text-white rounded-lg transition-colors">
                     View All Courses
                   </button>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

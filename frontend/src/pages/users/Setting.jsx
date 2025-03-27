@@ -42,8 +42,7 @@ function Setting() {
   });
   const [currentField, setCurrentField] = useState(null);
   const { user } = useAuth();
-  // console.log("_id", JSON.parse(user._id));
-  
+
   const birthdayInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -55,20 +54,25 @@ function Setting() {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [isCropping, setIsCropping] = useState(false);
-  const [isUploading, setIsUploading] = useState(false); // เพิ่ม state สำหรับการอัปโหลด
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const fetchSettingData = async () => {
       try {
-        // console.log(user.username);
-        
         const settingData = await getUser(user._id);
         setSetting(settingData);
-        setImage(defaultAvatar)
-        if(settingData.profile_picture_url){
-          const profile = await getImage(settingData.profile_picture_url)
-          setImage(profile);
+
+        let profilePictureUrl = defaultAvatar;
+        if (settingData.profile_picture_url) {
+          try {
+            profilePictureUrl = await getImage(settingData.profile_picture_url);
+          } catch (error) {
+            console.error("Failed to load profile picture:", error);
+            profilePictureUrl = defaultAvatar;
+          }
         }
+
+        setImage(profilePictureUrl);
         setLoading(false);
       } catch (error) {
         console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error);
@@ -89,7 +93,6 @@ function Setting() {
     }
   }, [verifiedFields.birthday]);
 
-  // Cleanup URL เพื่อป้องกัน memory leak
   useEffect(() => {
     return () => {
       if (
@@ -216,9 +219,10 @@ function Setting() {
   };
 
   const onCropComplete = async (croppedArea, croppedAreaPixelsData) => {
+    console.log("Cropped area:", croppedArea);
+    console.log("Cropped area pixels:", croppedAreaPixelsData);
     setCroppedAreaPixels(croppedAreaPixelsData);
   
-    // สร้าง preview ของรูปภาพที่ถูก crop
     try {
       const image = new Image();
       image.src = tempImage;
@@ -267,17 +271,22 @@ function Setting() {
     try {
       const image = new Image();
       image.src = tempImage;
-
-      await new Promise((resolve) => {
+  
+      await new Promise((resolve, reject) => {
         image.onload = resolve;
+        image.onerror = () => reject(new Error("Failed to load image"));
       });
-
+  
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
-
+  
+      if (!croppedAreaPixels) {
+        throw new Error("Cropped area pixels are not defined");
+      }
+  
       canvas.width = croppedAreaPixels.width;
       canvas.height = croppedAreaPixels.height;
-
+  
       ctx.beginPath();
       ctx.arc(
         croppedAreaPixels.width / 2,
@@ -288,7 +297,7 @@ function Setting() {
       );
       ctx.closePath();
       ctx.clip();
-
+  
       ctx.drawImage(
         image,
         croppedAreaPixels.x,
@@ -300,21 +309,21 @@ function Setting() {
         croppedAreaPixels.width,
         croppedAreaPixels.height
       );
-
+  
       const croppedImage = await new Promise((resolve) => {
         canvas.toBlob(
           (blob) => {
             resolve(blob);
           },
           "image/jpeg",
-          0.8 // ลดคุณภาพเพื่อให้ขนาดเล็กลง
+          0.8
         );
       });
-
+  
       const croppedFile = new File([croppedImage], "profile_picture_url.jpg", {
         type: "image/jpeg",
       });
-
+  
       return { file: croppedFile, preview: URL.createObjectURL(croppedImage) };
     } catch (error) {
       console.error("Error creating cropped image:", error);
@@ -322,7 +331,6 @@ function Setting() {
       return null;
     }
   };
-
 
   const applyCrop = async () => {
     const result = await createCroppedImage();
@@ -338,8 +346,23 @@ function Setting() {
         formData.append("profile_picture_url", result.file);
         const updatedData = await updateUser(setting._id, formData);
 
+        console.log("Updated profile picture URL:", updatedData.profile_picture_url);
+
+        let profilePictureUrl = result.preview;
+        if (updatedData.profile_picture_url) {
+          try {
+            profilePictureUrl = await getImage(updatedData.profile_picture_url);
+            if (profilePictureUrl !== result.preview) {
+              URL.revokeObjectURL(result.preview);
+            }
+          } catch (error) {
+            console.error("Failed to load updated profile picture:", error);
+            profilePictureUrl = result.preview || defaultAvatar;
+          }
+        }
+
         setSetting(updatedData);
-        setImage(updatedData.profile_picture_url || defaultAvatar);
+        setImage(profilePictureUrl);
 
         setIsCropping(false);
         setTempImage(null);
@@ -405,7 +428,7 @@ function Setting() {
                   className="w-full h-full object-cover rounded-full border-rose-100 border "
                   onError={(e) => {
                     console.log("Failed to load image:", image);
-                    e.target.src = defaultAvatar; // Fallback ถ้าโหลดไม่สำเร็จ
+                    e.target.src = defaultAvatar;
                   }}
                 />
               )}
@@ -663,7 +686,6 @@ function Setting() {
           </div>
         </div>
 
-        {/* Modal สำหรับการเปลี่ยนรหัสผ่าน */}
         {isPasswordChangeModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white dark:bg-background p-6 rounded-lg w-96">
@@ -727,7 +749,6 @@ function Setting() {
           </div>
         )}
 
-        {/* โมดัลสำหรับยืนยันรหัสผ่าน */}
         {isModalOpen && (
           <Authenticator
             isOpen={isModalOpen}
@@ -740,7 +761,6 @@ function Setting() {
         {isCropping && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-gray-900 rounded-lg w-[600px] h-[500px] flex flex-col">
-              {/* Header */}
               <div className="p-4 text-white flex justify-between items-center border-b border-gray-700">
                 <button
                   onClick={cancelCrop}
@@ -752,7 +772,6 @@ function Setting() {
                 <div></div>
               </div>
 
-              {/* Cropper Area */}
               <div className="flex-grow relative">
                 <Cropper
                   image={tempImage}
@@ -770,7 +789,6 @@ function Setting() {
                 />
               </div>
 
-              {/* Footer: Zoom Slider and Buttons */}
               <div className="p-4 border-t border-gray-700">
                 <div className="mb-4">
                   <label className="text-white text-sm mb-1 block">Zoom</label>

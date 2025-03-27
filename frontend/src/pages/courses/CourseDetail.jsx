@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { useLocation, Link, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Dialog } from "@headlessui/react";
-import Calendar from "react-calendar"; // ใช้ react-calendar
-import "react-calendar/dist/Calendar.css"; // นำเข้า styles ของ react-calendar
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import { getUser } from "../../services/api/UserApi"; // Make sure this is the correct import for the getUser function
 
 export default function CourseDetail() {
   const location = useLocation();
@@ -11,13 +12,13 @@ export default function CourseDetail() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [imageURLs, setImageURLs] = useState({});
   const [filteredActivities, setFilteredActivities] = useState([]);
-  const [showPopup, setShowPopup] = useState(false); // สถานะสำหรับการแสดงป๊อปอัพ
+  const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
+  const [trainersInfo, setTrainersInfo] = useState([]); // State to store fetched trainer info
+  const [loadingTrainers, setLoadingTrainers] = useState(true); // Track loading state
   const navigate = useNavigate();
-  
 
-  
-  // ฟังก์ชัน fetchImage
+  // ฟังก์ชัน fetch image
   const fetchImage = async (imageUrl, courseId) => {
     try {
       const response = await fetch(`/api/images/${imageUrl}`);
@@ -33,27 +34,64 @@ export default function CourseDetail() {
     }
   };
 
-  // ใช้ useEffect เพื่อโหลดภาพเมื่อคอร์สถูก render
+  // useEffect to load image when course is rendered
   useEffect(() => {
     if (course.course_image_url && course.course_image_url.length > 0) {
-      fetchImage(course.course_image_url[0], course._id); // ดึงภาพจาก URL
+      fetchImage(course.course_image_url[0], course._id); // Fetch image from URL
     }
   }, [course]);
 
-  // ฟังก์ชันสำหรับการกรองกิจกรรมที่ตรงกับวันที่ที่เลือก
+  // Fetch additional information for trainers
+  useEffect(() => {
+    const fetchTrainerData = async () => {
+      setLoadingTrainers(true); // Set loading state to true when fetching
+      const trainerData = await Promise.all(
+        course.activities.flatMap((activity) =>
+          activity.trainer_list.map(async (trainer) => {
+            try {
+              const trainerDetails = await getUser(trainer.trainer_id); // Fetch trainer data by trainer_id
+              // console.log("Fetched trainer details:", trainerDetails); // Log trainer details for debugging
+
+              // Check if trainerDetails and trainerDetails.data are valid
+              // console.log("test",trainerDetails.first_name);
+              const fullName =
+                trainerDetails?.first_name && trainerDetails?.last_name
+                  ? `${trainerDetails.first_name} ${trainerDetails.last_name} (${trainerDetails.nickname})`
+                  : "Unknown Trainer"; // Provide fallback if data is invalid
+              // console.log(fullName);
+              // Return merged trainer data with full name
+              return { ...trainer, name: fullName };
+            } catch (error) {
+              console.error("Error fetching trainer data:", error);
+              return { ...trainer, name: "Unknown Trainer" }; // In case of error, set name as "Unknown Trainer"
+            }
+          })
+        )
+      );
+      // console.log("trainnerDate",trainerData);
+      setTrainersInfo(trainerData); // Store fetched trainer data in state
+      setLoadingTrainers(false); // Set loading state to false once data is fetched
+    };
+
+    if (course.activities.length > 0) {
+      fetchTrainerData();
+    }
+  }, [course]);
+
+  // ฟังก์ชันสำหรับกรองกิจกรรมที่ตรงกับวันที่ที่เลือก
   useEffect(() => {
     const filtered = course.activities.filter((activity) => {
       const activityDate = new Date(activity.date);
       return (
         activityDate >= new Date(course.start_date) &&
         activityDate <= new Date(course.end_date) &&
-        activityDate.toDateString() === selectedDate.toDateString() // เปรียบเทียบวันที่
+        activityDate.toDateString() === selectedDate.toDateString()
       );
     });
     setFilteredActivities(filtered);
   }, [selectedDate, course]);
 
-  // ฟังก์ชันที่จะถูกเรียกเมื่อผู้ใช้เลือกวันที่ในปฏิทิน
+  // ฟังก์ชันที่ใช้เมื่อผู้ใช้เลือกวันที่ในปฏิทิน
   const handleDateChange = (date) => {
     const selectedDate = new Date(date);
     selectedDate.setHours(7, 0, 0, 0);
@@ -61,17 +99,21 @@ export default function CourseDetail() {
     const endDate = new Date(course.end_date);
 
     if (selectedDate >= startDate && selectedDate <= endDate) {
-      setSelectedDate(date); // อัปเดต selectedDate
+      setSelectedDate(date); // Update selected date
     } else {
-      // ถ้าเลือกวันที่อยู่นอกช่วง start_date ถึง end_date
-      setShowPopup(true); // แสดงป๊อปอัพ
+      // If the selected date is outside the range of start_date to end_date
+      setShowPopup(true);
       setPopupMessage(
-        `คอร์สนี้มีวันที่เริ่มต้น: ${new Date(course.start_date).toLocaleDateString()} ถึง ${new Date(course.end_date).toLocaleDateString()}`
+        `คอร์สนี้มีวันที่เริ่มต้น: ${new Date(
+          course.start_date
+        ).toLocaleDateString()} ถึง ${new Date(
+          course.end_date
+        ).toLocaleDateString()}`
       );
     }
   };
 
-  // ฟังก์ชันที่ใช้ในการปรับแต่งสีของวันที่ในปฏิทิน
+  // ฟังก์ชันสำหรับการปรับแต่งสีของวันที่ในปฏิทิน
   const tileClassName = ({ date }) => {
     const selectedDate = new Date(date);
     const startDate = new Date(course.start_date);
@@ -97,6 +139,11 @@ export default function CourseDetail() {
     }
   };
 
+  // ฟังก์ชันสำหรับการนำทางไปที่หน้าซื้อคอร์ส
+  const handleBuyCourse = () => {
+    navigate("/course/courseBuyFrom", { state: { course } });
+  };
+
   return (
     <div className="p-10 max-w-5xl mx-auto">
       <div className="flex justify-between items-center">
@@ -105,18 +152,18 @@ export default function CourseDetail() {
           <p className="text-lg text-gray-600 mt-1">{course.gym}</p>
         </div>
         <div className="flex gap-4">
-          <Link to="/course/courseBuyFrom" state={{ course }}>
-            <button className="bg-rose-600 text-white text-lg px-8 py-3 rounded-xl hover:bg-rose-600">
-              ซื้อคอร์ส
-            </button>
-          </Link>
+          <button
+            onClick={handleBuyCourse}
+            className="bg-rose-600 text-white text-lg px-8 py-3 rounded-xl hover:bg-rose-600"
+          >
+            ซื้อคอร์ส
+          </button>
         </div>
       </div>
 
       <div className="flex justify-center">
-        {/* แสดงภาพจาก Blob URL หรือจาก URL ที่ได้จากเซิร์ฟเวอร์ */}
         <img
-          src={imageURLs[course._id] || course.course_image_url[0]} // ใช้ Blob URL ถ้ามี หรือ URL จาก server
+          src={imageURLs[course._id] || course.course_image_url[0]}
           alt={course.course_name}
           className="w-200 h-200 object-cover mt-4 rounded-lg"
         />
@@ -135,7 +182,20 @@ export default function CourseDetail() {
                   {activity.description} on{" "}
                   {new Date(activity.date).toLocaleDateString()} at{" "}
                   {activity.start_time} - {activity.end_time} with{" "}
-                  {activity.trainer.join(", ")}
+                  {activity.trainer_list && activity.trainer_list.length > 0 ? (
+                    activity.trainer_list.map((trainer, trainerIndex) => (
+                      <span key={trainerIndex}>
+                        {trainersInfo.find(
+                          (t) => t.trainer_id === trainer.trainer_id
+                        )?.name || "Unknown Trainer"}
+                        {trainerIndex < activity.trainer_list.length - 1 &&
+                          ", "}{" "}
+                        {/* Add a comma except for the last trainer */}
+                      </span>
+                    ))
+                  ) : (
+                    <span>ไม่มีโค้ช</span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -143,16 +203,14 @@ export default function CourseDetail() {
         </span>
       </div>
 
-      {/* แสดงปฏิทิน */}
       <div className="mt-8">
         <Calendar
           onChange={handleDateChange}
           value={selectedDate}
-          tileClassName={tileClassName} // เพิ่ม tileClassName เพื่อปรับสีของวันที่
+          tileClassName={tileClassName}
         />
       </div>
 
-      {/* แสดงกิจกรรมในวันที่เลือก */}
       {filteredActivities.length > 0 && (
         <div className="mt-8">
           <h2 className="text-2xl font-semibold text-center mb-4">
@@ -170,7 +228,23 @@ export default function CourseDetail() {
                     {activity.end_time}
                   </div>
                   <div className="text-sm text-gray-600 mt-1">
-                    <strong>โค้ช:</strong> {activity.trainer.join(", ")}
+                    <strong>โค้ช:</strong>{" "}
+                    {activity.trainer_list &&
+                    activity.trainer_list.length > 0 ? (
+                      activity.trainer_list.map((trainer, trainerIndex) => (
+                        <span key={trainerIndex}>
+                          {/* Display trainer's name and separate with a comma except for the last one */}
+                          {trainersInfo.find(
+                            (t) => t.trainer_id === trainer.trainer_id
+                          )?.name || "Unknown Trainer"}
+                          {trainerIndex < activity.trainer_list.length - 1 &&
+                            ", "}{" "}
+                          {/* Add comma for all except the last one */}
+                        </span>
+                      ))
+                    ) : (
+                      <span>ไม่มีโค้ช</span> // Display if no trainers are present
+                    )}
                   </div>
                 </li>
               ))}
@@ -179,9 +253,6 @@ export default function CourseDetail() {
         </div>
       )}
 
-     
-
-      {/* Popup วันที่ไม่สามารถเลือกได้ */}
       {showPopup && (
         <Dialog
           open={showPopup}

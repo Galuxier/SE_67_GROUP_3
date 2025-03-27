@@ -20,11 +20,13 @@ import {
   ShieldCheckIcon
 } from "@heroicons/react/24/outline";
 import ImageViewer from "../../components/ImageViewer";
+import { addItemToCart } from "../../services/api/CartApi";
 
 export default function ProductDetail() {
   const { product_id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isLoggedIn } = useAuth();
   
   // State management
   const [isLoading, setIsLoading] = useState(true);
@@ -244,92 +246,124 @@ export default function ProductDetail() {
   };
   
   // Handle quantity changes
-  const handleDecreaseQuantity = () => {
-    if (quantity > 1) setQuantity(quantity - 1);
-  };
+  // ฟังก์ชันจัดการ Quantity
+    const handleDecreaseQuantity = () => {
+      if (quantity > 1) setQuantity(quantity - 1);
+    };
 
-  const handleIncreaseQuantity = () => {
-    const maxStock = selectedVariant?.stock || 0;
-    if (quantity < maxStock) setQuantity(quantity + 1);
-  };
-  
-  const handleQuantityChange = (e) => {
-    const value = parseInt(e.target.value, 10);
-    const maxStock = selectedVariant?.stock || 0;
-    
-    if (!isNaN(value)) {
-      if (value < 1) {
-        setQuantity(1);
-      } else if (value > maxStock) {
-        setQuantity(maxStock);
-      } else {
-        setQuantity(value);
+    const handleIncreaseQuantity = () => {
+      const maxStock = variants.length === 1 ? variants[0].stock : selectedVariant?.stock || 0;
+      if (quantity < maxStock) setQuantity(quantity + 1);
+    };
+
+    const handleQuantityChange = (e) => {
+      const value = parseInt(e.target.value, 10);
+      const maxStock = variants.length === 1 ? variants[0].stock : selectedVariant?.stock || 0;
+      
+      if (!isNaN(value)) {
+        if (value < 1) {
+          setQuantity(1);
+        } else if (value > maxStock) {
+          setQuantity(maxStock);
+        } else {
+          setQuantity(value);
+        }
       }
-    }
-  };
-  
-  // Add to cart function
-  const handleAddToCart = () => {
-    if (!selectedVariant) {
-      toast.error("Please select all product options");
-      return;
-    }
-  
-    if (selectedVariant.stock < quantity) {
-      toast.error(`Sorry, only ${selectedVariant.stock} items available in stock`);
-      return;
-    }
-  
-    const newCartItem = {
-      product_id: product._id,
-      variant_id: selectedVariant._id,
-      quantity: quantity,
-      price: selectedVariant.price,
-      image_url: selectedVariant.variant_image_url || (imageUrls[0] || ""),
-      product_name: product.product_name,
-      attribute: selectedVariant.attributes || {}
     };
   
-    let cart = JSON.parse(localStorage.getItem("cart")) || { shops: [], total_price: 0 };
-  
-    // หา shop_id ว่ามีอยู่ใน cart หรือไม่
-    const shopIndex = cart.shops.findIndex(shop => shop.shop_id === product.shop_id);
-  
-    if (shopIndex !== -1) {
-      // ถ้ามีร้านนี้แล้ว → เช็คว่าสินค้าซ้ำหรือไม่
-      const shop = cart.shops[shopIndex];
-      const itemIndex = shop.items.findIndex(
-        item => item.product_id === newCartItem.product_id && item.variant_id === newCartItem.variant_id
-      );
-  
-      if (itemIndex !== -1) {
-        shop.items[itemIndex].quantity += quantity;
-      } else {
-        shop.items.push(newCartItem);
-      }
-    } else {
-      // ถ้ายังไม่มีร้านค้า → เพิ่มร้านใหม่ (แค่ `shop_id`)
-      cart.shops.push({
-        shop_id: product.shop_id,
-        items: [newCartItem],
-      });
+  // Add to cart function
+  const handleAddToCart = async () => {
+    if (!isLoggedIn) {
+      toast("Please login before buying");
+      navigate("/login");
     }
+
+    try {
+      // กรณีสินค้ามีแค่ 1 variant (ถือว่าไม่มี variant ให้เลือก)
+      if (variants.length === 1) {
+        const defaultVariant = variants[0];
+        
+        if (defaultVariant.stock < quantity) {
+          toast.error(`Sorry, only ${defaultVariant.stock} items available in stock`);
+          return;
+        }
   
-    // คำนวณ total_price ใหม่
-    cart.total_price = cart.shops.reduce((total, shop) => {
-      return total + shop.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
-    }, 0);
+        await addItemToCart({
+          user_id: user._id,
+          shop_id: product.shop_id,
+          product_id: product._id,
+          variant_id: defaultVariant._id,
+          quantity: quantity
+        });
   
-    localStorage.setItem("cart", JSON.stringify(cart));
-    toast.success("Added to cart successfully!");
+        toast.success("Added to cart successfully!");
+        return;
+      }
+  
+      // กรณีสินค้ามีหลาย variants (ต้องเลือก variant)
+      if (variants.length > 1 && !selectedVariant) {
+        toast.error("Please select all product options");
+        return;
+      }
+  
+      if (selectedVariant.stock < quantity) {
+        toast.error(`Sorry, only ${selectedVariant.stock} items available in stock`);
+        return;
+      }
+  
+      await addItemToCart({
+        user_id: user._id,
+        shop_id: product.shop_id,
+        product_id: product._id,
+        variant_id: selectedVariant._id,
+        quantity: quantity
+      });
+  
+      toast.success("Added to cart successfully!");
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error("Failed to add item to cart");
+    }
   };
   
-  
-  
-  // Buy now function
-  // ProductDetail.jsx - ในฟังก์ชัน handleBuyNow
   const handleBuyNow = () => {
-    if (!selectedVariant) {
+    if (!isLoggedIn) {
+      toast("Please login before buying");
+      navigate("/login");
+    }
+
+    if (variants.length === 1) {
+      const defaultVariant = variants[0];
+      
+      if (defaultVariant.stock < quantity) {
+        toast.error(`Sorry, only ${defaultVariant.stock} items available in stock`);
+        return;
+      }
+  
+      const formData = {
+        type: "product",
+        product: {
+          product_id: product._id,
+          variant_id: defaultVariant._id,
+          product_name: product.product_name,
+          price: defaultVariant.price,
+          quantity: quantity,
+          attributes: {},
+          shop_id: product.shop_id,
+          shop_name: shopData?.shop_name || "Shop",
+          image_url: variantImageMapping[defaultVariant._id] || imageUrls[0] || ""
+        },
+        subTotal: defaultVariant.price * quantity,
+        shipping: 50,
+        total: (defaultVariant.price * quantity) + 50
+      };
+  
+      navigate("/shop/productPayment", { state: { formData } });
+      return;
+    }
+  
+    // กรณีสินค้ามีหลาย variants (ต้องเลือก variant)
+    if (variants.length > 1 && !selectedVariant) {
       toast.error("Please select all product options");
       return;
     }
@@ -339,7 +373,6 @@ export default function ProductDetail() {
       return;
     }
   
-    // สร้าง formData object ที่ชัดเจน
     const formData = {
       type: "product",
       product: {
@@ -350,16 +383,16 @@ export default function ProductDetail() {
         quantity: quantity,
         attributes: selectedVariant.attributes || {},
         shop_id: product.shop_id,
-        shop_name: shopData?.shop_name || "Shop"
+        shop_name: shopData?.shop_name || "Shop",
+        image_url: variantImageMapping[selectedVariant._id] || imageUrls[0] || ""
       },
       subTotal: selectedVariant.price * quantity,
       shipping: 50,
       total: (selectedVariant.price * quantity) + 50
     };
   
-    console.log("Form Data:", formData);
     navigate("/shop/productPayment", { 
-      state: { formData } // ส่งเป็น object ที่มี property ชัดเจน
+      state: { formData } 
     });
   };
   
@@ -371,12 +404,11 @@ export default function ProductDetail() {
   
   // Determine if all required options are selected
   const areAllOptionsSelected = () => {
+    // ถ้าไม่มี variants หรือ variants ว่างเปล่า ให้ถือว่าเลือกครบแล้ว
     if (!variants || variants.length === 0) return true;
     
-    // Get all unique attribute names
+    // ถ้ามี variants ให้ตรวจสอบว่าต้องเลือกครบทุก attribute
     const allAttributeNames = getAttributeNames();
-    
-    // Check if all attributes have been selected
     return allAttributeNames.every(attr => selectedAttrs[attr]);
   };
   
@@ -547,7 +579,7 @@ export default function ProductDetail() {
             </div>
             
             {/* Variant Selection */}
-            {variants.length > 0 && (
+            {variants.length > 1 && (
               <div className="mb-6 space-y-4">
                 {getAttributeNames().map((attrName) => (
                   <div key={attrName}>
@@ -592,7 +624,7 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   onClick={handleDecreaseQuantity}
-                  disabled={quantity <= 1 || !selectedVariant}
+                  disabled={quantity <= 1}
                   className="w-10 h-10 flex items-center justify-center border border-border rounded-l-lg bg-background text-text hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   -
@@ -600,24 +632,23 @@ export default function ProductDetail() {
                 <input
                   type="number"
                   min="1"
-                  max={selectedVariant?.stock || 1}
+                  max={variants.length === 1 ? variants[0].stock : selectedVariant?.stock || 1}
                   value={quantity}
                   onChange={handleQuantityChange}
-                  disabled={!selectedVariant}
                   className="w-16 h-10 border-y border-border text-center bg-background text-text focus:outline-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
                   onClick={handleIncreaseQuantity}
-                  disabled={quantity >= (selectedVariant?.stock || 0) || !selectedVariant}
+                  disabled={quantity >= (variants.length === 1 ? variants[0].stock : selectedVariant?.stock || 0)}
                   className="w-10 h-10 flex items-center justify-center border border-border rounded-r-lg bg-background text-text hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   +
                 </button>
                 
-                {selectedVariant && (
+                {(variants.length === 1 || selectedVariant) && (
                   <span className="ml-4 text-sm text-text/70">
-                    {selectedVariant.stock} available
+                    {variants.length === 1 ? variants[0].stock : selectedVariant?.stock} available
                   </span>
                 )}
               </div>
@@ -625,23 +656,25 @@ export default function ProductDetail() {
             
             {/* Add to Cart and Buy Now Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={!areAllOptionsSelected() || !selectedVariant}
-                className="flex-1 py-3 px-4 rounded-lg border border-primary text-primary hover:bg-primary/10 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent flex items-center justify-center"
-              >
-                <ShoppingCartIcon className="h-5 w-5 mr-2" />
-                Add to Cart
-              </button>
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                disabled={!areAllOptionsSelected() || !selectedVariant}
-                className="flex-1 py-3 px-4 rounded-lg bg-primary text-white hover:bg-secondary transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Buy Now
-              </button>
+            {/* ปุ่ม Add to Cart และ Buy Now */}
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={variants.length > 1 ? !areAllOptionsSelected() : false}
+              className="flex-1 py-3 px-4 rounded-lg border border-primary text-primary hover:bg-primary/10 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent flex items-center justify-center"
+            >
+              <ShoppingCartIcon className="h-5 w-5 mr-2" />
+              Add to Cart
+            </button>
+            <button
+              type="button"
+              onClick={handleBuyNow}
+              disabled={variants.length > 1 ? !areAllOptionsSelected() : false}
+              className="flex-1 py-3 px-4 rounded-lg bg-primary text-white hover:bg-secondary transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Buy Now
+            </button>
+
             </div>
             
             {/* Out of stock notification */}
@@ -723,6 +756,37 @@ export default function ProductDetail() {
               </p>
             )}
           </div>
+          {user && user.role && user.role.includes("shop_owner") ? (
+          <motion.div 
+            className="fixed bottom-6 right-6 z-30"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 15 }}
+          >
+            <Link
+              to="/shop/add-product"
+              className="flex items-center gap-2 bg-primary hover:bg-secondary text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
+            >
+              <PlusCircleIcon className="h-5 w-5" />
+              <span>Add New Product</span>
+            </Link>
+          </motion.div>
+        ) : (
+          <motion.div 
+            className="fixed bottom-6 right-6 z-30"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 15 }}
+          >
+            <Link
+              to="/shop/cart"
+              className="flex items-center gap-2 bg-primary hover:bg-secondary text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
+            >
+              <ShoppingCartIcon className="h-5 w-5" />
+              <span>View Cart</span>
+            </Link>
+          </motion.div>
+        )}
         </div>
       </div>
       

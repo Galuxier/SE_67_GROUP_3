@@ -2,7 +2,10 @@ import PropTypes from "prop-types";
 import { Plus, X, Users, Clock, Calendar, Info } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getTrainersInGym } from "../../services/api/TrainerApi";
+import {
+  getTrainersInGym,
+  getTrainersNotInGym,
+} from "../../services/api/TrainerApi";
 
 export default function ActivityModal({
   isOpen,
@@ -61,7 +64,11 @@ export default function ActivityModal({
       try {
         // Fetch all trainers in the gym
         const response = await getTrainersInGym(gym_id);
-        const allTrainers = response.data || [];
+        const response1 = await getTrainersNotInGym(gym_id);
+        const trainOutGim = response1.data || [];
+        const Trainersingym = response.data || [];
+
+        const allTrainers = [...Trainersingym, ...trainOutGim];
         console.log("Fetched Trainers:", allTrainers); // This will log the fetched trainers
         setTrainers(allTrainers); // Update state with the fetched trainers
       } catch (error) {
@@ -125,8 +132,8 @@ export default function ActivityModal({
   };
 
   const handleAddCoach = (trainerItem) => {
-    let statuss;  // ใช้ let แทน const เพื่อให้สามารถกำหนดค่าได้
-  
+    let statuss; // ใช้ let แทน const เพื่อให้สามารถกำหนดค่าได้
+
     // Check if coach is already selected
     if (
       !newActivity.trainer ||
@@ -134,32 +141,31 @@ export default function ActivityModal({
     ) {
       // กำหนดค่า statuss ตาม gym_id
       if (trainerItem.gym_id === gym_id) {
-        statuss = "ready";  // ไม่ต้องใช้ const ที่นี่
+        statuss = "ready"; // ไม่ต้องใช้ const ที่นี่
       } else {
-        statuss = "pending";  // ไม่ต้องใช้ const ที่นี่
+        statuss = "pending"; // ไม่ต้องใช้ const ที่นี่
       }
-  
+
       // สร้างข้อมูลโค้ช
       const coachInfo = {
         id: trainerItem._id,
         name: trainerItem.nickname,
         Nickname: trainerItem.nickname,
         gym_id: trainerItem.gym_id,
-        statuses: statuss,  // ใช้ค่าที่กำหนดใน statuss
+        statuses: statuss, // ใช้ค่าที่กำหนดใน statuss
       };
-      console.log("Coach Info:", coachInfo);  // แสดงข้อมูลโค้ช
+      console.log("Coach Info:", coachInfo); // แสดงข้อมูลโค้ช
       // เพิ่มโค้ชเข้าไปในกิจกรรมใหม่
       setNewActivity((prev) => ({
         ...prev,
         trainer: [...(prev.trainer || []), coachInfo], // เพิ่มโค้ชเข้าไปใน list
       }));
     }
-  
+
     // ปิด modal และรีเซ็ตคำค้นหา
     setIsCoachSelectOpen(false);
     setSearchQuery("");
   };
-  
 
   const handleRemoveCoach = (coachId) => {
     setNewActivity((prev) => ({
@@ -298,7 +304,7 @@ export default function ActivityModal({
 
   // Filter trainers based on search query
   const filteredTrainers = trainers.filter((t) => {
-    console.log("searchQuery: ", searchQuery); 
+    console.log("searchQuery: ", searchQuery);
     const nickname = t.nickname || ""; // Default to an empty string if undefined
     const firstName = t.firstName || ""; // Default to an empty string if undefined
     const lastName = t.lastName || ""; // Default to an empty string if undefined
@@ -604,136 +610,140 @@ export default function ActivityModal({
       </div>
 
       {/* Coach Selection Modal */}
-{isCoachSelectOpen && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-    <div className="w-[520px] bg-white p-6 shadow-xl rounded-xl relative max-h-[80vh] overflow-hidden flex flex-col">
-      <button
-        onClick={() => {
-          setIsCoachSelectOpen(false);
-          setSearchQuery("");
-        }}
-        className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
-      >
-        <X size={20} />
-      </button>
+      {isCoachSelectOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="w-[520px] bg-white p-6 shadow-xl rounded-xl relative max-h-[80vh] overflow-hidden flex flex-col">
+            <button
+              onClick={() => {
+                setIsCoachSelectOpen(false);
+                setSearchQuery("");
+              }}
+              className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
+            >
+              <X size={20} />
+            </button>
 
-      <h3 className="text-lg font-bold mb-4 text-gray-800">Select Coach</h3>
+            <h3 className="text-lg font-bold mb-4 text-gray-800">
+              Select Coach
+            </h3>
 
-      {/* Search input */}
-      <div className="relative mb-4">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <svg
-            className="h-5 w-5 text-gray-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+            {/* Search input */}
+            <div className="relative mb-4">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg
+                  className="h-5 w-5 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Search by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Coaches in Gym Section */}
+            <div className="mb-4">
+              <h4 className="text-md font-medium mb-2 text-gray-800">
+                Coaches in Gym
+              </h4>
+              <div className="flex overflow-x-auto pb-2 space-x-4">
+                {filteredTrainers
+                  .filter((trainerItem) => trainerItem.gym_id === gym_id) // แสดงเฉพาะโค้ชที่อยู่ใน gym เดียวกับ gym_id
+                  .map((trainerItem) => (
+                    <button
+                      key={trainerItem._id}
+                      type="button"
+                      className="flex items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors text-left"
+                      onClick={() => handleAddCoach(trainerItem)}
+                      disabled={newActivity.trainer?.some(
+                        (t) => t.id === trainerItem._id
+                      )}
+                    >
+                      <img
+                        src={
+                          imageURLs[trainerItem._id] ||
+                          "/path/to/placeholder-image.jpg" // Placeholder image if no image is loaded
+                        }
+                        alt={trainerItem.nickname}
+                        className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                      />
+                      <div className="ml-3">
+                        <p className="font-medium text-gray-800">
+                          {trainerItem.nickname}
+                        </p>
+                      </div>
+                      {newActivity.trainer?.some(
+                        (t) => t.id === trainerItem._id
+                      ) && (
+                        <span className="ml-auto bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
+                          Selected
+                        </span>
+                      )}
+                    </button>
+                  ))}
+              </div>
+            </div>
+
+            {/* Coaches out Gym Section */}
+            <div className="mb-4">
+              <h4 className="text-md font-medium mb-2 text-gray-800">
+                Coaches out Gym
+              </h4>
+              <div className="flex overflow-x-auto pb-2 space-x-4">
+                {filteredTrainers
+                  .filter((trainerItem) => trainerItem.gym_id !== gym_id) // แสดงเฉพาะโค้ชที่อยู่นอก gym เดียวกับ gym_id
+                  .map((trainerItem) => (
+                    <button
+                      key={trainerItem._id}
+                      type="button"
+                      className="flex items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors text-left"
+                      onClick={() => handleAddCoach(trainerItem)}
+                      disabled={newActivity.trainer?.some(
+                        (t) => t.id === trainerItem._id
+                      )}
+                    >
+                      <img
+                        src={
+                          imageURLs[trainerItem._id] ||
+                          "/path/to/placeholder-image.jpg" // Placeholder image if no image is loaded
+                        }
+                        alt={trainerItem.nickname}
+                        className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                      />
+                      <div className="ml-3">
+                        <p className="font-medium text-gray-800">
+                          {trainerItem.nickname}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {trainerItem.gym_id !== null ? "" : "Not in Gym"}
+                        </p>
+                      </div>
+                      {newActivity.trainer?.some(
+                        (t) => t.id === trainerItem._id
+                      ) && (
+                        <span className="ml-auto bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
+                          Selected
+                        </span>
+                      )}
+                    </button>
+                  ))}
+              </div>
+            </div>
+          </div>
         </div>
-        <input
-          type="text"
-          placeholder="Search by name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-        />
-      </div>
-
-      {/* Coaches in Gym Section */}
-      <div className="mb-4">
-        <h4 className="text-md font-medium mb-2 text-gray-800">
-          Coaches in Gym
-        </h4>
-        <div className="flex overflow-x-auto pb-2 space-x-4">
-          {filteredTrainers
-            .filter((trainerItem) => trainerItem.gym_id === gym_id) // แสดงเฉพาะโค้ชที่อยู่ใน gym เดียวกับ gym_id
-            .map((trainerItem) => (
-              <button
-                key={trainerItem._id}
-                type="button"
-                className="flex items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors text-left"
-                onClick={() => handleAddCoach(trainerItem)}
-                disabled={newActivity.trainer?.some(
-                  (t) => t.id === trainerItem._id
-                )}
-              >
-                <img
-                  src={
-                    imageURLs[trainerItem._id] ||
-                    "/path/to/placeholder-image.jpg" // Placeholder image if no image is loaded
-                  }
-                  alt={trainerItem.nickname}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
-                />
-                <div className="ml-3">
-                  <p className="font-medium text-gray-800">
-                    {trainerItem.nickname}
-                  </p>
-                </div>
-                {newActivity.trainer?.some(
-                  (t) => t.id === trainerItem._id
-                ) && (
-                  <span className="ml-auto bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
-                    Selected
-                  </span>
-                )}
-              </button>
-            ))}
-        </div>
-      </div>
-
-      {/* Coaches out Gym Section */}
-      <div className="mb-4">
-        <h4 className="text-md font-medium mb-2 text-gray-800">
-          Coaches out Gym
-        </h4>
-        <div className="flex overflow-x-auto pb-2 space-x-4">
-          {filteredTrainers
-            .filter((trainerItem) => trainerItem.gym_id !== gym_id) // แสดงเฉพาะโค้ชที่อยู่นอก gym เดียวกับ gym_id
-            .map((trainerItem) => (
-              <button
-                key={trainerItem._id}
-                type="button"
-                className="flex items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors text-left"
-                onClick={() => handleAddCoach(trainerItem)}
-                disabled={newActivity.trainer?.some(
-                  (t) => t.id === trainerItem._id
-                )}
-              >
-                <img
-                  src={
-                    imageURLs[trainerItem._id] ||
-                    "/path/to/placeholder-image.jpg" // Placeholder image if no image is loaded
-                  }
-                  alt={trainerItem.nickname}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
-                />
-                <div className="ml-3">
-                  <p className="font-medium text-gray-800">
-                    {trainerItem.nickname}
-                  </p>
-                  <p className="text-xs text-gray-500">No Gym</p>
-                </div>
-                {newActivity.trainer?.some(
-                  (t) => t.id === trainerItem._id
-                ) && (
-                  <span className="ml-auto bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
-                    Selected
-                  </span>
-                )}
-              </button>
-            ))}
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 }

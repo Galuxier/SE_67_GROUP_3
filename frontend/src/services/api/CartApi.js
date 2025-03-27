@@ -16,6 +16,7 @@ export const getUserCart = async (userId) => {
   }
 };
 
+
 /**
  * Add an item to the cart
  * @param {Object} cartItem - Item to add

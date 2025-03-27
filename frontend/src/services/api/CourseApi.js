@@ -23,7 +23,16 @@ export async function getCoursesByGymId(gym_id) {
       throw error;
     }
 }
+export async function getCourseById(course_id) {
+    try{
+        const response = await api.get(`/course/${course_id}`);
+        return response.data;
+    }catch (error){
+        console.error(error);
+        throw new error;
 
+    }
+}
 export async function getAllCourses() {
     try{
         const response = await api.get('/courses');
