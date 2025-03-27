@@ -87,14 +87,3 @@ export async function submitEnrollment(formData) {
       throw new Error(error.response?.data?.message || 'Failed to submit enrollment request');
     }
   }
-
-  export async function getAllUser() {
-    try{
-        const response = await api.get('/users');
-        console.log(response.data);
-        return response.data;
-    } catch(error){
-        console.error('Failed to get User: ', error);
-        throw error;
-    }
-  }

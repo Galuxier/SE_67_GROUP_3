@@ -37,6 +37,17 @@ export async function getCoursesByGymId(gym_id) {
       throw error;
     }
 }
+
+export async function getCoursesByOwnerId(owner_id) {
+  try {
+    const response = await api.get(`/user/${owner_id}/courses`);
+    return response.data;
+  } catch (error) {
+    console.error('Get Gym Courses Failed: ', error);
+    throw error;
+  }
+}
+
 export async function getCourseById(course_id) {
     try{
         const response = await api.get(`/course/${course_id}`);
