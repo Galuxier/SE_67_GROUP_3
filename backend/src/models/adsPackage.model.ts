@@ -1,13 +1,13 @@
 import { Schema, model, Document } from 'mongoose';
 
-enum AdsPackageType {
+export enum AdsPackageType {
   Coure = 'course',
   Event = 'event'
 }
 
 enum Status {
   Active = 'active',
-  InActive = 'in_active',
+  InActive = 'inactive',
 }
 
 export interface AdsPackageDocument extends Document {

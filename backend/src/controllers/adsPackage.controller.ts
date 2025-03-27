@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import AdsPackageService from '../services/adsPackage.service';
+import { AdsPackageType } from '../models/adsPackage.model';
 
 // สร้างแพ็คเกจโฆษณาใหม่
 export const createAdsPackageController = async (req: Request, res: Response) => {
@@ -18,6 +19,54 @@ export const getAdsPackagesController = async (req: Request, res: Response) => {
     res.status(200).json(adsPackages);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching ads packages', error: err });
+  }
+};
+
+// ดึงข้อมูลแพ็คเกจโฆษณาที่มีสถานะ active
+export const getActiveAdsPackagesController = async (req: Request, res: Response) => {
+  try {
+    const activePackages = await AdsPackageService.getActivePackages();
+    res.status(200).json({
+      success: true,
+      count: activePackages.length,
+      data: activePackages
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching active ads packages', 
+      error: err 
+    });
+  }
+};
+
+// ดึงข้อมูลแพ็คเกจโฆษณาตามประเภท (course, event, etc.)
+export const getAdsPackagesByTypeController = async (req: Request, res: Response) => {
+  try {
+    const { type } = req.params;
+    
+    // Validate package type
+    if (!Object.values(AdsPackageType).includes(type as AdsPackageType)) {
+      res.status(400).json({
+        success: false,
+        message: `Invalid package type. Must be one of: ${Object.values(AdsPackageType).join(', ')}`
+      });
+      return ;
+    }
+    
+    const packages = await AdsPackageService.getPackagesByType(type as AdsPackageType);
+    
+    res.status(200).json({
+      success: true,
+      count: packages.length,
+      data: packages
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching ads packages by type', 
+      error: err 
+    });
   }
 };
 
