@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { getCoursesByGymId } from "../../../services/api/CourseApi";
+import { useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function CourseList() {
   const { gym_id } = useParams();
@@ -152,11 +154,27 @@ function CourseList() {
                     <td colSpan="7" className="px-6 py-4 text-center text-red-500">
                       {error}
                     </td>
-                  </tr>
-                ) : filteredCourses.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
-                      No courses found.
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex gap-2">
+                        
+                      <Link
+                        to={
+                          gym_id
+                            ? `/gym/management/${gym_id}/course/edit/${course._id}`
+                            : `gym/management/edit/${course._id}`
+                           
+                        }
+                        className={`block p-2 rounded-md hover:bg-primary/10 ${
+                          location.pathname === "/gym/management/course/edit"
+                            ? "text-primary"
+                            : "text-text"
+                        } text-sm transition-colors`}
+                      >
+                        <PencilSquareIcon className="h-5 w-5 cursor-pointer" />
+                      </Link>
+                        
+                        <TrashIcon className="h-5 w-5 cursor-pointer" />
+                      </div>
                     </td>
                   </tr>
                 ) : (
