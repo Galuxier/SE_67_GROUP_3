@@ -26,7 +26,7 @@ export async function getEvents() {
     
 }
 
-export async function getEventsByOrganozerId(organizer_id) {
+export async function getEventsByOrganizerId(organizer_id) {
     try{
         const response = await api.get(`/organizer/${organizer_id}/events`)
         return response.data;

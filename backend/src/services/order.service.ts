@@ -1,10 +1,12 @@
-import { Order, OrderDocument, OrderType } from '../models/order.model';
-import { Product, ProductDocument } from '../models/product.model';
-import { Variant, VariantDocument } from '../models/variant.model';
-import { Course, CourseDocument } from '../models/course.model';
-import { Event, EventDocument } from '../models/event.model';
+import { Order, OrderDocument, OrderType, OrderStatus } from '../models/order.model';
+import { Product } from '../models/product.model';
+import { Variant } from '../models/variant.model';
+import { Course } from '../models/course.model';
+import { Event } from '../models/event.model';
 import { BaseService } from './base.service';
 import { Types } from 'mongoose';
+import mongoose from 'mongoose'; // Add this import
+import VariantService from './variant.service';
 
 class OrderService extends BaseService<OrderDocument> {
   constructor() {
@@ -58,6 +60,112 @@ class OrderService extends BaseService<OrderDocument> {
     }
   }
 
+  /**
+   * Update an order's status and handle stock adjustments accordingly
+   * @param orderId Order ID to update
+   * @param newStatus New status for the order
+   * @returns Updated order document
+   */
+  async updateOrderStatus(orderId: string, newStatus: OrderStatus): Promise<OrderDocument | null> {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const order = await Order.findById(orderId).session(session);
+      
+      if (!order) {
+        throw new Error(`Order not found: ${orderId}`);
+      }
+      
+      const oldStatus = order.status;
+      
+      // No stock changes needed if status doesn't change
+      if (oldStatus === newStatus) {
+        await session.commitTransaction();
+        return order;
+      }
+      
+      // Skip stock adjustments if this is a new order that hasn't processed stock yet
+      const isNewOrder = oldStatus === OrderStatus.Pending && 
+                         (newStatus === OrderStatus.Completed);
+      
+      // Only adjust stock for canceled/failed orders that were previously not canceled/failed
+      const needsStockRollback = (newStatus === OrderStatus.Cancelled || newStatus === OrderStatus.Failed) &&
+                               (oldStatus !== OrderStatus.Cancelled && oldStatus !== OrderStatus.Failed);
+      
+      if (needsStockRollback) {
+        // Prepare variant updates for product orders (positive quantity for stock return)
+        const variantUpdates = [];
+        
+        // Process items based on order type
+        for (const item of order.items) {
+          switch (order.order_type) {
+            case OrderType.Product:
+              if (item.variant_id) {
+                // Add to batch update list (positive quantity for stock return)
+                variantUpdates.push({
+                  variantId: item.variant_id.toString(),
+                  quantityChange: item.quantity 
+                });
+              }
+              break;
+
+            case OrderType.Course:
+              await this.updateCourseStock(item.ref_id, item.quantity, session);
+              break;
+
+            case OrderType.Ticket:
+              break;
+
+            default:
+              break;
+          }
+        }
+
+        // Batch update all product variants if needed
+        if (variantUpdates.length > 0) {
+          await VariantService.updateMultipleStocks(variantUpdates, session);
+        }
+      }
+      
+      // Update order status
+      order.status = newStatus;
+      await order.save({ session });
+      
+      // Commit the transaction
+      await session.commitTransaction();
+      return order;
+    } catch (error) {
+      // If any operation fails, abort the transaction
+      await session.abortTransaction();
+      console.error('Order status update failed:', error);
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  }
+
+  // Helper method to update course available slots
+  private async updateCourseStock(
+    courseId: Types.ObjectId, 
+    quantityChange: number, 
+    session: mongoose.ClientSession | null = null
+  ) {
+    const course = await Course.findById(courseId).session(session);
+    if (!course) throw new Error('Course not found');
+    
+    const newAvailableSlot = (course.available_slot || 0) + quantityChange;
+    
+    if (newAvailableSlot < 0) {
+      throw new Error(`Not enough available slots for course ${courseId}`);
+    }
+    
+    course.available_slot = newAvailableSlot;
+    await course.save({ session });
+    return course;
+  }
+
+
   // ตัด stock จาก Variant ของ Product
   private async updateProductStock(variantId: Types.ObjectId, quantity: number) {
     const variant = await Variant.findById(variantId);
@@ -66,18 +174,6 @@ class OrderService extends BaseService<OrderDocument> {
 
     variant.stock -= quantity;
     await variant.save();
-  }
-
-  // ตัด stock จาก Course
-  private async updateCourseStock(courseId: Types.ObjectId, quantity: number) {
-    const course = await Course.findById(courseId);
-    console.log(course);
-    
-    if (!course) throw new Error('Course not found');
-    if (course.available_slot < quantity) throw new Error('Not enough stock for course');
-
-    course.available_slot -= quantity;
-    await course.save();
   }
 
   // ตัด stock จาก Event (seat_zone)
