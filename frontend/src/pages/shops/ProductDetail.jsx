@@ -366,7 +366,7 @@ export default function ProductDetail() {
         }
       };
 
-      navigate("/shop/productPayment", { state: orderData });
+      navigate("/payment/products", { state: orderData });
       return;
     }
 
@@ -394,7 +394,7 @@ export default function ProductDetail() {
       }
     };
 
-    navigate("/shop/productPayment", { state: orderData });
+    navigate("/payment/products", { state: orderData });
   };
   
   // Open image viewer

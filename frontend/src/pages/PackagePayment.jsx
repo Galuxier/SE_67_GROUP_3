@@ -2,37 +2,35 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import PaymentForm from "../components/payment/paymentForm";
 import { getAdsPackageById } from "../services/api/AdsPackageApi";
+import { useAuth } from "../context/AuthContext"; // เพิ่ม useAuth เพื่อดึง user
 
 const PackagePayment = () => {
   const location = useLocation();
   const { state } = location;
+  const navigate = useNavigate();
+  const { user } = useAuth(); // ดึง user จาก AuthContext
   const [packageData, setPackageData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPackageData = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        
-        // ตรวจสอบว่ามีข้อมูล package ใน state หรือไม่
+
         if (!state?.package) {
           throw new Error("No package data available");
         }
 
-        // ถ้ามีข้อมูลใน state อยู่แล้ว ไม่ต้องเรียก API
+        // ใช้ข้อมูลจาก state หรือดึงจาก API ถ้าต้องการข้อมูลล่าสุด
         setPackageData(state.package);
-        
-        // หรือถ้าต้องการข้อมูลล่าสุดจาก API:
-        // const response = await getAdsPackageById(state.package.package_id);
-        // setPackageData(response);
-        
+        // const response = await getAdsPackageById(state.package._id);
+        // setPackageData(response.data);
+
       } catch (error) {
         console.error("Failed to fetch package:", error);
         setError("ไม่สามารถโหลดข้อมูลแพ็คเกจได้");
-        // นำผู้ใช้กลับไปหน้าหลักหากไม่มีข้อมูล
         navigate("/", { replace: true });
       } finally {
         setIsLoading(false);
@@ -67,24 +65,26 @@ const PackagePayment = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="md:flex">
-        <div className="md:w-2/3 p-6 border-r border-gray-200">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">ข้อมูลการชำระเงิน</h2>
-            <PaymentForm 
-            type="ads_package" 
-            DatafromOrder={{ 
-                package: packageData,
-                order_id: packageData._id, // ส่ง package._id เป็น order_id
-                total: packageData.price   // ส่ง price เป็น total เพื่อใช้ใน amount
-            }}
-            />
-          </div>
-        </div>
+          <div className="md:flex">
+            <div className="md:w-2/3 p-6 border-r border-gray-200">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold mb-4">ข้อมูลการชำระเงิน</h2>
+                <PaymentForm
+                  type="ads_package"
+                  DatafromOrder={{
+                    package_id: packageData._id, // ส่ง package_id
+                    price: packageData.price,   // ส่ง price
+                    quantity: 1,                // กำหนด quantity เป็น 1
+                    total: packageData.price    // ส่ง total
+                  }}
+                  user={user} // ส่ง user ไปด้วย
+                />
+              </div>
+            </div>
 
             <div className="md:w-1/3 p-6 bg-gray-50">
               <h2 className="text-xl font-semibold mb-4">สรุปรายการสั่งซื้อ</h2>
-              
+
               {packageData && (
                 <div className="space-y-4">
                   <div className="p-4 bg-white rounded-lg border border-gray-200">

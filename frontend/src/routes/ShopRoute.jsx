@@ -11,7 +11,6 @@ import Summary from "../pages/shops/managements/Summary";
 import ProductDetail from "../pages/shops/ProductDetail";
 import Cart from "../pages/shops/Cart";
 import ShopProfile from "../pages/shops/ShopProfile";
-import ProductPayment from "../pages/shops/ProductPayment";
 import ShopDetail from "../pages/shops/managements/ShopDetail";
 import ShopManageDashboard from "../pages/shops/managements/ShopManageDashboard";
 import AllProduct from "../pages/shops/managements/AllProduct";
@@ -27,7 +26,6 @@ function ShopRoutes() {
         <Route path=":shop_id" element={<ShopProfile />} />
         <Route path=":shop_id/:product_id" element={<ProductDetail />} />
         <Route path="cart" element={<Cart />} />
-        <Route path="productPayment" element={<ProductPayment />} />
       </Route>
 
       {/* Shop Management Routes */}
