@@ -31,15 +31,6 @@ export async function getOrdersByShopId(shop_id, status = '') {
     }
 }
 
-export async function createOrder(orderData) {
-    try {
-        const response = await api.post('/orders', orderData);
-        return response.data;
-    } catch (error) {
-        console.error('Create Order Failed: ', error);
-        throw error;
-    }
-}
 
 export async function getOrderById(order_id) {
     try {
@@ -68,6 +59,18 @@ export async function updateOrderStatus(order_id, status) {
     }
 }
 
+
+export async function createOrder(orderData) {
+    try {
+        console.log('awdad: ',orderData);
+        
+        const response = await api.post('/orders', orderData);
+        return response.data;
+    } catch (error) {
+        console.error('Create Order Failed: ', error);
+        throw error;
+    }
+}
 
 
 /**

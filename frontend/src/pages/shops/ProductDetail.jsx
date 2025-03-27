@@ -21,9 +21,10 @@ import {
 } from "@heroicons/react/24/outline";
 import ImageViewer from "../../components/ImageViewer";
 import { addItemToCart } from "../../services/api/CartApi";
+import { PlusCircleIcon } from "lucide-react";
 
 export default function ProductDetail() {
-  const { product_id } = useParams();
+  const { product_id, shop_id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isLoggedIn } = useAuth();
@@ -45,6 +46,9 @@ export default function ProductDetail() {
   const [mainSwiperRef, setMainSwiperRef] = useState(null);
   
   // Fetch product and variant data
+  const [isShopLoading, setIsShopLoading] = useState(true);
+  // const FALLBACK_SHOP_IMAGE = new URL("../../assets/images/shop-placeholder.jpg", import.meta.url).href;
+
   useEffect(() => {
     const fetchProductData = async () => {
       setIsLoading(true);
@@ -64,8 +68,6 @@ export default function ProductDetail() {
         // Fetch variants
         const variantsResponse = await getVariantsByProductId(product_id);
         const variantsList = variantsResponse.data || variantsResponse || [];
-        console.log(variantsList);
-        
         setVariants(variantsList);
         setSelectedAttrs({});
         
@@ -88,8 +90,6 @@ export default function ProductDetail() {
         
         // Get product images
         let allImageUrls = [];
-        
-        // First add product images
         if (productData.product_image_urls && productData.product_image_urls.length > 0) {
           const productImages = await Promise.all(
             productData.product_image_urls.map(async (imageUrl) => {
@@ -101,12 +101,9 @@ export default function ProductDetail() {
               }
             })
           );
-          
-          // Filter out null values from failed image fetches
           allImageUrls = productImages.filter(Boolean);
         }
         
-        // Then add variant images (that aren't duplicates)
         const variantImages = Object.values(variantImageMap);
         for (const img of variantImages) {
           if (!allImageUrls.includes(img)) {
@@ -114,29 +111,43 @@ export default function ProductDetail() {
           }
         }
         
-        // If no images at all, use fallback
         if (allImageUrls.length === 0) {
           allImageUrls = [new URL("../../assets/images/product-placeholder.jpg", import.meta.url).href];
         }
         
         setImageUrls(allImageUrls);
-        
-        // Store variant image mapping for later use
         setVariantImageMapping(variantImageMap);
-          
-        // Fetch shop data if shop_id exists
+        
+        // Fetch shop data
         if (productData.shop_id) {
+          setIsShopLoading(true);
           try {
             const shopResponse = await getShopById(productData.shop_id);
-            console.log(shopResponse);
-            shopResponse.logo_url = await getImage(shopResponse.logo_url);
-            setShopData(shopResponse.data || shopResponse);
-
+            const shopDataTemp = shopResponse.data || shopResponse;
+            
+            // พยายามโหลด logo_url แต่ถ้าไม่สำเร็จก็ใช้ fallback
+            try {
+              if (shopDataTemp.logo_url) {
+                const logoUrl = await getImage(shopDataTemp.logo_url);
+                shopDataTemp.logo_url = logoUrl;
+              } else {
+                shopDataTemp.logo_url = FALLBACK_SHOP_IMAGE;
+              }
+            } catch (imageError) {
+              console.error("Error fetching shop logo:", imageError);
+              shopDataTemp.logo_url = FALLBACK_SHOP_IMAGE;
+            }
+            
+            setShopData(shopDataTemp);
           } catch (shopError) {
             console.error("Error fetching shop data:", shopError);
-            // Non-critical error, continue without shop data
+            // ถ้าโหลด shop data ไม่ได้เลย ยังคง set shopData เป็น null
+            setShopData(null);
+          } finally {
+            setIsShopLoading(false);
           }
         }
+        
       } catch (err) {
         console.error("Error fetching product:", err);
         setError(err.message || "Failed to load product details");
@@ -328,72 +339,62 @@ export default function ProductDetail() {
   
   const handleBuyNow = () => {
     if (!isLoggedIn) {
-      toast("Please login before buying");
+      toast("กรุณาเข้าสู่ระบบก่อนสั่งซื้อ");
       navigate("/login");
+      return;
     }
 
+    // กรณีสินค้ามี variant เดียว
     if (variants.length === 1) {
       const defaultVariant = variants[0];
       
       if (defaultVariant.stock < quantity) {
-        toast.error(`Sorry, only ${defaultVariant.stock} items available in stock`);
+        toast.error(`ขออภัย สินค้ามีเพียง ${defaultVariant.stock} ชิ้นในสต็อก`);
         return;
       }
-  
-      const formData = {
+
+      const orderData = {
         type: "product",
+        DatafromOrder: {
+          product: {
+            product_id: product._id,
+            variant_id: defaultVariant._id,
+            price: defaultVariant.price,
+            quantity: quantity
+          },
+          total: defaultVariant.price * quantity
+        }
+      };
+
+      navigate("/shop/productPayment", { state: orderData });
+      return;
+    }
+
+    // กรณีสินค้ามีหลาย variants
+    if (variants.length > 1 && !selectedVariant) {
+      toast.error("กรุณาเลือกตัวเลือกสินค้าทั้งหมด");
+      return;
+    }
+
+    if (selectedVariant.stock < quantity) {
+      toast.error(`ขออภัย สินค้ามีเพียง ${selectedVariant.stock} ชิ้นในสต็อก`);
+      return;
+    }
+
+    const orderData = {
+      type: "product",
+      DatafromOrder: {
         product: {
           product_id: product._id,
-          variant_id: defaultVariant._id,
-          product_name: product.product_name,
-          price: defaultVariant.price,
-          quantity: quantity,
-          attributes: {},
-          shop_id: product.shop_id,
-          shop_name: shopData?.shop_name || "Shop",
-          image_url: variantImageMapping[defaultVariant._id] || imageUrls[0] || ""
+          variant_id: selectedVariant._id,
+          price: selectedVariant.price,
+          quantity: quantity
         },
-        subTotal: defaultVariant.price * quantity,
-        shipping: 50,
-        total: (defaultVariant.price * quantity) + 50
-      };
-  
-      navigate("/shop/productPayment", { state: { formData } });
-      return;
-    }
-  
-    // กรณีสินค้ามีหลาย variants (ต้องเลือก variant)
-    if (variants.length > 1 && !selectedVariant) {
-      toast.error("Please select all product options");
-      return;
-    }
-  
-    if (selectedVariant.stock < quantity) {
-      toast.error(`Sorry, only ${selectedVariant.stock} items available in stock`);
-      return;
-    }
-  
-    const formData = {
-      type: "product",
-      product: {
-        product_id: product._id,
-        variant_id: selectedVariant._id,
-        product_name: product.product_name,
-        price: selectedVariant.price,
-        quantity: quantity,
-        attributes: selectedVariant.attributes || {},
-        shop_id: product.shop_id,
-        shop_name: shopData?.shop_name || "Shop",
-        image_url: variantImageMapping[selectedVariant._id] || imageUrls[0] || ""
-      },
-      subTotal: selectedVariant.price * quantity,
-      shipping: 50,
-      total: (selectedVariant.price * quantity) + 50
+        total: selectedVariant.price * quantity
+      }
     };
-  
-    navigate("/shop/productPayment", { 
-      state: { formData } 
-    });
+
+    navigate("/shop/productPayment", { state: orderData });
   };
   
   // Open image viewer
@@ -410,6 +411,50 @@ export default function ProductDetail() {
     // ถ้ามี variants ให้ตรวจสอบว่าต้องเลือกครบทุก attribute
     const allAttributeNames = getAttributeNames();
     return allAttributeNames.every(attr => selectedAttrs[attr]);
+  };
+
+  const renderShopInformation = () => {
+    if (isShopLoading) {
+      return (
+        <div className="mt-8 border-t border-border/30 pt-6">
+          <div className="flex items-center justify-center p-4">
+            <ClipLoader size={30} color="#E11D48" />
+            <span className="ml-2 text-text">Loading shop information...</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (!shopData) {
+      return null;
+    }
+
+    return (
+      <div className="mt-8 border-t border-border/30 pt-6">
+        <Link
+          to={`/shop/${shopData._id}`}
+          className="block p-4 border border-border rounded-lg bg-card hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        >
+          <div className="flex items-center">
+            <div className="w-12 h-12 mr-4">
+              <img
+                src={shopData.logo_url || FALLBACK_SHOP_IMAGE}
+                alt="Shop logo"
+                className="w-full h-full object-cover rounded-full border border-border/50"
+                onError={(e) => {
+                  e.target.src = FALLBACK_SHOP_IMAGE;
+                }}
+              />
+            </div>
+            <div className="flex-grow">
+              <h3 className="font-semibold text-text">{shopData.shop_name || "Shop"}</h3>
+              <p className="text-sm text-text/70">{shopData.description || "Visit shop for more products"}</p>
+            </div>
+            <span className="text-sm text-primary">View Shop →</span>
+          </div>
+        </Link>
+      </div>
+    );
   };
   
   // Loading state
@@ -712,33 +757,7 @@ export default function ProductDetail() {
         </div>
         
         {/* Shop Information */}
-        {shopData && (
-          <div className="mt-8 border-t border-border/30 pt-6">
-            <Link
-              to={`/shop/${shopData._id}`}
-              className="block p-4 border border-border rounded-lg bg-card hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              <div className="flex items-center">
-                {shopData.logo_url ? (
-                  <img
-                    src={shopData.logo_url}
-                    alt="Shop logo"
-                    className="w-12 h-12 object-cover rounded-full mr-4 border border-border/50"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-primary/20 mr-4 flex items-center justify-center">
-                    <BuildingStorefrontIcon className="h-6 w-6 text-primary" />
-                  </div>
-                )}
-                <div className="flex-grow">
-                  <h3 className="font-semibold text-text">{shopData.shop_name || "Shop"}</h3>
-                  <p className="text-sm text-text/70">{shopData.description || "Visit shop for more products"}</p>
-                </div>
-                <span className="text-sm text-primary">View Shop →</span>
-              </div>
-            </Link>
-          </div>
-        )}
+        {renderShopInformation()}
         
         {/* Product Description */}
         <div className="mt-8 border-t border-border/30 pt-6">

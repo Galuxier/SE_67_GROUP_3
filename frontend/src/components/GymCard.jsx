@@ -137,10 +137,10 @@ const GymCardItem = ({ gym, onClick }) => {
           <>
             <h3 className="text-lg font-bold text-text mb-2">{gym.gym_name}</h3>
             <div className="flex items-center text-sm text-text/70 mb-3">
-              <MapPinIcon className="w-4 h-4 flex-shrink-0 mr-1" />
-              <span>{gym.address?.district || "-"}, {gym.address?.province || "-"}</span>
+              <MapPinIcon className="w-4 h-4 flex-shrink-0 mr-1 text-text" />
+              <span className="text-text">{gym.address?.district || "-"}, {gym.address?.province || "-"}</span>
             </div>
-            <p className="text-text/80 text-sm mb-4 line-clamp-2">
+            <p className="text-text/80 text-sm mb-4 line-clamp-2 text-text">
               {gym.description || "Experience authentic Muay Thai training with expert coaches in a welcoming environment."}
             </p>
             <div className="flex justify-end">
