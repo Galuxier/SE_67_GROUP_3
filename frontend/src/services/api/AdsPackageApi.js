@@ -46,6 +46,11 @@ const mockPurchased = [
 
 export async function createAdsPackage(formData) {
   try {
+    // ตรวจสอบว่ามี status หรือไม่ ถ้าไม่มีให้เพิ่มค่า default
+    if (!formData.has('status')) {
+      formData.append('status', 'active');
+    }
+
     const response = await api.post("/adsPackages", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
@@ -54,6 +59,10 @@ export async function createAdsPackage(formData) {
     return response.data;
   } catch (error) {
     console.error("Failed to create ads package:", error);
+    if (error.response) {
+      console.error("Server response:", error.response.data);
+      throw new Error(error.response.data.message || "Failed to create package");
+    }
     throw error;
   }
 }
@@ -129,6 +138,41 @@ export async function purchasePackage(packageId) {
     return response.data;
   } catch (error) {
     console.error("Failed to purchase package:", error);
+    throw error;
+  }
+}
+
+export async function togglePackageActive(packageId, active) {
+  try {
+    // สำหรับ development ใช้ mock data
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Mock toggling package ${packageId} to ${active ? 'active' : 'inactive'}`);
+      const index = mockPurchased.findIndex(p => p._id === packageId || p.packageId === packageId);
+      if (index !== -1) {
+        mockPurchased[index].status = active ? "active" : "inactive";
+        console.log(`Package status updated:`, mockPurchased[index]);
+        return mockPurchased[index];
+      }
+      throw new Error('Package not found');
+    }
+
+    // สำหรับ production ใช้ API จริง
+    const response = await api.patch(`/user/packages/${packageId}/active`, {
+      active
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to toggle package status:", error);
+    throw error;
+  }
+}
+
+export async function getAdsPackageById(packageId) {
+  try {
+    const response = await api.get(`/adsPackages/${packageId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch ads package:", error);
     throw error;
   }
 }

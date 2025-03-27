@@ -93,7 +93,7 @@ const PaymentForm = ({ type, DatafromOrder }) => {
         },
         status: "pending"
       };
-    } else {
+    } else if (type === 'product') {
       // สำหรับกรณีอื่นๆ ที่ไม่ใช่ ticket (เช่น Product)
       return {
         user_id: formData.user_id,
@@ -118,16 +118,45 @@ const PaymentForm = ({ type, DatafromOrder }) => {
         },
         status: "pending"
       };
+    } else  if (type === 'ads_package') {
+      return {
+        user_id: formData.user_id,
+        order_type: 'ads_package',
+        items: [{
+          ref_id: DatafromOrder.package._id,
+          ref_model: "AdsPackage",
+          price_at_order: DatafromOrder.package.price,
+          quantity: 1,
+        }],
+        total_price: DatafromOrder.package.price,
+        status: "pending" // ตั้งค่าเริ่มต้นเป็น pending
+      };
     }
+
   };
   
 
   // ส่วนที่เหลือของฟังก์ชันไม่เปลี่ยนแปลง
   const createPaymentData = () => {
+    // ตรวจสอบและดึง order_id จากแหล่งข้อมูลต่างๆ
+    const orderId = DatafromOrder?.order_id || 
+                   DatafromOrder?.product?.product_id || 
+                   DatafromOrder?.package?._id;
+  
+    // ตรวจสอบและดึง amount จาก package.price หรือ formData.amount
+    const amount = DatafromOrder?.package?.price || 
+                  DatafromOrder?.total || 
+                  formData.amount;
+  
+    if (!orderId) {
+      console.error('No order_id found:', DatafromOrder);
+      throw new Error('Missing order_id for payment');
+    }
+  
     return {
-      order_id: formData.order_id,
+      order_id: orderId,
       user_id: formData.user_id,
-      amount: formData.amount,
+      amount: amount, // ใช้ค่าที่คำนวณได้จากด้านบน
       payment_method: paymentMethod,
       payment_status: "pending",
       paid_at: null
@@ -152,12 +181,19 @@ const PaymentForm = ({ type, DatafromOrder }) => {
       toast.error("กรุณากรอกข้อมูลให้ถูกต้องครบถ้วน");
       return;
     }
-
+  
     setIsProcessing(true);
     
     try {
       const orderData = createOrderData();
       const paymentData = createPaymentData();
+      
+      // Debug logging
+      console.log('[Debug] Saving payment data:', {
+        order_id: paymentData.order_id,
+        package_id: paymentData.package_id,
+        amount: paymentData.amount
+      });
       
       saveToLocalStorage(orderData, paymentData);
       

@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import PackageCard from "../../../components/PackageCard";
-import { getAdsPackages, getPurchasedPackages } from "../../../services/api/AdsPackageApi";
+import { 
+  getAdsPackages, 
+  getPurchasedPackages,
+  purchasePackage,
+  togglePackageActive,
+  getAdsPackagesByType
+} from "../../../services/api/AdsPackageApi";
 
 const EventPackage = () => {
   const [packages, setPackages] = useState([]);
@@ -10,35 +16,54 @@ const EventPackage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // ดึงแพ็กเกจทั้งหมดและกรองเฉพาะ type event
-        const allPackages = await getAdsPackages();
-        const eventPackages = allPackages.filter(pkg => pkg.type === "event");
+        setLoading(true);
+        // ใช้ getAdsPackagesByType แทนการ filter ฝั่ง client
+        const eventPackages = await getAdsPackagesByType("event"); // หรือ "course" สำหรับ CoursePackage
         setPackages(eventPackages);
-
-        // ดึงแพ็กเกจที่ซื้อแล้ว
-        const purchased = await getPurchasedPackages("event");
+  
+        const purchased = await getPurchasedPackages("event"); // หรือ "course" สำหรับ CoursePackage
         setPurchasedPackages(purchased);
       } catch (error) {
         console.error("Failed to fetch packages:", error);
+        // อาจเพิ่มการแสดง error ให้ผู้ใช้เห็น
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchData();
   }, []);
 
   const handlePurchase = async (packageId) => {
     try {
-      // สมมติว่ามี API สำหรับซื้อแพ็กเกจ
-      // await purchasePackage(packageId);
-      alert(`Purchased package ${packageId} successfully`);
-      // Refresh ข้อมูลหลังจากซื้อ
-      const purchased = await getPurchasedPackages("event");
-      setPurchasedPackages(purchased);
+      console.log(`Starting purchase for package ${packageId}`);
+      const purchased = await purchasePackage(packageId);
+      console.log("Purchase successful:", purchased);
+      
+      // Refresh purchased packages
+      const updatedPurchased = await getPurchasedPackages("event");
+      setPurchasedPackages(updatedPurchased);
+      
+      alert(`Purchased package successfully!`);
     } catch (error) {
       console.error("Purchase failed:", error);
-      alert("Purchase failed: " + error.message);
+      alert(`Purchase failed: ${error.message}`);
+    }
+  };
+
+  const handleToggleActive = async (packageId, newStatus) => {
+    try {
+      console.log(`Setting package ${packageId} to ${newStatus ? "active" : "inactive"}`);
+      await togglePackageActive(packageId, newStatus);
+      
+      // Refresh purchased packages
+      const updatedPurchased = await getPurchasedPackages("event");
+      setPurchasedPackages(updatedPurchased);
+      
+      console.log(`Package ${packageId} status updated successfully`);
+    } catch (error) {
+      console.error(`Failed to toggle package status:`, error);
+      throw error;
     }
   };
 
@@ -62,7 +87,7 @@ const EventPackage = () => {
             <PackageCard 
               key={pkg._id} 
               packageData={pkg} 
-              onPurchase={handlePurchase} 
+              onPurchase={handlePurchase}
             />
           ))}
         </div>
@@ -78,6 +103,8 @@ const EventPackage = () => {
                 key={pkg._id} 
                 packageData={pkg} 
                 isPurchased={true}
+                isActive={pkg.status === "active"}
+                onToggleActive={handleToggleActive}
               />
             ))}
           </div>
