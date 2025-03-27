@@ -7,7 +7,8 @@ import {
     deleteGymController,
     getTrainersByGymIdController,
     getBoxersByGymIdController,
-    checkGymNameController
+    checkGymNameController,
+    searchGymsController
 } from '../controllers/gym.controller';
 import { gymImagesUpload } from '../middlewares/uploads/gym.upload';
 
@@ -27,6 +28,7 @@ router.delete('/gym/:id', deleteGymController);
 router.get('/gym/:id/trainers', getTrainersByGymIdController);
 router.get('/gym/:id/boxers', getBoxersByGymIdController);
 router.get('/gym/check-name/:gymName', checkGymNameController);
+router.get('/gyms/search', searchGymsController);
 
 
 export default router;

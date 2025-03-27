@@ -1,7 +1,7 @@
 import { Schema, model, Document } from 'mongoose';
 
 // กำหนด enum สำหรับ status ใน course
-enum CourseStatus {
+export enum CourseStatus {
   Preparing = 'preparing',
   Ongoing = 'ongoing',
   Finished = 'finished',
@@ -64,6 +64,8 @@ export interface CourseDocument extends Document {
   activities: Activity[];
   packages: Package[];
   trainer_in_course: TrainerInCourse[];
+  max_participants: number;
+  available_slot: number;
 }
 
 // สร้าง schema สำหรับ Course
@@ -96,7 +98,9 @@ const CourseSchema = new Schema<CourseDocument>({
     trainer_id: { type: Schema.Types.ObjectId, required: true},
     status: { type : String, enum: TrainerStatus, required: true },
     isMenber:{type: Boolean , require:true}
-   }]
+   }],
+   max_participants: { type: Number, required: true },
+   available_slot: { type: Number }
 });
 
 // สร้างโมเดล Course
