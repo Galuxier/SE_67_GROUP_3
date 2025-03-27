@@ -334,7 +334,11 @@ function Navbar() {
         </ul>
       </header>
 
-      {!isHomePage && !location.pathname.startsWith("/user") && !location.pathname.startsWith('/shop/cart') && !location.pathname.startsWith('/shop/productPayment') &&  (
+      {!isHomePage && !location.pathname.startsWith("/user") 
+        && !location.pathname.startsWith('/shop/cart') 
+        && !location.pathname.startsWith('/shop/productPayment') 
+        && !location.pathname.startsWith("/payment")
+        &&  (
         <div className="absolute w-full z-10 left-0 py-4">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="flex" aria-label="Breadcrumb">

@@ -171,6 +171,39 @@ export async function createTicketOrder(ticketOrderData) {
 }
 
 /**
+ * Create a package order
+ * 
+ * @param {Object} packageOrderData - Data needed for creating a course order
+ * @param {string} packageOrderData.user_id - User ID
+ * @param {string} packageOrderData.package_id - Course ID
+ * @param {number} packageOrderData.quantity - Quantity of slots to book
+ * @param {number} packageOrderData.price - Price of the course
+ * @param {Object} packageOrderData.shippingAddress - Shipping address object
+ * @returns {Promise<Object>} - The created order
+ */
+export async function createPackageOrder(courseOrderData) {
+    const { user_id, package_id, quantity, price, shippingAddress } = courseOrderData;
+    
+    const orderData = {
+        user_id,
+        order_type: "ads_package",
+        items: [
+            {
+                ref_id: package_id,
+                ref_model: "AdsPackage",
+                price_at_order: price,
+                quantity
+            }
+        ],
+        total_price: price * quantity,
+        shipping_address: shippingAddress,
+        status: "pending"
+    };
+    
+    return createOrder(orderData);
+}
+
+/**
  * Cancel an order
  * 
  * @param {string} order_id - The ID of the order to cancel

@@ -45,7 +45,7 @@ export default function CourseBuyFrom() {
         </div>
 
         <div className="mt-6">
-        <Link to ="/course/courseCheck" state={{ course, quantity }}>
+        <Link to ="/payment/course" state={{ course, quantity }}>
           <button className="w-full bg-red-500 hover:bg-red-600 text-white py-3 text-lg rounded-xl">
             ซื้อคอร์ส
           </button>

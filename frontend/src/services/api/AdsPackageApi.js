@@ -169,7 +169,7 @@ export async function togglePackageActive(packageId, active) {
 
 export async function getAdsPackageById(packageId) {
   try {
-    const response = await api.get(`/adsPackages/${packageId}`);
+    const response = await api.get(`/adsPackage/${packageId}`);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch ads package:", error);

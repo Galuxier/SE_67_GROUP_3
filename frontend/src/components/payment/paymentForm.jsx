@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AddressForm from "../forms/AddressForm";
-import { createProductOrder, createTicketOrder, createCourseOrder } from "../../services/api/OrderApi";
+import { createProductOrder, createTicketOrder, createCourseOrder, createPackageOrder } from "../../services/api/OrderApi";
 
 const PaymentForm = ({ type, DatafromOrder, user }) => {
   const navigate = useNavigate();
@@ -54,11 +54,18 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
       if (!formData.firstName) newErrors.firstName = "กรุณากรอกชื่อ";
       if (!formData.lastName) newErrors.lastName = "กรุณากรอกนามสกุล";
       
-      if (["product", "cart", "ticket"].includes(type)) {
-        if (!formData.phone) newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์";
-        else if (!/^[0-9]{10}$/.test(formData.phone)) 
-          newErrors.phone = "เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลัก";
-      }
+      if (!formData.phone) newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์";
+      else if (!/^[0-9]{10}$/.test(formData.phone)) 
+        newErrors.phone = "เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลัก";
+
+      // ตรวจสอบข้อมูลที่อยู่จาก AddressForm
+      if (!addressData.province) newErrors.province = "กรุณาเลือกจังหวัด";
+      if (!addressData.district) newErrors.district = "กรุณาเลือกอำเภอ";
+      if (!addressData.subdistrict) newErrors.subdistrict = "กรุณาเลือกตำบล";
+      if (!addressData.postal_code) newErrors.postal_code = "กรุณากรอกรหัสไปรษณีย์";
+      else if (!/^[0-9]{5}$/.test(addressData.postal_code)) 
+        newErrors.postal_code = "รหัสไปรษณีย์ต้องเป็นตัวเลข 5 หลัก";
+      if (!addressData.information) newErrors.information = "กรุณากรอกข้อมูลที่อยู่เพิ่มเติม";
     }
     
     if (step === 2 && paymentMethod === "card") {
@@ -73,7 +80,7 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
   };
 
   const getOrderData = () => {
-    const shippingAddress = ["product", "cart", "ticket"].includes(type) ? {
+    const shippingAddress = {
       receiver_name: `${formData.firstName} ${formData.lastName}`,
       receiver_phone: formData.phone,
       province: addressData.province || "",
@@ -82,16 +89,16 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
       street: addressData.information || "",
       postal_code: addressData.postal_code || "",
       information: addressData.information || ""
-    } : undefined;
+    };
 
     switch (type) {
       case "product":
         return {
           user_id: user?._id,
           items: [{
-            product_id: DatafromOrder.product.product_id, // ใช้ product_id
+            product_id: DatafromOrder.product.product_id,
             variant_id: DatafromOrder.product.variant_id,
-            price: DatafromOrder.product.price, // ใช้ price
+            price: DatafromOrder.product.price,
             quantity: DatafromOrder.product.quantity
           }],
           total_price: DatafromOrder.total,
@@ -101,9 +108,9 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
         return {
           user_id: user?._id,
           items: DatafromOrder.selectedProducts.map(item => ({
-            product_id: item.product_id, // ใช้ product_id
+            product_id: item.product_id,
             variant_id: item.variant_id,
-            price: item.price, // ใช้ price
+            price: item.price,
             quantity: item.quantity
           })),
           total_price: DatafromOrder.total,
@@ -133,12 +140,10 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
       case "ads_package":
         return {
           user_id: user?._id,
-          items: [{
-            product_id: DatafromOrder.package._id, // ใช้ product_id
-            price: DatafromOrder.package.price, // ใช้ price
-            quantity: 1
-          }],
-          total_price: DatafromOrder.package.price
+          package_id: DatafromOrder.package_id,
+          quantity: DatafromOrder.quantity || 1,
+          price: DatafromOrder.price,
+          shippingAddress // ส่ง shippingAddress สำหรับ ads_package ด้วย
         };
       default:
         throw new Error("Invalid order type");
@@ -174,7 +179,7 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
           createdOrder = await createCourseOrder(orderData);
           break;
         case "ads_package":
-          createdOrder = await createProductOrder(orderData);
+          createdOrder = await createPackageOrder(orderData);
           break;
         default:
           throw new Error("Unsupported order type");
@@ -182,7 +187,7 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
 
       console.log("Order: ", createdOrder);
       toast.success("สร้างคำสั่งซื้อสำเร็จ กรุณาดำเนินการชำระเงิน");
-      // setFormStep(3); // ถ้าต้องการแสดงหน้ายืนยัน
+      setFormStep(3); // แสดงหน้ายืนยัน
     } catch (error) {
       console.error("Payment error:", error);
       toast.error(error.message || "เกิดข้อผิดพลาดในการสร้างคำสั่งซื้อ");
@@ -230,25 +235,27 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
         </div>
       </div>
 
-      {["product", "cart", "ticket"].includes(type) && (
-        <>
-          <div>
-            <label className="block mb-2 font-medium">เบอร์โทรศัพท์*</label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => handleInputChange("phone", e.target.value)}
-              className={`w-full border ${errors.phone ? "border-red-500" : "border-gray-300"} p-2 rounded`}
-              required
-            />
-            {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
-          </div>
-          <div className="mt-4">
-            <h3 className="text-lg font-semibold mb-2">ที่อยู่จัดส่ง</h3>
-            <AddressForm onChange={setAddressData} />
-          </div>
-        </>
-      )}
+      <div>
+        <label className="block mb-2 font-medium">เบอร์โทรศัพท์*</label>
+        <input
+          type="tel"
+          value={formData.phone}
+          onChange={(e) => handleInputChange("phone", e.target.value)}
+          className={`w-full border ${errors.phone ? "border-red-500" : "border-gray-300"} p-2 rounded`}
+          required
+        />
+        {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+      </div>
+
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold mb-2">ที่อยู่จัดส่ง*</h3>
+        <AddressForm onChange={setAddressData} />
+        {errors.province && <p className="text-red-500 text-sm mt-1">{errors.province}</p>}
+        {errors.district && <p className="text-red-500 text-sm mt-1">{errors.district}</p>}
+        {errors.subdistrict && <p className="text-red-500 text-sm mt-1">{errors.subdistrict}</p>}
+        {errors.postal_code && <p className="text-red-500 text-sm mt-1">{errors.postal_code}</p>}
+        {errors.information && <p className="text-red-500 text-sm mt-1">{errors.information}</p>}
+      </div>
 
       <div className="mt-4">
         <h3 className="text-lg font-semibold mb-2">วิธีการชำระเงิน*</h3>
@@ -291,6 +298,53 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
       </button>
       <h2 className="text-xl font-semibold">ข้อมูลบัตรเครดิต/เดบิต</h2>
       {/* Card payment fields remain the same */}
+      <div>
+        <label className="block mb-2 font-medium">หมายเลขบัตร*</label>
+        <input
+          type="text"
+          value={formData.cardNumber}
+          onChange={(e) => handleInputChange("cardNumber", e.target.value)}
+          className={`w-full border ${errors.cardNumber ? "border-red-500" : "border-gray-300"} p-2 rounded`}
+          required
+        />
+        {errors.cardNumber && <p className="text-red-500 text-sm mt-1">{errors.cardNumber}</p>}
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block mb-2 font-medium">วันหมดอายุ*</label>
+          <input
+            type="text"
+            value={formData.expiry}
+            onChange={(e) => handleInputChange("expiry", e.target.value)}
+            className={`w-full border ${errors.expiry ? "border-red-500" : "border-gray-300"} p-2 rounded`}
+            placeholder="MM/YY"
+            required
+          />
+          {errors.expiry && <p className="text-red-500 text-sm mt-1">{errors.expiry}</p>}
+        </div>
+        <div>
+          <label className="block mb-2 font-medium">CVC*</label>
+          <input
+            type="text"
+            value={formData.cvc}
+            onChange={(e) => handleInputChange("cvc", e.target.value)}
+            className={`w-full border ${errors.cvc ? "border-red-500" : "border-gray-300"} p-2 rounded`}
+            required
+          />
+          {errors.cvc && <p className="text-red-500 text-sm mt-1">{errors.cvc}</p>}
+        </div>
+      </div>
+      <div>
+        <label className="block mb-2 font-medium">ชื่อผู้ถือบัตร*</label>
+        <input
+          type="text"
+          value={formData.cardHolder}
+          onChange={(e) => handleInputChange("cardHolder", e.target.value)}
+          className={`w-full border ${errors.cardHolder ? "border-red-500" : "border-gray-300"} p-2 rounded`}
+          required
+        />
+        {errors.cardHolder && <p className="text-red-500 text-sm mt-1">{errors.cardHolder}</p>}
+      </div>
       <button
         onClick={handlePayment}
         className="w-full bg-rose-500 hover:bg-rose-600 text-white py-2 px-4 rounded mt-2"

@@ -20,7 +20,17 @@ export async function getUser(_id) {
         console.error('Failed to get User: ', error);
         throw error;
     }
-    
+}
+
+export async function getAllUser() {
+  try{
+      const response = await api.get('/users');
+      console.log(response.data);
+      return response.data;
+  } catch(error){
+      console.error('Failed to get User: ', error);
+      throw error;
+  }
 }
 
 export async function createTempUser(formData){

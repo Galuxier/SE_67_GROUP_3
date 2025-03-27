@@ -79,7 +79,7 @@ const PackageCard = ({
           // ในส่วนของปุ่ม Purchase Now ให้แก้ไขเป็น:
           <button
           onClick={() => {
-            navigate("/package/packagePayment", {
+            navigate("/payment/package", {
               state: {
                 package: {
                   _id: packageData._id,

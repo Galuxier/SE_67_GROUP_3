@@ -40,9 +40,8 @@ import ShopRoutes from "./routes/ShopRoute";
 import UserRoutes from "./routes/UserRoute";
 import AdminRoutes from "./routes/AdminRoute";
 import PlaceRoutes from "./routes/PlaceRoute";
-// import AdminRouteGuard from "./routes/guards/AdminRouteGuard";
 import { AdminRouteGuard } from "./routes/guards/RouteGuard";
-import PackageRoutes from "./routes/PackageRoute";
+import PaymentRoutes from "./routes/PaymentRoute";
 
 const App = () => {
   return (
@@ -73,7 +72,7 @@ const App = () => {
               <Route path="/user/*" element={<UserRoutes />} />
               <Route path="/shop/*" element={<ShopRoutes />} />
               <Route path="/place/*" element={<PlaceRoutes />} />
-              <Route path="/package/*" element={<PackageRoutes />} />
+              <Route path="/payment/*" element={<PaymentRoutes />} />
               {/* <Route path="/admin/*" element={<AdminRoutes />} /> */}
 
               {/* ใช้ AdminRouteGuard เพื่อป้องกันหน้า Admin */}
