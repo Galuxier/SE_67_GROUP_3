@@ -233,6 +233,17 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                     Completed Courses
                   </Link> */}
                   <Link
+                    to={gymData? `/gym/management/${gymData._id}/course/list` : `gym/management/create`}
+                    className={`block p-2 rounded-md hover:bg-primary/10 ${
+                      location.pathname === "/gym/management/course/list"
+                        ? "text-primary"
+                        : "text-text"
+                    } text-sm transition-colors`}
+                  >
+                    Course List
+                  </Link>
+
+                  <Link
                     to={gymData ? `/gym/management/${gymData._id}/courses/create` : "/gym/management/create"}
                     className={`block p-2 rounded-md hover:bg-primary/10 ${
                       location.pathname === "/gym/management/courses/create"
@@ -245,6 +256,7 @@ const GymManageSidebar = ({ gymData, userGyms = [], onSwitchGym }) => {
                       {gymData ? "Create Course" : "Create Gym First"}
                     </div>
                   </Link>
+                  
                 </div>
               )}
             </div>
