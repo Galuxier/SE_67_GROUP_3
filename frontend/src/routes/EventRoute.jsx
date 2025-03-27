@@ -27,8 +27,8 @@ function EventRoutes() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<EventHome />} />
           <Route path="/:id" element={<EventDetail />} />
-          <Route path="/register/:eventId" element={<RegistrationForm />} />
-          <Route path="/ticket/:eventId" element={<BuyTicket />} />
+          <Route path="/:eventId/register" element={<RegistrationForm />} />
+          <Route path="/:eventId/ticket" element={<BuyTicket />} />
           <Route path="/ticket/payment" element={<TicketPayment />} />
 
 
