@@ -74,7 +74,7 @@ function BuyTicket() {
     console.log(orderData);
     
     // นำข้อมูล orderData ไปส่งไปยังหน้าชำระเงิน
-    navigate(`/event/ticket/payment`, { state: { orderData,event } });
+    navigate(`/payment/event/ticket`, { state: { orderData,event } });
   };
 
   const incrementCount = (zoneId) => {
