@@ -1,6 +1,7 @@
 import { Course, CourseDocument, CourseStatus } from '../models/course.model';
 import {BaseService} from './base.service';
 import { Types } from 'mongoose';
+import { Gym } from '../models/gym.model';
 
 class CourseService extends BaseService<CourseDocument> {
   constructor() {
@@ -92,6 +93,29 @@ class CourseService extends BaseService<CourseDocument> {
 
   async getPrepaingCourse(): Promise<CourseDocument[]>{
     return await Course.find({ status: CourseStatus.Preparing });
+  }
+
+  async getCoursesByUserOwnership(userId: string): Promise<CourseDocument[]> {
+    try {
+      // First find all gyms owned by this user
+      const userOwnedGyms = await Gym.find({ owner_id: new Types.ObjectId(userId) })
+        .select('_id');
+      
+      if (userOwnedGyms.length === 0) {
+        return []; // User doesn't own any gyms
+      }
+      
+      // Get gym IDs
+      const gymIds = userOwnedGyms.map(gym => gym._id);
+      
+      // Find all courses that belong to these gyms
+      const courses = await Course.find({ gym_id: { $in: gymIds } });
+      
+      return courses;
+    } catch (error) {
+      console.error('Error fetching courses by user ownership:', error);
+      throw error;
+    }
   }
 }
 

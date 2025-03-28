@@ -145,16 +145,16 @@ export async function purchasePackage(packageId) {
 export async function togglePackageActive(packageId, active) {
   try {
     // สำหรับ development ใช้ mock data
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Mock toggling package ${packageId} to ${active ? 'active' : 'inactive'}`);
-      const index = mockPurchased.findIndex(p => p._id === packageId || p.packageId === packageId);
-      if (index !== -1) {
-        mockPurchased[index].status = active ? "active" : "inactive";
-        console.log(`Package status updated:`, mockPurchased[index]);
-        return mockPurchased[index];
-      }
-      throw new Error('Package not found');
-    }
+    // if (process.env.NODE_ENV === 'development') {
+    //   console.log(`Mock toggling package ${packageId} to ${active ? 'active' : 'inactive'}`);
+    //   const index = mockPurchased.findIndex(p => p._id === packageId || p.packageId === packageId);
+    //   if (index !== -1) {
+    //     mockPurchased[index].status = active ? "active" : "inactive";
+    //     console.log(`Package status updated:`, mockPurchased[index]);
+    //     return mockPurchased[index];
+    //   }
+    //   throw new Error('Package not found');
+    // }
 
     // สำหรับ production ใช้ API จริง
     const response = await api.patch(`/user/packages/${packageId}/active`, {

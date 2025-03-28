@@ -207,8 +207,8 @@ const ProductCardItem = ({ product, size = "default" }) => {
   const navigateToProductDetail = async () => {
     const productId = product._id || product.id;
     try {
-      const shopName = await getShopNameForUrl();
-      navigate(`/shop/${shopName}/${productId}`);
+      // const shopName = await getShopNameForUrl();
+      navigate(`/shop/${product.shop_id}/${productId}`);
     } catch (error) {
       console.error("Error navigating to product:", error);
       navigate(`/shop/product/${productId}`);

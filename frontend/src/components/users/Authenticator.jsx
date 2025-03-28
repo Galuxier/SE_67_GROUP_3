@@ -1,8 +1,12 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getUserProfile } from "../../services/api/UserApi"; // นำเข้า getUserProfile
+import { getUser } from "../../services/api/UserApi"; // นำเข้า getUserProfile
+import { useAuth } from "../../context/AuthContext";
+import { verifyPassword } from "../../services/api/AuthApi";
 
 function Authenticator({ isOpen, onClose, onVerify, setIsLoading }) {
+  const { users } = useAuth();
   const { username } = useParams();  // ดึง username จาก URL
   const [user, setUser] = useState(null);  // ข้อมูลโปรไฟล์ผู้ใช้
   const [password, setPassword] = useState("");  // รหัสผ่านที่กรอก
@@ -14,7 +18,7 @@ function Authenticator({ isOpen, onClose, onVerify, setIsLoading }) {
     if (isOpen) {
       const fetchUserProfile = async () => {
         try {
-          const profileData = await getUserProfile(username); // เรียก API เพื่อดึงข้อมูลโปรไฟล์
+          const profileData = await getUser(users._id); // เรียก API เพื่อดึงข้อมูลโปรไฟล์
           setUser(profileData);
         } catch (error) {
           console.error("Error fetching user profile:", error);
@@ -22,7 +26,7 @@ function Authenticator({ isOpen, onClose, onVerify, setIsLoading }) {
       };
       fetchUserProfile();
     }
-  }, [isOpen, username]);
+  }, [isOpen, users]);
 
   // ฟังก์ชันสำหรับกรอกรหัสผ่าน
   const handlePasswordChange = (e) => {

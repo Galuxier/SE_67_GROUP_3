@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { createEvent } from "../../../services/api/EventApi";
 import { useAuth } from "../../../context/AuthContext";
 import { PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { defaultWeightClass } from "./DefaultWeightClass";
+import { maleWeightClass, femaleWeightClasses ,defaultWeightClass} from "./DefaultWeightClass";
 import { getBoxers } from "../../../services/api/BoxerApi";
 import { getImage } from "../../../services/api/ImageApi";
 import { getPlaces } from "../../../services/api/PlaceApi";
@@ -30,7 +30,7 @@ const PlaceModal = ({ places, isOpen, setIsOpen,setPlaceModalOpen,location, setL
         if (place.place_image_urls && Array.isArray(place.place_image_urls)) {
           for (const url of place.place_image_urls) {
             const validUrl = await getImage(url); // ฟังก์ชันที่คุณใช้ตรวจสอบ URL
-            console.log("validUrl",validUrl);
+            // console.log("validUrl",validUrl);
             if (validUrl) {
               validUrls.push(validUrl); // เก็บ URL ที่ถูกต้อง
             }
@@ -56,7 +56,7 @@ const PlaceModal = ({ places, isOpen, setIsOpen,setPlaceModalOpen,location, setL
 
   const savePlace = () => {
     // Validate required fields
-    console.log("selectedPlace",selectedPlace);
+    // console.log("selectedPlace",selectedPlace);
     
     if (!selectedPlace) {
       toast.error("Please fill in all match details including weight class");
@@ -288,7 +288,7 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
         }
       }
       setImageUrls(urls);
-      console.log("profile",urls);
+      // console.log("profile",urls);
     }
 
     if (boxers && boxers.length) {
@@ -296,7 +296,7 @@ const SearchableSelect = ({ label, boxers, selectedBoxer, setSelectedBoxer }) =>
     }
   }, []);
 
-  console.log(selectedBoxer);
+  // console.log(selectedBoxer);
   
   
   return (
@@ -365,52 +365,32 @@ const MatchModal = ({
   isOpen, 
   setIsOpen, 
   setMatches, 
+  matches,
   setWeightClasses,
+  weightClasses,
   currentDate, 
   newMatch, 
   setNewMatch
 }) => {
-
   const handleMatchInputChange = (e) => {
     const { name, value } = e.target;
     setNewMatch({ ...newMatch, [name]: value });
   };
+
+  const [boxers, setBoxers] = useState([]); // ใช้ useState เก็บข้อมูลนักมวย
+  const [gender, setGender] = useState(""); // สร้าง state สำหรับ gender
+  const [selectedWeightClass, setSelectedWeightClass] = useState("");
+
+  // console.log("sss",selectedWeightClass);
   
-  const saveMatch = () => {
-    // Validate required fields
-    if (!newMatch.boxer1_id || !newMatch.boxer2_id || !newMatch.match_time || !newMatch.weight_class_id) {
-      toast.error("Please fill in all match details including weight class");
-      return;
-    }
-
-    // Prevent boxer from matching against themselves
-    if (newMatch.boxer1_id === newMatch.boxer2_id) {
-      toast.error("A boxer cannot be matched against themselves");
-      return;
-    }
-    
-    setMatches(prev => [...prev, { ...newMatch, match_date: currentDate }]);
-    // Reset form and close modal
-    setNewMatch({ 
-      id: Date.now(),
-      boxer1_id: "", 
-      boxer2_id: "", 
-      match_time: "",
-      weight_class_id: ""
-    });
-    setIsOpen(false);
-  };
-
-  const [boxers, setBoxers] = useState([]); // ✅ ใช้ useState เก็บข้อมูลนักมวย
 
   // เรียก API โหลดรายชื่อนักมวย
   useEffect(() => {
     const fetchBoxers = async () => {
       try {
         const response = await getBoxers();
-        // console.log("boxers:", response);
         if (response.success) {
-          setBoxers(response.data); // ✅ กำหนดค่า boxers ให้เป็นอาร์เรย์ที่ได้จาก API
+          setBoxers(response.data); // กำหนดค่า boxers ให้เป็นอาร์เรย์ที่ได้จาก API
         } else {
           console.error("Failed to fetch boxers");
         }
@@ -420,86 +400,190 @@ const MatchModal = ({
     };
 
     fetchBoxers();
-  }, []); // ✅ ทำงานครั้งเดียวตอน component mount
+  }, []); // ทำงานครั้งเดียวตอน component mount
 
+  const filteredWeightClasses = defaultWeightClass.filter(
+    (wc) => wc.gender === gender
+  )
+
+  const handleWeightClassChange = (e) => {
+    const selectedId = e.target.value;
+    const selected = filteredWeightClasses.find(item => item.id === parseInt(selectedId));
+    setSelectedWeightClass(selected);
+    
+  };
+
+  const saveMatch = () => {
+    // Validate required fields
+    if (!newMatch.boxer1_id || !newMatch.boxer2_id || !newMatch.match_time) {
+      toast.error("Please fill in all match details including weight class");
+      return;
+    }
+  
+    // Prevent boxer from matching against themselves
+    if (newMatch.boxer1_id === newMatch.boxer2_id) {
+      toast.error("A boxer cannot be matched against themselves");
+      return;
+    }
+  
+    console.log("5555");
+    console.log(selectedWeightClass);
+  
+    const [hours, minutes] = newMatch.match_time.split(":").map(Number);
+    const matchDateTime = new Date(currentDate);
+    matchDateTime.setHours(hours, minutes, 0, 0);
+    // สร้าง match ใหม่
+    const newMatchEntry = {
+      boxer1_id: newMatch.boxer1_id,
+      boxer2_id: newMatch.boxer2_id,
+      match_time: matchDateTime,
+      match_date: currentDate
+    };
+    setMatches([...matches, newMatchEntry]);
+  
+    // อัปเดต weight class โดยการเพิ่ม match ใหม่เข้ากับ array matches ที่มีอยู่ (ถ้ามี)
+    const updatedWeightClasses = weightClasses.map(wc => {
+      if (wc.id === selectedWeightClass.id) {
+        return {
+          ...wc,
+          // รวม match ใหม่เข้ากับ matches เดิม ถ้าไม่มีค่า matches ก็ใช้ array ว่าง
+          matches: [...(wc.matches || []), newMatchEntry]
+        };
+      }
+      return wc;
+    });
+  
+    // ถ้า weight class ยังไม่มีอยู่ใน weightClasses ให้เพิ่มเข้าไป
+    if (!weightClasses.some(wc => wc.id === selectedWeightClass.id)) {
+      updatedWeightClasses.push({
+        id: selectedWeightClass.id,
+        gender: gender,
+        weigh_name: selectedWeightClass.weigh_name,
+        min_weight: parseFloat(selectedWeightClass.min_weight),
+        max_weight: parseFloat(selectedWeightClass.max_weight),
+        max_enrollment: parseInt(selectedWeightClass.max_enrollment),
+        price: 0,
+        matches: [newMatchEntry]
+      });
+    }
+  
+    console.log("updatedWeightClasses match", updatedWeightClasses);
+    setWeightClasses(updatedWeightClasses);
+  
+    // Reset form and close modal
+    setNewMatch({
+      id: Date.now(),
+      boxer1_id: "",
+      boxer2_id: "",
+      match_time: "",
+      match_date: ""
+    });
+  
+    // setIsOpen(false);
+    
+    setIsOpen(false);
+    setSelectedWeightClass(null);
+    setGender("");
+  };
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-  <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full">
-    <h3 className="text-lg font-medium mb-4 text-white">Add Match for {new Date(currentDate).toLocaleDateString()}</h3>
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-300">
-          Weight Class
-        </label>
-        <select
-          name="weight_class_id"
-          value={newMatch.weight_class_id || ""}
-          onChange={handleMatchInputChange}
-          className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg py-2 px-3"
-          required
-        >
-          <option value="">-- Select Weight Class --</option>
-          {defaultWeightClass.map((wc) => (
-            <option key={wc.id} value={wc.id}>
-              {wc.weigh_name} ({wc.min_weight} kg - {wc.max_weight} kg)
-            </option>
-          ))}
-        </select>
-      </div>
+      <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full">
+        <h3 className="text-lg font-medium mb-4 text-white">Add Match for {new Date(currentDate).toLocaleDateString()}</h3>
+        <div className="space-y-4">
+          {/* เลือก Gender */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300">Gender</label>
+            <select
+              name="gender"
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg py-2 px-3"
+              required
+            >
+              <option value="">-- Select Gender --</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
 
-      <SearchableSelect
-        label="Boxer 1"
-        boxers={boxers}
-        selectedBoxer={boxers.find(b => b._id === newMatch.boxer1_id) || null}
-        setSelectedBoxer={(boxer) => {
-          setNewMatch({ ...newMatch, boxer1_id: boxer?._id || null });
-        }}
-      />
+          {/* เลือก Weight Class */}
+          {gender && (
+            <div>
+              <label className="block text-sm font-medium text-gray-300">
+                Weight Class
+              </label>
+              <select
+                name="weight_class_id"
+                onChange={handleWeightClassChange}
+                className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg py-2 px-3"
+                required
+              >
+                <option value="">-- Select Weight Class --</option>
+                {filteredWeightClasses.map((wc) => (
+                  <option key={wc.id} value={wc.id}>
+                    {wc.weigh_name} ({wc.min_weight} kg - {wc.max_weight} kg)
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-      <SearchableSelect
-        label="Boxer 2"
-        boxers={boxers}
-        selectedBoxer={boxers.find(b => b._id === newMatch.boxer2_id) || null}
-        setSelectedBoxer={(boxer) => {
-          setNewMatch({ ...newMatch, boxer2_id: boxer?._id || null });
-        }}
-      />
+          {/* เลือก Boxer 1 */}
+          <SearchableSelect
+            label="Boxer 1"
+            boxers={boxers}
+            selectedBoxer={boxers.find(b => b._id === newMatch.boxer1_id) || null}
+            setSelectedBoxer={(boxer) => {
+              setNewMatch({ ...newMatch, boxer1_id: boxer?._id || null });
+            }}
+          />
 
-      <div>
-        <label className="block text-sm font-medium text-gray-300">
-          Match Time
-        </label>
-        <input
-          type="time"
-          name="match_time"
-          value={newMatch.match_time}
-          onChange={handleMatchInputChange}
-          className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg py-2 px-3"
-          required
-        />
+          {/* เลือก Boxer 2 */}
+          <SearchableSelect
+            label="Boxer 2"
+            boxers={boxers}
+            selectedBoxer={boxers.find(b => b._id === newMatch.boxer2_id) || null}
+            setSelectedBoxer={(boxer) => {
+              setNewMatch({ ...newMatch, boxer2_id: boxer?._id || null });
+            }}
+          />
+
+          {/* เลือก Match Time */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300">
+              Match Time
+            </label>
+            <input
+              type="time"
+              name="match_time"
+              value={newMatch.match_time}
+              onChange={handleMatchInputChange}
+              className="w-full border border-gray-600 bg-gray-700 text-white rounded-lg py-2 px-3"
+              required
+            />
+          </div>
+        </div>
+        <div className="flex justify-end mt-4">
+          <button 
+            onClick={() => setIsOpen(false)} 
+            className="px-4 py-2 mr-2 border border-gray-600 rounded-lg text-gray-300"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={saveMatch} 
+            className="px-4 py-2 bg-primary text-white rounded-lg"
+          >
+            Save
+          </button>
+        </div>
       </div>
     </div>
-    <div className="flex justify-end mt-4">
-      <button 
-        onClick={() => setIsOpen(false)} 
-        className="px-4 py-2 mr-2 border border-gray-600 rounded-lg text-gray-300"
-      >
-        Cancel
-      </button>
-      <button 
-        onClick={saveMatch} 
-        className="px-4 py-2 bg-primary text-white rounded-lg"
-      >
-        Save
-      </button>
-    </div>
-  </div>
-</div>
-
   );
 };
+
 
 const SeatZoneModal = ({
   isOpen,
@@ -635,13 +719,24 @@ const WeightClassModal = ({
   const [max_enrollment, setMaxEnrollment] = useState(editingWeightClass?.max_enrollment || "");
   const [price, setPrice] = useState(editingWeightClass?.price || "");
   const [errors, setErrors] = useState({});
+  const [gender, setGender] = useState('');
+  const [selectedWeightClass, setSelectedWeightClass] = useState(null);
 
+  // เลือกข้อมูลตาม gender
+  const weightClassesList = gender === 'male' ? maleWeightClass : gender === 'female' ? femaleWeightClasses : [];
+
+  const handleWeightClassChange = (e) => {
+    const selectedId = e.target.value;
+    const selected = weightClassesList.find(item => item.id === parseInt(selectedId));
+    setSelectedWeightClass(selected);
+  };
+
+  // console.log("selectedWeightClass",selectedWeightClass);
+  
   const validateWeightClass = () => {
     const newErrors = {};
-    if (!type) newErrors.type = "Please enter type.";
-    if (!weigh_name) newErrors.weigh_name = "Please enter weight name.";
-    if (!min_weight || min_weight <= 0) newErrors.min_weight = "Please enter a valid minimum weight.";
-    if (!max_weight || max_weight <= min_weight) newErrors.max_weight = "Max weight must be greater than min weight.";
+    // if (!type) newErrors.type = "Please enter type.";
+    if(!gender) newErrors.type = "Please select gender.";
     if (!max_enrollment || max_enrollment <= 0) newErrors.max_enrollment = "Please enter a valid max enrollment.";
     if (price && price < 0) newErrors.price = "Price cannot be negative.";
     setErrors(newErrors);
@@ -653,25 +748,28 @@ const WeightClassModal = ({
 
     const newWeightClass = {
       id: editingWeightClass ? editingWeightClass.id : Date.now(),
-      type,
-      weigh_name,
-      min_weight: parseFloat(min_weight),
-      max_weight: parseFloat(max_weight),
+      gender: gender,
+      weigh_name: selectedWeightClass.weigh_name,
+      min_weight: parseFloat(selectedWeightClass.min_weight),
+      max_weight: parseFloat(selectedWeightClass.max_weight),
       max_enrollment: parseInt(max_enrollment),
       price: price ? parseFloat(price) : "",
-      matches: editingWeightClass
-        ? [...editingWeightClass.matches]
-        : [] // start with an empty array if creating new
+      matches: editingWeightClass ? [...editingWeightClass.matches] : [] // start with an empty array if creating new
     };
+
 
     const updatedWeightClasses = editingWeightClass
       ? weightClasses.map(wc => wc.id === editingWeightClass.id ? newWeightClass : wc)
       : [...weightClasses, newWeightClass];
 
+      console.log("update",updatedWeightClasses);
+      
     setWeightClasses(updatedWeightClasses);
     setIsOpen(false);
     setEditingWeightClass(null);
+    setSelectedWeightClass(null);
     setType("");
+    setGender("");
     setWeighName("");
     setMinWeight("");
     setMaxWeight("");
@@ -689,46 +787,59 @@ const WeightClassModal = ({
           {editingWeightClass ? "Edit Weight Class" : "Add Weight Class"}
         </h3>
         <div className="space-y-4">
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium dark:text-gray-200">Type</label>
-            <input
-              type="text"
+            <select
               value={type}
               onChange={(e) => setType(e.target.value)}
               className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-200"
-            />
+            >
+              <option value="">-- Select Type --</option>
+              <option value="amateur">Amateur</option>
+              <option value="professional">Professional</option>
+            </select>
             {errors.type && <p className="text-red-500 text-sm">{errors.type}</p>}
-          </div>
+          </div> */}
+
           <div>
-            <label className="block text-sm font-medium dark:text-gray-200">Weight Name</label>
-            <input
-              type="text"
-              value={weigh_name}
-              onChange={(e) => setWeighName(e.target.value)}
+            <label className="block text-sm font-medium dark:text-gray-200">Gender</label>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
               className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-200"
-            />
-            {errors.weigh_name && <p className="text-red-500 text-sm">{errors.weigh_name}</p>}
+            >
+              <option value="">-- Select Gender --</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+            {errors.gender && <p className="text-red-500 text-sm">{errors.gender}</p>}
           </div>
-          <div>
-            <label className="block text-sm font-medium dark:text-gray-200">Min Weight (kg)</label>
-            <input
-              type="number"
-              value={min_weight}
-              onChange={(e) => setMinWeight(e.target.value)}
-              className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-200"
-            />
-            {errors.min_weight && <p className="text-red-500 text-sm">{errors.min_weight}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium dark:text-gray-200">Max Weight (kg)</label>
-            <input
-              type="number"
-              value={max_weight}
-              onChange={(e) => setMaxWeight(e.target.value)}
-              className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-200"
-            />
-            {errors.max_weight && <p className="text-red-500 text-sm">{errors.max_weight}</p>}
-          </div>
+
+          {gender && (
+            <div>
+              <label className="block text-sm font-medium dark:text-gray-200">Weight Class</label>
+              <select
+                onChange={handleWeightClassChange}
+                className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-200"
+              >
+                <option value="">Select Weight Class</option>
+                {weightClassesList.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.weigh_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {selectedWeightClass && (
+            <div>
+              <p><strong>Weight Name:</strong> {selectedWeightClass.weigh_name}</p>
+              <p><strong>Min Weight:</strong> {selectedWeightClass.min_weight} kg</p>
+              <p><strong>Max Weight:</strong> {selectedWeightClass.max_weight} kg</p>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium dark:text-gray-200">Max Enrollment</label>
             <input
@@ -739,7 +850,7 @@ const WeightClassModal = ({
             />
             {errors.max_enrollment && <p className="text-red-500 text-sm">{errors.max_enrollment}</p>}
           </div>
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium dark:text-gray-200">Price (optional)</label>
             <input
               type="number"
@@ -748,8 +859,9 @@ const WeightClassModal = ({
               className="w-full border rounded-lg py-2 px-3 dark:bg-gray-700 dark:text-gray-200"
             />
             {errors.price && <p className="text-red-500 text-sm">{errors.price}</p>}
-          </div>
+          </div> */}
         </div>
+
         <div className="flex justify-end mt-4">
           <button
             onClick={() => setIsOpen(false)}
@@ -769,7 +881,6 @@ const WeightClassModal = ({
   );
 };
 
-
 const AddEventForm = () => {
   const navigate = useNavigate();
   const { organizer_id } = useParams();
@@ -778,7 +889,7 @@ const AddEventForm = () => {
 
 const [places, setPlaces] = useState([]); // ✅ เก็บข้อมูลสถานที่
 
-console.log("places",places);
+// console.log("places",places);
 
 
 useEffect(() => {
@@ -830,14 +941,6 @@ useEffect(() => {
   const [isPlaceModalOpen, setPlaceModalOpen] = useState(false);
 
 
-  useEffect(() => {
-    if(eventData?.event_type === "ticket_sales") {
-      setWeightClasses(Array.isArray(defaultWeightClass) ? defaultWeightClass : []);
-    } else {
-      setWeightClasses([]);
-    }
-  }, [eventData, defaultWeightClass]);
-
   const getDatesInRange = (startDate, endDate) => {
     const dates = [];
     const start = new Date(startDate);
@@ -871,18 +974,16 @@ useEffect(() => {
       setEventData({ ...eventData, poster_url: file, previewPoster: URL.createObjectURL(file) });
     }
   };
-
-  console.log("isOpen",isPlaceModalOpen);
   
   const [location,setLocation] = useState(null);
   const [locationImg, setLocationImg] = useState(null);
 
-  console.log("location",location);
+  // console.log("location",location);
   if (location) {
     eventData.location_id = [location._id]; // กำหนดใหม่ทุกครั้ง ไม่ใช้ .push()
   }
   
-  console.log("eventData",eventData);
+  // console.log("eventData",eventData);
   
 
   const handleAddLocation = () =>{
@@ -1064,8 +1165,10 @@ const handleAddWeightClass = () => {
         formData.append("status", "ongoing");
       }
       else{
-        formData.append("status",eventData.event_type);
+        formData.append("status",eventData.status);
       }
+      
+      console.log("weight",weightClasses);
       
 
       const weightClassesData = weightClasses.map(wc => {
@@ -1094,7 +1197,7 @@ const handleAddWeightClass = () => {
       });
       
       
-      formData.append("weight_classes", JSON.stringify(weightClassesData));
+      formData.append("weight_classes", JSON.stringify(weightClasses));
       // แปลง Array/Object ให้เป็น JSON แล้วส่งไป
       formData.append("seat_zones", JSON.stringify(seatZones));
       if (eventData.poster_url) {
@@ -1346,12 +1449,12 @@ const handleAddWeightClass = () => {
     <table className="w-full border-collapse border rounded-lg text-sm">
       <thead>
         <tr className="bg-gray-200 dark:text-gray-900">
-          <th className="p-2 border">Type</th>
+          {/* <th className="p-2 border">Type</th> */}
           <th className="p-2 border">Weight Name</th>
           <th className="p-2 border">Min Weight</th>
           <th className="p-2 border">Max Weight</th>
           <th className="p-2 border">Max Enrollment</th>
-          <th className="p-2 border">Price</th>
+          {/* <th className="p-2 border">Price</th> */}
           <th className="p-2 border">Actions</th>
         </tr>
       </thead>
@@ -1365,12 +1468,12 @@ const handleAddWeightClass = () => {
         ) : (
           weightClasses.map((wc) => (
             <tr key={wc.id} className="text-center ">
-              <td className="p-2 border">{wc.type}</td>
+              {/* <td className="p-2 border">{wc.type}</td> */}
               <td className="p-2 border">{wc.weigh_name}</td>
               <td className="p-2 border">{wc.min_weight}</td>
               <td className="p-2 border">{wc.max_weight}</td>
               <td className="p-2 border">{wc.max_enrollment}</td>
-              <td className="p-2 border">{wc.price ? new Intl.NumberFormat().format(wc.price) : "Free"}</td>
+              {/* <td className="p-2 border">{wc.price ? new Intl.NumberFormat().format(wc.price) : "Free"}</td> */}
               <td className="p-2 border">
                 <button className="text-blue-500 mr-2" onClick={() => handleEditWeightClass(wc)}>
                   <PencilIcon className="h-4 w-4" />
@@ -1525,7 +1628,7 @@ const handleAddWeightClass = () => {
                         <div key={matchIndex} className="flex items-center justify-between p-3 bg-white rounded-lg border dark:bg-gray-800">
                           <div>
                             <p className="font-medium">{boxer1?.first_name} {boxer1?.last_name} vs {boxer2?.first_name} {boxer2?.last_name}</p>
-                            <p className="text-sm">{match.match_time}</p>
+                            <p><p>{match.match_time.toLocaleTimeString()}</p></p>
                           </div>
                           {/* ปุ่มลบสำหรับการลบแมตช์ */}
                           <button
@@ -1578,6 +1681,16 @@ const handleAddWeightClass = () => {
     )
   );
   
+  console.log("eventData.location_id:", eventData.location_id);
+console.log("places:", places);
+console.log(
+  "Matched Place:",
+  places.find(loc => String(loc._id) === String(eventData.location_id))
+
+);
+
+  
+  
 
   const renderReview = () => (
     <div className="space-y-6">
@@ -1588,7 +1701,7 @@ const handleAddWeightClass = () => {
       <p>Event Name: {eventData.event_name}</p>
       <p>
         Location: { 
-          places.find(loc => loc.location_id === eventData.location_id)?.name || 
+          places.find(loc => String(loc._id) === String(eventData.location_id)).name ||
           "Unknown Location"
         }
       </p>
@@ -1634,7 +1747,7 @@ const handleAddWeightClass = () => {
                   {boxer2 ? `${boxer2.first_name} "${boxer2.nickname}" ${boxer2.last_name}` : 'Unknown Boxer'}
                 </p>
                 <p className="text-sm text-gray-600">
-                  {new Date(m.match_date).toLocaleDateString()} at {m.match_time}
+                  {new Date(m.match_date).toLocaleDateString()} at <p>{m.match_time.toLocaleTimeString()}</p>
                 </p>
               </div>
             );
@@ -1706,7 +1819,9 @@ const handleAddWeightClass = () => {
         isOpen={isMatchModalOpen}
         setIsOpen={setIsMatchModalOpen}
         setMatches={setMatches}
+        matches={matches}
         setWeightClasses={setWeightClasses}
+        weightClasses={weightClasses}
         currentDate={currentDate}
         newMatch={newMatch}
         setNewMatch={setNewMatch}

@@ -7,7 +7,6 @@ import { useAuth } from "../../context/AuthContext";
 // Event Type Components
 const TicketSale = ({ event, navigate }) => {
   const user = useAuth();
-  console.log(user);
   
   return (
     <div className="p-6 text-center">
@@ -60,7 +59,7 @@ const TicketSale = ({ event, navigate }) => {
       <button 
         onClick={() => {
           if (user.isLoggedIn) {
-            navigate(`/event/ticket/${event._id}`, { state: { event } });
+            navigate(`/event/${event._id}/ticket`, { state: { event } });
           } else {
             navigate("/login");
           }
@@ -73,6 +72,7 @@ const TicketSale = ({ event, navigate }) => {
 };
 
 const Registration = ({ event, navigate }) => {
+  const user = useAuth();
   return (
     <div className="p-6 text-center">
       <h2 className="font-semibold text-2xl mb-4 text-text">Weight Categories</h2>
@@ -100,7 +100,7 @@ const Registration = ({ event, navigate }) => {
       <button
         onClick={() => {
           if (user.isLoggedIn) {
-            navigate(`/event/register/${event._id}`, { state: { event } });
+            navigate(`/event/${event._id}/register`, { state: { event } });
           } else {
             navigate("/login");
           }
@@ -119,6 +119,8 @@ function EventDetail() {
   const location = useLocation();
   const navigate = useNavigate();
   const [event, setEvent] = useState(location.state?.event || null);
+  
+  
 
   useEffect(() => {
     if (!event) {
@@ -174,7 +176,7 @@ function EventDetail() {
       setImageUrl(url); // Update state
       const seat_url = await getImage(event.seatZone_url);
       setSeatZoneUrl(seat_url); // Update state
-      console.log(seat_url);
+      // console.log(seat_url);
       
     }
     fetchImage();

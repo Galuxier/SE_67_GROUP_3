@@ -27,15 +27,38 @@ export default function ShopProfile() {
       try {
         setIsLoadingShop(true);
         const response = await getShopById(shop_id);
-        response.contacts = JSON.parse(response.contacts);
-        response.address = JSON.parse(response.address);
-        
+  
+        // ตรวจสอบว่า response มีข้อมูลหรือไม่
+        if (!response) {
+          throw new Error("No shop data returned from API");
+        }
+  
+        // จัดการ contacts (ถ้าเป็น string ให้ parse ถ้าไม่ใช่ให้ใช้ตามที่เป็น)
+        if (response.contacts) {
+          response.contacts = typeof response.contacts === "string" 
+            ? JSON.parse(response.contacts) 
+            : response.contacts;
+        } else {
+          response.contacts = {}; // ค่าเริ่มต้นถ้าไม่มี
+        }
+  
+        // จัดการ address (ถ้าเป็น string ให้ parse ถ้าไม่ใช่ให้ใช้ตามที่เป็น)
+        if (response.address) {
+          response.address = typeof response.address === "string" 
+            ? JSON.parse(response.address) 
+            : response.address;
+        } else {
+          response.address = {}; // ค่าเริ่มต้นถ้าไม่มี
+        }
+  
         setShop(response);
-        
-        // Fetch shop logo if available
+  
+        // Fetch shop logo ถ้ามี
         if (response.logo_url) {
           try {
             const logoUrl = await getImage(response.logo_url);
+            console.log(logoUrl);
+            
             setShopLogoUrl(logoUrl);
           } catch (imageError) {
             console.error("Error fetching shop logo:", imageError);
@@ -48,7 +71,7 @@ export default function ShopProfile() {
         setIsLoadingShop(false);
       }
     };
-    
+  
     if (shop_id) {
       fetchShopData();
     }

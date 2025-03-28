@@ -7,7 +7,8 @@ import{
     deleteCourseController,
     getCoursesByGymIdController,
     getPrepaingCourseController,
-    searchCoursesController
+    searchCoursesController,
+    getCoursesByUserOwnershipController
 } from '../controllers/course.controller';
 import { courseImagesUpload } from '../middlewares/uploads/course.upload';
 
@@ -28,5 +29,7 @@ route.delete('/course/:id', deleteCourseController);
 route.get('/gym/:gymId/courses', getCoursesByGymIdController);
 
 route.get('/courses/search', searchCoursesController);
+
+route.get('/user/:userId/courses', getCoursesByUserOwnershipController);
 
 export default route;

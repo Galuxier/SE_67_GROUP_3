@@ -12,14 +12,16 @@ export default function ShopDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const { shopId } = useParams();
+  const { shop_id } = useParams();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchShopData = async () => {
       try {
         setIsLoading(true);
-        const response = await getShopById(shopId);
+        const response = await getShopById(shop_id);
+        console.log(response);
+        
         response.contacts = JSON.parse(response.contacts);
         response.address = JSON.parse(response.address);
         
@@ -47,7 +49,7 @@ export default function ShopDetail() {
       }
     };
 
-    if (shopId) {
+    if (shop_id) {
       fetchShopData();
     }
 
@@ -57,7 +59,7 @@ export default function ShopDetail() {
         URL.revokeObjectURL(logoUrl);
       }
     };
-  }, [shopId]);
+  }, [shop_id]);
 
   const handleShopUpdate = async (updatedShop) => {
     setShop(updatedShop);

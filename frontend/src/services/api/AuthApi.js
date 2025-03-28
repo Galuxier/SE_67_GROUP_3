@@ -62,3 +62,16 @@ export async function updateUser(userId, userData) {
       throw error;
   }   
 }
+
+export async function verifyPassword(username, password) {
+  try {
+    const response = await api.post('/verify-password', {
+      username,
+      password
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Password verification failed:", error.response?.data || error);
+    throw new Error(error.response?.data?.message || "Password verification failed");
+  }
+}

@@ -1,13 +1,13 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 
-enum PaymentStatus {
+export enum PaymentStatus {
   Pending = 'pending',
   Completed = 'completed',
   Failed = 'failed',
 }
 
 export interface PaymentDocument extends Document {
-  order_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Orders
+  order_id: Types.ObjectId; // อ้างอิงไปที่ Orders
   user_id: Schema.Types.ObjectId; // อ้างอิงไปที่ Users
   amount: number;
   payment_method: string;
