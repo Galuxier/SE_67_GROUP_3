@@ -22,7 +22,7 @@ const CourseFilter = ({ province, handleProvinceSelect, provinceData, district, 
       </select>
 
       {/* Optional: Adding district filter since API supports it */}
-      <label className="block mb-2 text-sm font-medium text-text">
+      {/* <label className="block mb-2 text-sm font-medium text-text">
         District
       </label>
       <input
@@ -31,7 +31,7 @@ const CourseFilter = ({ province, handleProvinceSelect, provinceData, district, 
         value={district || ''}
         onChange={(e) => handleDistrictSelect(e.target.value)}
         placeholder="Enter district"
-      />
+      /> */}
     </div>
   );
 };

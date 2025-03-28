@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AddressForm from "../forms/AddressForm";
-import { createProductOrder, createTicketOrder, createCourseOrder, createPackageOrder } from "../../services/api/OrderApi";
+import { createProductOrder, createTicketOrder, createCourseOrder, createPackageOrder, updateOrderStatus } from "../../services/api/OrderApi";
+import { createPayment, updatePaymentStatus } from "../../services/api/PaymentApi";
 
 const PaymentForm = ({ type, DatafromOrder, user }) => {
   const navigate = useNavigate();
@@ -12,7 +13,8 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
   const [errors, setErrors] = useState({});
   const [addressData, setAddressData] = useState({});
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState("pending");
+  const [orderData, setOrderData] = useState(null);
+  const [paymentData, setPaymentData] = useState(null);
 
   const [formData, setFormData] = useState({
     email: user?.email || "",
@@ -58,7 +60,6 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
       else if (!/^[0-9]{10}$/.test(formData.phone)) 
         newErrors.phone = "เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลัก";
 
-      // ตรวจสอบข้อมูลที่อยู่จาก AddressForm
       if (!addressData.province) newErrors.province = "กรุณาเลือกจังหวัด";
       if (!addressData.district) newErrors.district = "กรุณาเลือกอำเภอ";
       if (!addressData.subdistrict) newErrors.subdistrict = "กรุณาเลือกตำบล";
@@ -102,7 +103,8 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
             quantity: DatafromOrder.product.quantity
           }],
           total_price: DatafromOrder.total,
-          shippingAddress
+          shippingAddress,
+          payment_method: paymentMethod
         };
       case "cart":
         return {
@@ -114,7 +116,8 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
             quantity: item.quantity
           })),
           total_price: DatafromOrder.total,
-          shippingAddress
+          shippingAddress,
+          payment_method: paymentMethod
         };
       case "ticket":
         return {
@@ -127,7 +130,8 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
             date: item.date
           })),
           total_price: DatafromOrder.total_price,
-          shippingAddress
+          shippingAddress,
+          payment_method: paymentMethod
         };
       case "course":
         return {
@@ -135,7 +139,8 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
           course_id: DatafromOrder.course_id,
           quantity: DatafromOrder.quantity || 1,
           price: DatafromOrder.price,
-          shippingAddress
+          shippingAddress,
+          payment_method: paymentMethod
         };
       case "ads_package":
         return {
@@ -143,7 +148,8 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
           package_id: DatafromOrder.package_id,
           quantity: DatafromOrder.quantity || 1,
           price: DatafromOrder.price,
-          shippingAddress // ส่ง shippingAddress สำหรับ ads_package ด้วย
+          shippingAddress,
+          payment_method: paymentMethod
         };
       default:
         throw new Error("Invalid order type");
@@ -164,33 +170,64 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
     setIsProcessing(true);
     try {
       const orderData = getOrderData();
-      let createdOrder;
-      console.log("orderData: ", orderData);
-      
+      let result;
+
       switch (type) {
         case "product":
         case "cart":
-          createdOrder = await createProductOrder(orderData);
+          result = await createProductOrder(orderData);
           break;
         case "ticket":
-          createdOrder = await createTicketOrder(orderData);
+          result = await createTicketOrder(orderData);
           break;
         case "course":
-          createdOrder = await createCourseOrder(orderData);
+          result = await createCourseOrder(orderData);
           break;
         case "ads_package":
-          createdOrder = await createPackageOrder(orderData);
+          result = await createPackageOrder(orderData);
           break;
         default:
           throw new Error("Unsupported order type");
       }
 
-      console.log("Order: ", createdOrder);
-      toast.success("สร้างคำสั่งซื้อสำเร็จ กรุณาดำเนินการชำระเงิน");
-      setFormStep(3); // แสดงหน้ายืนยัน
+      setOrderData(result.order);
+      setPaymentData(result.payment.data);
+      setFormStep(3);
     } catch (error) {
       console.error("Payment error:", error);
       toast.error(error.message || "เกิดข้อผิดพลาดในการสร้างคำสั่งซื้อ");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePaymentSuccess = async () => {
+    setIsProcessing(true);
+    try {
+      console.log(paymentData._id);
+      
+      await updateOrderStatus(orderData._id, "completed");
+      await updatePaymentStatus(paymentData._id, "completed");
+      toast.success("การชำระเงินสำเร็จ");
+      navigate("/");
+    } catch (error) {
+      console.error("Error in handlePaymentSuccess:", error);
+      toast.error("เกิดข้อผิดพลาดในการอัพเดทสถานะ");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePaymentFailed = async () => {
+    setIsProcessing(true);
+    try {
+      await updateOrderStatus(orderData._id, "failed");
+      await updatePaymentStatus(paymentData._id, "failed");
+      toast.error("การชำระเงินล้มเหลว");
+      navigate("/");
+    } catch (error) {
+      console.error("Error in handlePaymentFailed:", error);
+      toast.error("เกิดข้อผิดพลาดในการอัพเดทสถานะ");
     } finally {
       setIsProcessing(false);
     }
@@ -269,7 +306,7 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
             />
             <span>พร้อมเพย์</span>
           </label>
-          <label className="flex items-center space-x-2 p-3 border border-gray-300 rounded hover:bg-gray-50">
+          {/* <label className="flex items-center space-x-2 p-3 border border-gray-300 rounded hover:bg-gray-50">
             <input
               type="radio"
               checked={paymentMethod === "card"}
@@ -277,7 +314,7 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
               className="h-4 w-4"
             />
             <span>บัตรเครดิต/เดบิต</span>
-          </label>
+          </label> */}
         </div>
       </div>
 
@@ -297,7 +334,6 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
         <span className="mr-1">←</span> ย้อนกลับ
       </button>
       <h2 className="text-xl font-semibold">ข้อมูลบัตรเครดิต/เดบิต</h2>
-      {/* Card payment fields remain the same */}
       <div>
         <label className="block mb-2 font-medium">หมายเลขบัตร*</label>
         <input
@@ -361,7 +397,6 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
         <span className="mr-1">←</span> ย้อนกลับ
       </button>
       <h2 className="text-xl font-semibold">ชำระเงินด้วยพร้อมเพย์</h2>
-      {/* PromptPay QR code section remains the same */}
       <button
         onClick={handlePayment}
         className="w-full bg-rose-500 hover:bg-rose-600 text-white py-2 px-4 rounded mt-4"
@@ -372,14 +407,31 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
     </div>
   );
 
-  const renderSuccess = () => (
+  const renderStep3 = () => (
     <div className="text-center py-8 space-y-6">
-      <div className="text-green-500 text-5xl mb-4">✓</div>
-      <h2 className="text-2xl font-semibold mb-2">บันทึกการสั่งซื้อเรียบร้อย</h2>
-      <p className="text-gray-600 mb-6">สถานะ: {paymentStatus === "completed" ? "สำเร็จ" : "รอดำเนินการ"}</p>
+      <h2 className="text-2xl font-semibold mb-2">คำสั่งซื้อและการชำระเงินถูกสร้างแล้ว</h2>
+      <p className="text-gray-600">Order ID: {orderData?._id}</p>
+      <p className="text-gray-600">Payment ID: {paymentData?._id}</p>
+      <p className="text-gray-600">สถานะ: รอดำเนินการ</p>
+      <div className="flex justify-center space-x-4">
+        <button
+          onClick={handlePaymentSuccess}
+          className="bg-green-500 hover:bg-green-600 text-white py-2 px-6 rounded"
+          disabled={isProcessing}
+        >
+          {isProcessing ? "กำลังประมวลผล..." : "จำลองชำระเงินสำเร็จ"}
+        </button>
+        <button
+          onClick={handlePaymentFailed}
+          className="bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded"
+          disabled={isProcessing}
+        >
+          {isProcessing ? "กำลังประมวลผล..." : "จำลองชำระเงินล้มเหลว"}
+        </button>
+      </div>
       <button
         onClick={() => navigate("/")}
-        className="bg-rose-500 hover:bg-rose-600 text-white py-2 px-6 rounded"
+        className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded mt-4"
       >
         กลับสู่หน้าหลัก
       </button>
@@ -390,7 +442,7 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
     <div>
       {formStep === 1 && renderStep1()}
       {formStep === 2 && (paymentMethod === "card" ? renderCardPayment() : renderPromptPay())}
-      {formStep === 3 && renderSuccess()}
+      {formStep === 3 && renderStep3()}
     </div>
   );
 };

@@ -15,6 +15,9 @@ import { useInView } from "react-intersection-observer";
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import ImageViewer from "../../components/ImageViewer";
+import { getTrainersInGym } from "../../services/api/TrainerApi";
+import { getBoxerInGym } from "../../services/api/BoxerApi";
+import { getCoursesByGymId } from "../../services/api/CourseApi";
 
 const GymDetail = () => {
   const navigate = useNavigate();

@@ -4,9 +4,9 @@ import { PlusCircleIcon, Cog6ToothIcon, TicketIcon, UserGroupIcon, CalendarIcon,
 import { motion } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import { getEvents } from "../../services/api/EventApi";
+import { searchEvents } from "../../services/api/EventApi";
 import EventCard from "../../components/EventCard";
-import EventFilter from "../../components/events/EventFilter"; // Add the import
+import EventFilter from "../../components/events/EventFilter";
 import provinceData from "../../data/thailand/address/provinces.json";
 
 function EventHome() {
@@ -18,57 +18,36 @@ function EventHome() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeEventType, setActiveEventType] = useState("All");
+  const [sortOption, setSortOption] = useState("newest");
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("Province data:", provinceData);
-  }, []);
-
-  useEffect(() => {
     const fetchEvents = async () => {
       try {
         setIsLoading(true);
-        const response = await getEvents();
-        console.log(response.data);
+        const params = {
+          query: searchQuery,
+          province: province !== "All" ? province : undefined,
+          event_type: activeEventType !== "All" ? activeEventType.toLowerCase() : undefined,
+          sort: sortOption,
+          limit: 100,
+          page: 1
+        };
         
-        const eventsArray = Array.isArray(response) ? response : response?.data || [];
+        const response = await searchEvents(params);
+        const eventsArray = Array.isArray(response.data) ? response.data : response.data?.events || [];
         setEvents(eventsArray);
-        console.log("event: ", response.data);
-        
         setFilteredEvents(eventsArray);
-        setIsLoading(false);
       } catch (error) {
         console.error("Failed to fetch events:", error);
+      } finally {
         setIsLoading(false);
       }
     };
     fetchEvents();
-  }, []);
-
-  useEffect(() => {
-    let filtered = [...events];
-    
-    if (province !== "All") {
-      filtered = filtered.filter(event => event.location?.province === province);
-    }
-    
-    if (activeEventType !== "All") {
-      filtered = filtered.filter(event => event.event_type === activeEventType);
-    }
-    
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(event => 
-        event.event_name?.toLowerCase().includes(query) || 
-        event.level?.toLowerCase().includes(query) ||
-        event.location?.district?.toLowerCase().includes(query)
-      );
-    }
-    
-    setFilteredEvents(filtered);
-  }, [province, activeEventType, searchQuery, events]);
+  }, [province, activeEventType, searchQuery, sortOption]);
 
   const handleProvinceSelect = (provinceNameTh) => {
     setProvince(provinceNameTh);
@@ -82,8 +61,12 @@ function EventHome() {
     setSearchQuery(e.target.value);
   };
 
+  const handleSortChange = (e) => {
+    setSortOption(e.target.value);
+  };
+
   const loadMoreEvents = () => {
-    setVisibleEvents((prevVisibleEvents) => prevVisibleEvents + 30);
+    setVisibleEvents((prev) => prev + 30);
   };
 
   const toggleFilterModal = () => {
@@ -94,6 +77,7 @@ function EventHome() {
     setProvince("All");
     setActiveEventType("All");
     setSearchQuery("");
+    setSortOption("newest");
   };
 
   const containerVariants = {
@@ -117,15 +101,9 @@ function EventHome() {
     }
   };
 
-  const registrationEvents = Array.isArray(filteredEvents)
-    ? filteredEvents.filter(event => event.event_type === "registration")
-    : [];
-  const ticketSaleEvents = Array.isArray(filteredEvents)
-    ? filteredEvents.filter(event => event.event_type === "ticket_sales")
-    : [];
-  const featuredEvents = Array.isArray(events)
-    ? events.filter(event => event.featured)
-    : [];
+  const registrationEvents = filteredEvents.filter(event => event.event_type === "registration");
+  const ticketSaleEvents = filteredEvents.filter(event => event.event_type === "ticket_sales");
+  const featuredEvents = events.filter(event => event.featured);
 
   const renderSkeletonCards = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -272,11 +250,11 @@ function EventHome() {
                     
                     <div className="absolute bottom-3 left-3">
                       <span className={`px-2 py-1 text-xs rounded-full text-white ${
-                        event.event_type === "TicketSale" 
+                        event.event_type === "ticket_sales" 
                           ? "bg-red-500" 
                           : "bg-blue-500"
                       }`}>
-                        {event.event_type === "TicketSale" ? "Fight Night" : "Tournament"}
+                        {event.event_type === "ticket_sales" ? "Fight Night" : "Tournament"}
                       </span>
                     </div>
                   </div>
@@ -330,7 +308,6 @@ function EventHome() {
         )}
 
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Desktop Filter Panel */}
           <motion.div 
             className="hidden lg:block lg:w-72 bg-card rounded-2xl shadow-lg border border-border/30 overflow-hidden flex-shrink-0 h-fit sticky top-28"
             initial={{ x: -20, opacity: 0 }}
@@ -347,15 +324,14 @@ function EventHome() {
             </div>
             
             <div className="p-5">
-            <EventFilter 
-              province={province} 
-              handleProvinceSelect={handleProvinceSelect} 
-              provinceData={provinceData} 
-            />
+              <EventFilter 
+                province={province} 
+                handleProvinceSelect={handleProvinceSelect} 
+                provinceData={provinceData} 
+              />
             </div>
           </motion.div>
 
-          {/* Main Events Display */}
           <div className="flex-grow" id="all-events">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <div className="flex items-center">
@@ -411,11 +387,14 @@ function EventHome() {
                   </div>
                 )}
                 
-                <select className="py-2 px-3 rounded-lg border border-border text-text bg-card focus:outline-none focus:ring-2 focus:ring-primary">
-                  <option>Sort by: Upcoming</option>
-                  <option>Date: Earliest First</option>
-                  <option>Date: Latest First</option>
-                  <option>Name: A-Z</option>
+                <select 
+                  className="py-2 px-3 rounded-lg border border-border text-text bg-card focus:outline-none focus:ring-2 focus:ring-primary"
+                  value={sortOption}
+                  onChange={handleSortChange}
+                >
+                  <option value="newest">Sort by: Upcoming</option>
+                  <option value="price-low-to-high">Price: Low to High</option>
+                  <option value="price-high-to-low">Price: High to Low</option>
                 </select>
                 
                 <button
@@ -545,7 +524,7 @@ function EventHome() {
               <button
                 onClick={handleClearFilters}
                 className="px-4 py-2 border border-border text-text rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
-              >ss
+              >
                 Clear All
               </button>
               <button

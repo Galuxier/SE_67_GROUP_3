@@ -26,20 +26,20 @@ function AddPackage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-  
+
     try {
       const formData = new FormData();
-      
       formData.append("type", packageData.type);
       formData.append("name", packageData.name);
       formData.append("detail", packageData.detail);
       formData.append("duration", packageData.duration.toString());
       formData.append("price", packageData.price.toString());
-      formData.append("status", "active"); // เพิ่มฟิลด์นี้ตามที่ API ต้องการ
-  
+      formData.append("status", "active");
+
       const createdPackage = await createAdsPackage(formData);
       console.log("Package created successfully:", createdPackage);
       alert(`Package "${packageData.name}" created successfully!`);
+      navigate("/some-success-page"); // เปลี่ยนไปยังหน้าที่ต้องการหลังสำเร็จ
     } catch (error) {
       console.error("Error creating package:", error);
       alert(`Error: ${error.message}`);
@@ -49,21 +49,21 @@ function AddPackage() {
   };
 
   return (
-    <div className="flex justify-center items-start min-h-screen bg-gray-50 pt-10 pb-10">
-      <div className="w-full max-w-2xl p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Create New Ads Package</h1>
-        
+    <div className="flex justify-center items-start min-h-screen bg-background pt-10 pb-10">
+      <div className="w-full max-w-2xl p-8 bg-card rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold mb-6 text-center text-text">Create New Ads Package</h1>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Package Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text mb-1">
               Package Type
             </label>
             <select
               name="type"
               value={packageData.type}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border border-border rounded bg-card text-text focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             >
               <option value="course">Course</option>
@@ -73,7 +73,7 @@ function AddPackage() {
 
           {/* Package Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text mb-1">
               Package Name
             </label>
             <input
@@ -81,7 +81,7 @@ function AddPackage() {
               name="name"
               value={packageData.name}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border border-border rounded bg-card text-text focus:ring-2 focus:ring-primary focus:border-transparent placeholder-gray-400"
               placeholder="Enter package name"
               required
             />
@@ -89,14 +89,14 @@ function AddPackage() {
 
           {/* Package Detail */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text mb-1">
               Package Details
             </label>
             <textarea
               name="detail"
               value={packageData.detail}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border border-border rounded bg-card text-text focus:ring-2 focus:ring-primary focus:border-transparent placeholder-gray-400"
               placeholder="Enter package details"
               rows={3}
               required
@@ -105,7 +105,7 @@ function AddPackage() {
 
           {/* Duration */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text mb-1">
               Duration (days)
             </label>
             <div className="relative">
@@ -117,7 +117,7 @@ function AddPackage() {
                 name="duration"
                 value={packageData.duration}
                 onChange={handleInputChange}
-                className="w-full pl-8 p-2 border rounded"
+                className="w-full pl-8 p-2 border border-border rounded bg-card text-text focus:ring-2 focus:ring-primary focus:border-transparent"
                 min="1"
                 required
               />
@@ -126,7 +126,7 @@ function AddPackage() {
 
           {/* Price */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text mb-1">
               Price (THB)
             </label>
             <div className="relative">
@@ -138,7 +138,7 @@ function AddPackage() {
                 name="price"
                 value={packageData.price}
                 onChange={handleInputChange}
-                className="w-full pl-8 p-2 border rounded"
+                className="w-full pl-8 p-2 border border-border rounded bg-card text-text focus:ring-2 focus:ring-primary focus:border-transparent"
                 min="0"
                 step="0.01"
                 required
@@ -151,7 +151,7 @@ function AddPackage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full bg-rose-500 hover:bg-rose-600 text-white py-2 px-4 rounded ${
+              className={`w-full bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded transition-colors ${
                 isSubmitting ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >

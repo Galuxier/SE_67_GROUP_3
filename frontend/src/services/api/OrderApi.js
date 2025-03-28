@@ -1,21 +1,18 @@
 import { api } from "../Axios";
+import { createPayment } from "./PaymentApi";
 
 export async function getUserOrders(user_id) {
-    try{
+    try {
         const response = await api.get(`/user/${user_id}/orders`);
         return response.data;
-    } catch (error){
-        console.error('Get All Gym Faild: ', error);
+    } catch (error) {
+        console.error('Get All Gym Failed: ', error);
         throw error;
     }
 }
 
 /**
  * Fetch orders for a specific shop with optional status filtering
- * 
- * @param {string} shop_id - The ID of the shop to get orders for
- * @param {string} [status] - Optional status filter (pending, completed, cancelled, failed)
- * @returns {Promise<Object>} - The response containing order data
  */
 export async function getOrdersByShopId(shop_id, status = '') {
     try {
@@ -31,7 +28,6 @@ export async function getOrdersByShopId(shop_id, status = '') {
     }
 }
 
-
 export async function getOrderById(order_id) {
     try {
         const response = await api.get(`/order/${order_id}`);
@@ -44,10 +40,6 @@ export async function getOrderById(order_id) {
 
 /**
  * Update order status
- * 
- * @param {string} order_id - The ID of the order to update
- * @param {string} status - The new status (pending, completed, cancelled, failed)
- * @returns {Promise<Object>} - The updated order
  */
 export async function updateOrderStatus(order_id, status) {
     try {
@@ -59,11 +51,8 @@ export async function updateOrderStatus(order_id, status) {
     }
 }
 
-
 export async function createOrder(orderData) {
     try {
-        console.log('awdad: ',orderData);
-        
         const response = await api.post('/orders', orderData);
         return response.data;
     } catch (error) {
@@ -72,20 +61,11 @@ export async function createOrder(orderData) {
     }
 }
 
-
 /**
- * Create a course order
- * 
- * @param {Object} courseOrderData - Data needed for creating a course order
- * @param {string} courseOrderData.user_id - User ID
- * @param {string} courseOrderData.course_id - Course ID
- * @param {number} courseOrderData.quantity - Quantity of slots to book
- * @param {number} courseOrderData.price - Price of the course
- * @param {Object} courseOrderData.shippingAddress - Shipping address object
- * @returns {Promise<Object>} - The created order
+ * Create a course order and payment
  */
 export async function createCourseOrder(courseOrderData) {
-    const { user_id, course_id, quantity, price, shippingAddress } = courseOrderData;
+    const { user_id, course_id, quantity, price, shippingAddress, payment_method } = courseOrderData;
     
     const orderData = {
         user_id,
@@ -102,23 +82,34 @@ export async function createCourseOrder(courseOrderData) {
         shipping_address: shippingAddress,
         status: "pending"
     };
-    
-    return createOrder(orderData);
+
+    try {
+        // สร้าง Order
+        const order = await createOrder(orderData);
+
+        // สร้าง Payment โดยใช้ order._id
+        const paymentData = {
+            order_id: order._id,
+            user_id,
+            amount: order.total_price,
+            payment_method: payment_method || "credit_card", // Default to credit_card if not provided
+            payment_status: "pending"
+        };
+        const payment = await createPayment(paymentData);
+
+        // Return ทั้ง order และ payment
+        return { order, payment };
+    } catch (error) {
+        console.error('Create Course Order with Payment Failed: ', error);
+        throw error;
+    }
 }
 
-
 /**
- * Create a product order
- * 
- * @param {Object} productOrderData - Data needed for creating a product order
- * @param {string} productOrderData.user_id - User ID
- * @param {Array} productOrderData.items - Array of product items
- * @param {number} productOrderData.total_price - Total price of all items
- * @param {Object} productOrderData.shippingAddress - Shipping address object
- * @returns {Promise<Object>} - The created order
+ * Create a product order and payment
  */
 export async function createProductOrder(productOrderData) {
-    const { user_id, items, total_price, shippingAddress } = productOrderData;
+    const { user_id, items, total_price, shippingAddress, payment_method } = productOrderData;
     
     const orderData = {
         user_id,
@@ -135,21 +126,33 @@ export async function createProductOrder(productOrderData) {
         status: "pending"
     };
     
-    return createOrder(orderData);
+    try {
+        // สร้าง Order
+        const order = await createOrder(orderData);
+
+        // สร้าง Payment โดยใช้ order._id
+        const paymentData = {
+            order_id: order._id,
+            user_id,
+            amount: total_price,
+            payment_method: payment_method || "credit_card",
+            payment_status: "pending"
+        };
+        const payment = await createPayment(paymentData);
+        console.log({order, payment});
+        // Return ทั้ง order และ payment
+        return { order, payment };
+    } catch (error) {
+        console.error('Create Product Order with Payment Failed: ', error);
+        throw error;
+    }
 }
 
 /**
- * Create a ticket order
- * 
- * @param {Object} ticketOrderData - Data needed for creating a ticket order
- * @param {string} ticketOrderData.user_id - User ID
- * @param {Array} ticketOrderData.tickets - Array of ticket items
- * @param {number} ticketOrderData.total_price - Total price of all tickets
- * @param {Object} ticketOrderData.shippingAddress - Shipping address object
- * @returns {Promise<Object>} - The created order
+ * Create a ticket order and payment
  */
 export async function createTicketOrder(ticketOrderData) {
-    const { user_id, tickets, total_price, shippingAddress } = ticketOrderData;
+    const { user_id, tickets, total_price, shippingAddress, payment_method } = ticketOrderData;
     
     const orderData = {
         user_id,
@@ -167,22 +170,33 @@ export async function createTicketOrder(ticketOrderData) {
         status: "pending"
     };
     
-    return createOrder(orderData);
+    try {
+        // สร้าง Order
+        const order = await createOrder(orderData);
+
+        // สร้าง Payment โดยใช้ order._id
+        const paymentData = {
+            order_id: order._id,
+            user_id,
+            amount: total_price,
+            payment_method: payment_method || "credit_card",
+            payment_status: "pending"
+        };
+        const payment = await createPayment(paymentData);
+
+        // Return ทั้ง order และ payment
+        return { order, payment };
+    } catch (error) {
+        console.error('Create Ticket Order with Payment Failed: ', error);
+        throw error;
+    }
 }
 
 /**
- * Create a package order
- * 
- * @param {Object} packageOrderData - Data needed for creating a course order
- * @param {string} packageOrderData.user_id - User ID
- * @param {string} packageOrderData.package_id - Course ID
- * @param {number} packageOrderData.quantity - Quantity of slots to book
- * @param {number} packageOrderData.price - Price of the course
- * @param {Object} packageOrderData.shippingAddress - Shipping address object
- * @returns {Promise<Object>} - The created order
+ * Create a package order and payment
  */
-export async function createPackageOrder(courseOrderData) {
-    const { user_id, package_id, quantity, price, shippingAddress } = courseOrderData;
+export async function createPackageOrder(packageOrderData) {
+    const { user_id, package_id, quantity, price, shippingAddress, payment_method } = packageOrderData;
     
     const orderData = {
         user_id,
@@ -200,14 +214,30 @@ export async function createPackageOrder(courseOrderData) {
         status: "pending"
     };
     
-    return createOrder(orderData);
+    try {
+        // สร้าง Order
+        const order = await createOrder(orderData);
+
+        // สร้าง Payment โดยใช้ order._id
+        const paymentData = {
+            order_id: order._id,
+            user_id,
+            amount: order.total_price,
+            payment_method: payment_method || "credit_card",
+            payment_status: "pending"
+        };
+        const payment = await createPayment(paymentData);
+
+        // Return ทั้ง order และ payment
+        return { order, payment };
+    } catch (error) {
+        console.error('Create Package Order with Payment Failed: ', error);
+        throw error;
+    }
 }
 
 /**
  * Cancel an order
- * 
- * @param {string} order_id - The ID of the order to cancel
- * @returns {Promise<Object>} - The cancelled order
  */
 export async function cancelOrder(order_id) {
     return updateOrderStatus(order_id, "cancelled");
