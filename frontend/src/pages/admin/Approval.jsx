@@ -7,8 +7,8 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   EyeIcon,
-  ChevronLeftIcon, // เปลี่ยนจาก ChevronUpIcon เป็น ChevronLeftIcon
-  ChevronRightIcon, // เปลี่ยนจาก ChevronUpIcon เป็น ChevronRightIcon
+  ChevronLeftIcon,
+  ChevronRightIcon,
   ChevronUpIcon,
   ChevronDownIcon,
   UserCircleIcon,
@@ -29,6 +29,10 @@ const statusColors = {
   rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
 };
 
+const encodeUserId = (userId) => {
+  return btoa(userId);
+};
+
 const ROLE_DISPLAY = {
   boxer: "นักมวย",
   trainer: "โค้ชมวย",
@@ -39,7 +43,6 @@ const ROLE_DISPLAY = {
   admin: "ผู้ดูแลระบบ",
 };
 
-// ฟังก์ชันช่วยตรวจสอบประเภทไฟล์จากนามสกุล
 const isImageFile = (fileUrl) => {
   const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
   return imageExtensions.some((ext) => fileUrl.toLowerCase().endsWith(ext));
@@ -55,6 +58,7 @@ export default function AdminApproval() {
   const [enrollments, setEnrollments] = useState([]);
   const [filteredEnrollments, setFilteredEnrollments] = useState([]);
   const [filterRole, setFilterRole] = useState("");
+  const [filterStatus, setFilterStatus] = useState(""); // เพิ่ม state สำหรับ filter status
   const [infoModal, setInfoModal] = useState(false);
   const [fileModal, setFileModal] = useState(false);
   const [rejectModal, setRejectModal] = useState(false);
@@ -67,17 +71,17 @@ export default function AdminApproval() {
     direction: "desc",
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1); // เพิ่ม state สำหรับหน้าปัจจุบัน
+  const rowsPerPage = 10; // จำนวนแถวต่อหน้า
 
   useEffect(() => {
     const fetchEnrollment = async () => {
       try {
         const response = await getAllEnrollment();
-        console.log("API Response:", response);
         const enrollmentData = Array.isArray(response) ? response : [];
         setEnrollments(enrollmentData);
         setFilteredEnrollments(enrollmentData);
-
-        // โหลดรูปภาพสำหรับแต่ละ user
+        
         const imagePromises = enrollmentData.map(async (enrollment) => {
           if (enrollment.user_id.profile_picture_url) {
             try {
@@ -104,16 +108,21 @@ export default function AdminApproval() {
     fetchEnrollment();
   }, []);
 
-  console.log(enrollments);
-
-  // Filter enrollment data based on role and search term
+  // Filter and sort logic
   useEffect(() => {
     let filtered = [...enrollments];
 
+    // Filter by role
     if (filterRole) {
       filtered = filtered.filter((enrollment) => enrollment.role === filterRole);
     }
 
+    // Filter by status
+    if (filterStatus) {
+      filtered = filtered.filter((enrollment) => enrollment.status === filterStatus);
+    }
+
+    // Filter by search term
     if (searchTerm) {
       const lowercasedSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -125,6 +134,7 @@ export default function AdminApproval() {
       );
     }
 
+    // Sort
     if (sortConfig.key) {
       filtered.sort((a, b) => {
         if (sortConfig.key.includes(".")) {
@@ -151,7 +161,14 @@ export default function AdminApproval() {
     }
 
     setFilteredEnrollments(filtered);
-  }, [enrollments, filterRole, sortConfig, searchTerm]);
+    setCurrentPage(1); // รีเซ็ตไปหน้าแรกเมื่อมีการกรองใหม่
+  }, [enrollments, filterRole, filterStatus, searchTerm, sortConfig]);
+
+  // Pagination logic
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const currentRows = filteredEnrollments.slice(indexOfFirstRow, indexOfLastRow);
+  const totalPages = Math.ceil(filteredEnrollments.length / rowsPerPage);
 
   const handleSortClick = (key) => {
     let direction = "asc";
@@ -163,12 +180,12 @@ export default function AdminApproval() {
 
   const getSortIcon = (columnName) => {
     if (sortConfig.key !== columnName) {
-      return <ChevronUpIcon className="w-4 h-4 ml-1 opacity-30" />; // ลูกศรเริ่มต้น (จางๆ เมื่อไม่ active)
+      return <ChevronUpIcon className="w-4 h-4 ml-1 opacity-30" />;
     }
     return sortConfig.direction === "asc" ? (
-      <ChevronUpIcon className="w-4 h-4 ml-1 text-text" /> // ชี้ขึ้นเมื่อเรียงจากน้อยไปมาก
+      <ChevronUpIcon className="w-4 h-4 ml-1 text-text" />
     ) : (
-      <ChevronDownIcon className="w-4 h-4 ml-1 text-text" /> // ชี้ลงเมื่อเรียงจากมากไปน้อย
+      <ChevronDownIcon className="w-4 h-4 ml-1 text-text" />
     );
   };
 
@@ -183,11 +200,8 @@ export default function AdminApproval() {
   };
 
   const handleInfoClick = (enrollment) => {
-    console.log("handleInfoClick triggered", enrollment);
     setSelectedEnrollment(enrollment);
     setInfoModal(true);
-    console.log("infoModal state after set:", true);
-    console.log("selectedEnrollment after set:", enrollment);
   };
 
   const handleFilesClick = (enrollment) => {
@@ -210,10 +224,7 @@ export default function AdminApproval() {
       formData.append("reviewer_id", user._id);
       if (reason) formData.append("reject_reason", reason);
 
-      formData.forEach((value, key) => console.log(`${key}: ${value}`));
       const response = await updateEnrollment(id, formData);
-      console.log(response.data);
-
       setEnrollments((prev) =>
         prev.map((enrollment) => (enrollment._id === id ? response.data : enrollment))
       );
@@ -285,12 +296,8 @@ export default function AdminApproval() {
           <div className="w-full md:w-48">
             <label className="block text-sm font-medium mb-1">กรองตามสถานะ</label>
             <select
-              onChange={(e) => {
-                const status = e.target.value;
-                setFilteredEnrollments((prev) =>
-                  status ? prev.filter((item) => item.status === status) : prev
-                );
-              }}
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
               className="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-background"
             >
               <option value="">ทุกสถานะ</option>
@@ -303,6 +310,7 @@ export default function AdminApproval() {
           <button
             onClick={() => {
               setFilterRole("");
+              setFilterStatus("");
               setSearchTerm("");
               setSortConfig({ key: "create_at", direction: "desc" });
             }}
@@ -319,108 +327,63 @@ export default function AdminApproval() {
           <table className="min-w-full divide-y divide-border">
             <thead className="bg-bar">
               <tr>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
-                >
-                  <div
-                    className="flex items-center cursor-pointer"
-                    onClick={() => handleSortClick("user_id.username")}
-                  >
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick("user_id.username")}>
                     <span>ผู้ใช้</span>
                     {getSortIcon("user_id.username")}
                   </div>
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
-                >
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
                   <div className="flex items-center cursor-pointer" onClick={() => handleSortClick("role")}>
                     <span>บทบาทที่ขอ</span>
                     {getSortIcon("role")}
                   </div>
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
-                >
-                  <div
-                    className="flex items-center cursor-pointer"
-                    onClick={() => handleSortClick("user_id.first_name")}
-                  >
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick("user_id.first_name")}>
                     <span>ชื่อ-นามสกุล</span>
                     {getSortIcon("user_id.first_name")}
                   </div>
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
-                >
-                  <div
-                    className="flex items-center cursor-pointer"
-                    onClick={() => handleSortClick("user_id.email")}
-                  >
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick("user_id.email")}>
                     <span>อีเมล</span>
                     {getSortIcon("user_id.email")}
                   </div>
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
-                >
-                  <div
-                    className="flex items-center cursor-pointer"
-                    onClick={() => handleSortClick("create_at")}
-                  >
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick("create_at")}>
                     <span>เวลาร้องขอ</span>
                     {getSortIcon("create_at")}
                   </div>
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
-                >
-                  <div
-                    className="flex items-center cursor-pointer"
-                    onClick={() => handleSortClick("updated_at")}
-                  >
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick("updated_at")}>
                     <span>เวลาตอบกลับ</span>
                     {getSortIcon("updated_at")}
                   </div>
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
-                >
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
                   <span>ผู้ดำเนินการ</span>
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
-                >
-                  <div
-                    className="flex items-center cursor-pointer"
-                    onClick={() => handleSortClick("status")}
-                  >
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
+                  <div className="flex items-center cursor-pointer" onClick={() => handleSortClick("status")}>
                     <span>สถานะ</span>
                     {getSortIcon("status")}
                   </div>
                 </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider"
-                >
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text/70 uppercase tracking-wider">
                   <span>การดำเนินการ</span>
                 </th>
               </tr>
             </thead>
             <tbody className="bg-card divide-y divide-border">
-              {Array.isArray(filteredEnrollments) && filteredEnrollments.length > 0 ? (
-                filteredEnrollments.map((enrollment) => (
+              {Array.isArray(currentRows) && currentRows.length > 0 ? (
+                currentRows.map((enrollment) => (
                   <tr key={enrollment._id} className="hover:bg-bar/30 transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex flex-col items-center">
-                        <Link to={`/user/profile/${enrollment.user_id.username}`} className="relative group">
+                        <Link to={`/user/${encodeUserId(enrollment.user_id._id)}`} className="relative group">
                           {profileImages[enrollment.user_id._id] ? (
                             <img
                               src={profileImages[enrollment.user_id._id]}
@@ -435,7 +398,7 @@ export default function AdminApproval() {
                           <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                         </Link>
                         <Link
-                          to={`/user/profile/${enrollment.user_id.username}`}
+                          to={`/user/${encodeUserId(enrollment.user_id._id)}`}
                           className="mt-1 text-sm text-text hover:text-primary transition-colors"
                         >
                           {enrollment.user_id.username}
@@ -468,7 +431,7 @@ export default function AdminApproval() {
                     <td className="px-4 py-3 whitespace-nowrap">
                       {enrollment.reviewer_id ? (
                         <Link
-                          to={`/user/profile/${enrollment.reviewer_id.username}`}
+                          to={`/user/${encodeUserId(enrollment.reviewer_id._id)}`}
                           className="text-sm text-primary hover:underline"
                         >
                           {enrollment.reviewer_id.first_name} {enrollment.reviewer_id.last_name}
@@ -532,6 +495,46 @@ export default function AdminApproval() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {filteredEnrollments.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-3 bg-bar border-t border-border">
+            <div className="text-sm text-text/70">
+              แสดง {indexOfFirstRow + 1} - {Math.min(indexOfLastRow, filteredEnrollments.length)} จาก{" "}
+              {filteredEnrollments.length} รายการ
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-md bg-background hover:bg-background/80 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeftIcon className="h-5 w-5" />
+              </button>
+              10 rows per page
+              {Array.from({ length: totalPages }, (_, index) => (
+                <button
+                  key={index + 1}
+                  onClick={() => setCurrentPage(index + 1)}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === index + 1
+                      ? "bg-primary text-white"
+                      : "bg-background hover:bg-background/80"
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-md bg-background hover:bg-background/80 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRightIcon className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Information Modal */}

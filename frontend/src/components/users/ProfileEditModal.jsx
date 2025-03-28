@@ -20,10 +20,11 @@ import {
 
 import Authenticator from "./Authenticator";
 import { getImage } from "../../services/api/ImageApi";
-
+import { useAuth } from "../../context/AuthContext";
 
 
 const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
+  const { setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     first_name: "",
@@ -37,7 +38,7 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
   });
 
   const [activeTab, setActiveTab] = useState("profile");
-
+  
   // Image cropping states
   const [image, setImage] = useState(null);
   const [tempImage, setTempImage] = useState(null);
@@ -199,75 +200,6 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
       return null;
     }
   };
-  
-  
-
-  // const createCroppedImage = async () => {
-  //   if (!previewImage || !croppedAreaPixels) return null;
-
-  //   try {
-  //     const image = new Image();
-  //     image.src = previewImage;
-      
-  //     // Wait for image to load
-  //     await new Promise((resolve) => {
-  //       image.onload = resolve;
-  //     });
-
-  //     const canvas = document.createElement("canvas");
-  //     const ctx = canvas.getContext("2d");
-      
-  //     // Set canvas dimensions to the cropped area
-  //     canvas.width = croppedAreaPixels.width;
-  //     canvas.height = croppedAreaPixels.height;
-      
-  //     // Draw the cropped area onto the canvas
-  //     ctx.drawImage(
-  //       image,
-  //       croppedAreaPixels.x,
-  //       croppedAreaPixels.y,
-  //       croppedAreaPixels.width,
-  //       croppedAreaPixels.height,
-  //       0,
-  //       0,
-  //       croppedAreaPixels.width,
-  //       croppedAreaPixels.height
-  //     );
-      
-  //     // Convert canvas to blob with promise
-  //     return new Promise((resolve) => {
-  //       canvas.toBlob((blob) => {
-  //         if (!blob) {
-  //           console.error("Canvas to Blob conversion failed");
-  //           resolve(null);
-  //           return;
-  //         }
-          
-  //         // Create a File object from the blob
-  //         // Always use a consistent filename for better backend processing
-  //         const fileName = "profile_picture.jpg";
-  //         const fileType = "image/jpeg";
-          
-  //         // Create a File object with a name the backend expects
-  //         const croppedFile = new File([blob], fileName, {
-  //           type: fileType,
-  //           lastModified: new Date().getTime()
-  //         });
-          
-  //         // Create a URL for preview
-  //         const previewUrl = URL.createObjectURL(blob);
-  //         setPreviewImage(previewUrl);
-          
-  //         console.log("Created cropped file:", croppedFile.name, "Size:", croppedFile.size, "Type:", croppedFile.type);
-  //         resolve(croppedFile);
-  //       }, 'image/jpeg', 0.95); // Always use JPEG with 95% quality for consistency
-  //     });
-  //   } catch (error) {
-  //     console.error("Error creating cropped image:", error);
-  //     toast.error("Error cropping image. Please try again.");
-  //     return null;
-  //   }
-  // };
 
   // Apply crop and set the cropped image
   const applyCrop = async () => {
@@ -295,7 +227,7 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
 
   // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault(); // ต้องให้ `e` ถูกส่งเข้ามาในฟังก์ชันนี้
+    e.preventDefault();
 
     if (!isPasswordVerified) {
       setIsModalOpen(true);
@@ -312,29 +244,37 @@ const ProfileEditModal = ({ isOpen, onClose, userData, onSave }) => {
       submitData.append("phone", formData.contact_info.phone);
 
       if (formData.profile_picture_url) {
-        submitData.append("profile_picture_url", formData.profile_picture_url);
+        submitData.append("profile_picture_url", formData.profile_picture_url); // File object
       }
 
-      // ส่งข้อมูลไป API เพื่ออัปเดตข้อมูล
       const result = await updateUser(userData._id, submitData);
-      
+
       let profilePictureUrl = defaultAvatar;
-      if(result.profile_picture_url){
-        try{
-          profilePictureUrl = await getImage(result.profile_picture_url);
-        }catch (error){
-          console.error("Failed to  load update profile picture:", error);
+      if (result.profile_picture_url) {
+        try {
+          profilePictureUrl = await getImage(result.profile_picture_url); // ได้ URL จริง
+        } catch (error) {
+          console.error("Failed to load updated profile picture:", error);
           profilePictureUrl = defaultAvatar;
         }
       }
 
-      //
+      // อัปเดตข้อมูลใน AuthContext ด้วย object ใหม่
+      const updatedUser = {
+        ...userData,
+        first_name: result.first_name,
+        last_name: result.last_name,
+        bio: result.bio,
+        contact_info: result.contact_info,
+        profile_picture: profilePictureUrl, // ใช้ URL ที่ได้จาก getImage
+        profile_picture_url: result.profile_picture_url // เก็บ path เดิมไว้ด้วย
+      };
+      setUser(updatedUser);
 
+      // อัปเดต localStorage
+      localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      // แสดงข้อความสำเร็จ
       toast.success("Profile updated successfully!");
-
-      // อัปเดตข้อมูลผู้ใช้หลังจากการบันทึก
       onSave(result);
       setIsLoading(false);
       onClose();

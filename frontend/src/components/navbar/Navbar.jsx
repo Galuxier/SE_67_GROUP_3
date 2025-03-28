@@ -5,7 +5,7 @@ import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import NotificationBell from "./NotificationBell";
-import { getImage } from "../../services/api/ImageApi";  
+import { getImage } from "../../services/api/ImageApi";
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,17 +17,30 @@ function Navbar() {
   const location = useLocation();
 
   const encodeUserId = (userId) => {
-    // Simple base64 encoding
     return btoa(userId);
   };
 
   useEffect(() => {
     const loadProfilePicture = async () => {
-      if (user?.profile_picture_url) {
+      if (user) {
         setIsProfilePictureLoading(true);
         try {
-          const imageData = await getImage(user.profile_picture_url);
-          setProfilePicture(imageData);
+          console.log("Current user.profile_picture:", user.profile_picture); // Debug
+          console.log("Current user.profile_picture_url:", user.profile_picture_url); // Debug
+
+          const imageSource = user.profile_picture || user.profile_picture_url;
+          if (imageSource) {
+            if (typeof imageSource === "string" && imageSource.startsWith("http")) {
+              setProfilePicture(imageSource);
+            } else if (user.profile_picture_url) {
+              const imageData = await getImage(user.profile_picture_url);
+              setProfilePicture(imageData);
+            } else {
+              setProfilePicture("");
+            }
+          } else {
+            setProfilePicture("");
+          }
         } catch (error) {
           console.error("Failed to load profile picture:", error);
           setProfilePicture("");
@@ -36,11 +49,12 @@ function Navbar() {
         }
       } else {
         setProfilePicture("");
+        setIsProfilePictureLoading(false);
       }
     };
 
     loadProfilePicture();
-  }, [user]);
+  }, [user, user?.profile_picture]); // Dependency รวม user และ user.profile_picture
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -128,6 +142,7 @@ function Navbar() {
                           src={profilePicture}
                           alt="Profile"
                           className="w-10 h-10 rounded-full object-cover"
+                          key={profilePicture} // Force re-render when URL changes
                         />
                       ) : (
                         <BsPersonCircle className="size-8" />
@@ -295,7 +310,7 @@ function Navbar() {
             <>
               <li className="py-1">
                 <Link
-                  to={`/user/${user.username}`}
+                  to={`/user/${encodeUserId(user._id)}`}
                   className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   Your Profile
@@ -338,7 +353,7 @@ function Navbar() {
         && !location.pathname.startsWith('/shop/cart') 
         && !location.pathname.startsWith('/shop/productPayment') 
         && !location.pathname.startsWith("/payment")
-        &&  (
+        && (
         <div className="absolute w-full z-10 left-0 py-4">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="flex" aria-label="Breadcrumb">

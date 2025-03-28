@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AddressForm from "../forms/AddressForm";
 import { createProductOrder, createTicketOrder, createCourseOrder, createPackageOrder, updateOrderStatus } from "../../services/api/OrderApi";
-import { createPayment } from "../../services/api/PaymentApi"; // นำเข้า createPayment ถ้ายังไม่ได้นำเข้า
+import { createPayment, updatePaymentStatus } from "../../services/api/PaymentApi";
 
 const PaymentForm = ({ type, DatafromOrder, user }) => {
   const navigate = useNavigate();
@@ -13,8 +13,8 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
   const [errors, setErrors] = useState({});
   const [addressData, setAddressData] = useState({});
   const [isProcessing, setIsProcessing] = useState(false);
-  const [orderData, setOrderData] = useState(null); // เก็บข้อมูล order ที่ได้กลับมา
-  const [paymentData, setPaymentData] = useState(null); // เก็บข้อมูล payment ที่ได้กลับมา
+  const [orderData, setOrderData] = useState(null);
+  const [paymentData, setPaymentData] = useState(null);
 
   const [formData, setFormData] = useState({
     email: user?.email || "",
@@ -190,10 +190,9 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
           throw new Error("Unsupported order type");
       }
 
-      // เก็บ order และ payment ที่ได้กลับมา
       setOrderData(result.order);
-      setPaymentData(result.payment);
-      setFormStep(3); // ไปที่ step 3 เพื่อแสดงปุ่มจำลอง
+      setPaymentData(result.payment.data);
+      setFormStep(3);
     } catch (error) {
       console.error("Payment error:", error);
       toast.error(error.message || "เกิดข้อผิดพลาดในการสร้างคำสั่งซื้อ");
@@ -202,41 +201,32 @@ const PaymentForm = ({ type, DatafromOrder, user }) => {
     }
   };
 
-  // ฟังก์ชันใหม่สำหรับอัพเดทสถานะ payment
-  const updatePaymentStatus = async (paymentId, status) => {
-    try {
-      const response = await api.patch(`/payments/${paymentId}/status`, { payment_status: status });
-      return response.data;
-    } catch (error) {
-      console.error('Update Payment Status Failed: ', error);
-      throw error;
-    }
-  };
-
-  // จำลองการชำระเงินสำเร็จ
   const handlePaymentSuccess = async () => {
     setIsProcessing(true);
     try {
+      console.log(paymentData._id);
+      
       await updateOrderStatus(orderData._id, "completed");
       await updatePaymentStatus(paymentData._id, "completed");
       toast.success("การชำระเงินสำเร็จ");
-      navigate("/"); // กลับไปหน้าหลักหลังสำเร็จ
+      navigate("/");
     } catch (error) {
+      console.error("Error in handlePaymentSuccess:", error);
       toast.error("เกิดข้อผิดพลาดในการอัพเดทสถานะ");
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // จำลองการชำระเงินล้มเหลว
   const handlePaymentFailed = async () => {
     setIsProcessing(true);
     try {
       await updateOrderStatus(orderData._id, "failed");
       await updatePaymentStatus(paymentData._id, "failed");
       toast.error("การชำระเงินล้มเหลว");
-      navigate("/"); // กลับไปหน้าหลักหลังล้มเหลว
+      navigate("/");
     } catch (error) {
+      console.error("Error in handlePaymentFailed:", error);
       toast.error("เกิดข้อผิดพลาดในการอัพเดทสถานะ");
     } finally {
       setIsProcessing(false);
