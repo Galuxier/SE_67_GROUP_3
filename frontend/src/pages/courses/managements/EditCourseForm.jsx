@@ -7,14 +7,15 @@ import {
 } from "@heroicons/react/24/outline";
 import { toast } from "react-toastify";
 import ActivityModal from "../../../components/courses/ActivityModal";
-import { getCourseById } from "../../../services/api/CourseApi";
+import { getCourseById ,updateCourse} from "../../../services/api/CourseApi";
 import { X } from "lucide-react";
+import { getUser } from '/src/services/api/UserApi.js';  // ใช้ named import
 const CreateCourseForm = () => {
   const navigate = useNavigate();
   const { gymData } = useOutletContext() || {};
   const { gym_id,course_id} = useParams();
   // console.log(gym_id);
-  console.log(course_id);
+//   console.log(course_id);
 
   useEffect(() => {
     if (!gymData && !gym_id) {
@@ -125,33 +126,70 @@ const CreateCourseForm = () => {
 //   "preparing"
 const [activities, setActivities] = useState([]);
 useEffect(() => {
-  if (courseFromList) {
-    const formatDate = (date) => {
-      // ตรวจสอบว่า date มีค่าเป็น string ที่สามารถแปลงเป็น Date ได้หรือไม่
-      const parsedDate = new Date(date);
-      return parsedDate.toLocaleDateString("th-TH", {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+    const fetchData = async () => {
+      if (courseFromList) {
+        // ฟังก์ชันสำหรับแปลงวันที่ให้เป็นรูปแบบที่ต้องการ
+        const formatDate = (date) => {
+          const parsedDate = new Date(date);  // แปลง date เป็น Date object
+          return parsedDate.toLocaleDateString("en-CA");  // แปลงเป็น "YYYY-MM-DD"
+        };
+  
+        // แปลงข้อมูลกิจกรรมก่อนที่จะตั้งค่า
+        const formattedActivities = Array.isArray(courseFromList.activities)
+          ? await Promise.all(courseFromList.activities.map(async (activity) => {
+              // เพิ่มข้อมูลสถานะของโค้ช
+              const trainerWithStatus = await Promise.all(activity.trainer_list.map(async (trainer) => {
+                const respon = await getUser(trainer.trainer_id);
+                console.log("Trainer Info: ", respon);  // ตรวจสอบข้อมูลที่ได้จาก getUser
+                
+                // หาค่า status ของ trainer_id ใน trainer_in_course
+                const trainerStatus = courseFromList.trainer_in_course.find(t => t.trainer_id === trainer.trainer_id);
+                return {
+                  trainer_id: trainer.trainer_id,
+                  Nickname: respon.nickname,
+                  gym_id : respon.gym_id,
+                  name: respon.nickname,
+                  id :respon._id,
+                  status: trainerStatus ? trainerStatus.status : "unknown",  // กำหนด "unknown" หากไม่พบ status
+                };
+              }));
+  
+              return {
+                ...activity,
+                date: activity.date ? formatDate(activity.date) : "",  // ใช้ formatDate เพื่อแปลง date เป็น "YYYY-MM-DD"
+                startTime: activity.start_time || "00:00",  // ใช้เวลาเริ่มต้น ถ้าไม่มีให้ใช้ "00:00"
+                endTime: activity.end_time || "00:00",      // ใช้เวลาสิ้นสุด ถ้าไม่มีให้ใช้ "00:00"
+                trainer: trainerWithStatus  // แทนที่ trainer_list ด้วย array ของ trainer_id, trainer_name และ status
+              };
+            }))
+          : [];
+  
+        // ตั้งค่าค่า courseData
+        setCourseData({
+          course_name: courseFromList.course_name || "",
+          description: courseFromList.description || "",
+          level: courseFromList.level || "beginner",
+          price: courseFromList.price || "",
+          max_participants: courseFromList.max_participants || "",
+          start_date: courseFromList.start_date ? formatDate(courseFromList.start_date) : "",
+          end_date: courseFromList.end_date ? formatDate(courseFromList.end_date) : "",
+          gym_id: courseFromList.gym_id || gym_id,
+          image_url: courseFromList.course_image_url || null,
+          previewImage: courseFromList.course_image_url && courseFromList.course_image_url[0]
+            ? `http://10.35.145.93:3000/api/images/${courseFromList.course_image_url[0]}`
+            : null
+        });
+  
+        // ตั้งค่ากิจกรรมหลังการแปลงข้อมูล
+        setActivities(formattedActivities);
+      }
     };
-
-    setCourseData({
-      course_name: courseFromList.course_name || "",
-      description: courseFromList.description || "",
-      level: courseFromList.level || "beginner",
-      price: courseFromList.price || "",
-      max_participants: courseFromList.max_participants || "",
-      start_date: courseFromList.start_date ? formatDate(courseFromList.start_date) : "",
-      end_date: courseFromList.end_date ? formatDate(courseFromList.end_date) : "",
-      gym_id: courseFromList.gym_id || gym_id,
-      image_url: courseFromList.course_image_url || null,
-      previewImage: courseFromList.course_image_url && courseFromList.course_image_url[0]
-        ? `http://10.35.145.93:3000/api/images/${courseFromList.course_image_url[0]}` : null
-    });
-    setActivities(courseFromList.activities || []);
-  }
-}, [courseFromList, gym_id]);
+  
+    fetchData();
+  }, [courseFromList, gym_id]);  // useEffect จะทำงานเมื่อ courseFromList หรือ gym_id เปลี่ยนแปลง
+  
+  
+  
 
 //    console.log("dataaaaaa",courseData);
    console.log("activity",activities);
@@ -345,7 +383,7 @@ useEffect(() => {
     if (courseData.image_url) {
       formData.append("course_image_url", courseData.image_url);
     }
-    console.log("Activities:", activities);
+    // console.log("Activities:", activities);
     // แก้ไขให้ 'time' แสดงในรูปแบบ "startTime - endTime" และลบ startTime, endTime ออกจากข้อมูล
     const formattedActivities = activities.map((activity) => {
       return {
@@ -363,13 +401,20 @@ useEffect(() => {
       };
     });
     const trainer_in_course = activities.flatMap((activity) => {
-      return activity.trainer.map((trainer) => ({
-        trainer_id: trainer.id, // Map trainer.id to trainer_id
-        status: trainer.statuses, // Map trainer status
-        isMenber: trainer.statuses === 'ready' ? true : false, // Conditional logic for isMenber
-      }));
-    });
-    formData.append("trainer_in_course", JSON.stringify(trainer_in_course));
+        return activity.trainer.map((trainer) => ({
+          trainer_id: trainer.id, // Map trainer.id to trainer_id
+          status: trainer.statuses, // Map trainer status
+          isMember: trainer.statuses === 'ready', // Conditional logic for isMenber
+        }));
+      });
+      
+      // กรอง trainer ที่มี trainer_id ซ้ำกัน
+      const uniqueTrainers = trainer_in_course.filter((value, index, self) => {
+        return index === self.findIndex((t) => t.trainer_id === value.trainer_id);
+      });
+      
+      // ส่งข้อมูล trainer_in_course ที่ไม่ซ้ำกันไปยัง formData
+      formData.append("trainer_in_course", JSON.stringify(uniqueTrainers));
     
     // console.log("trainnerINcourse",trainer_in_course);
     
@@ -381,29 +426,37 @@ useEffect(() => {
       console.log(`${key}: ${value}`);
     }
 
-    // try {
-    //   const response = await createCourse(formData);
-    //   console.log("Course created:", response);
-    //   toast.success("Course created successfully!");
-    //   navigate(`/gym/management/${gym_id}`);
-    // } catch (error) {
-    //   console.error("Error creating course:", error);
-    //   toast.error("Failed to create course. Please try again.");
-    // }
+    try {
+      const response = await updateCourse(course_id,formData);
+      console.log("Course created:", response);
+      toast.success("Course created successfully!");
+      navigate(`/gym/management/${gym_id}`);
+    } catch (error) {
+      console.error("Error creating course:", error);
+      toast.error("Failed to create course. Please try again.");
+    }
   };
 
   const handleAddActivity = (date, day) => {
-    setCurrentDate(date.toISOString().split("T")[0]);
+    // ตั้งค่า currentDate โดยใช้วันที่ที่เลือกในรูปแบบ YYYY-MM-DD
+    setCurrentDate(date.toLocaleDateString("en-CA"));  // ใช้ "en-CA" เพื่อให้ได้รูปแบบ YYYY-MM-DD
+
+    // ตั้งค่า currentDay ตามวันที่ที่เลือก
     setCurrentDay(day);
+
+    // รีเซ็ตค่า newActivity และกำหนด currentDate ลงใน newActivity.date
     setNewActivity({
-      startTime: "",
-      endTime: "",
-      description: "",
-      trainer: [],
-      date: date.toISOString().split("T")[0],
+      startTime: "",   // เวลาเริ่มต้น
+      endTime: "",     // เวลาสิ้นสุด
+      description: "", // คำอธิบาย
+      trainer: [],     // โค้ช
+      date: date.toLocaleDateString("en-CA"),  // กำหนด currentDate ลงใน newActivity.date
     });
+
+    // เปิด modal เพื่อเพิ่มกิจกรรม
     setIsActivityModalOpen(true);
-  };
+};
+
 
   const renderStepIndicator = () => (
     <div className="mb-8">
@@ -892,7 +945,7 @@ useEffect(() => {
   return (
     <div className="max-w-4xl mx-auto bg-card border border-border/30 rounded-lg p-6 shadow-md">
       <h1 className="text-2xl font-bold mb-6 text-text text-center">
-        Create New Course
+       Update Course 
       </h1>
       {renderStepIndicator()}
       <form onSubmit={handleSubmit}>

@@ -8,7 +8,6 @@ export default function CourseBuyFrom() {
     const course = location.state?.course || {};
 
     const [quantity, setQuantity] = useState(1);
-
     const back = () => navigate(-1);
 
     return (

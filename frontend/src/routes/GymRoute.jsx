@@ -18,8 +18,8 @@ import BoxerList from "../pages/gyms/managements/BoxerList";
 import GymInfo from "../pages/gyms/managements/GymInfo";
 import UserProfile from "../pages/users/UserProfile";
 import CoursePackage from "../pages/gyms/managements/CoursePackage";
-// import CourseList from "../pages/gyms/managements/CourseList";
 import CourseList from "../pages/gyms/managements/CourseList";
+
 import EditCourseForm from "../pages/courses/managements/EditCourseForm";
 import CourseEnrollmentAll from "../pages/gyms/managements/CourseEnrollmentAll";
 import CourseEnrollmentPending from "../pages/gyms/managements/CourseEnrollmentPending";

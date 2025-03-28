@@ -5,7 +5,7 @@ import Enrollment from "../pages/Enrollment";
 import Setting from "../pages/users/Setting";
 import UserOrders from "../pages/users/UserOrder";
 import OrderDetail from "../pages/users/OrderDetail";
-
+import TrainerWork from "../pages/TrainerWork";
 function UserRoutes() {
   return (
     <Routes>
@@ -16,7 +16,7 @@ function UserRoutes() {
         <Route path="settings" element={<Setting />}/>
         <Route path="orders" element={<UserOrders />}/>
         <Route path="orders/:order_id" element={<OrderDetail />}/>
-
+        <Route path="trainer/management" element={<TrainerWork />} />
       </Route>
 
       {/* ไม่มี Layout(Navbar) */}

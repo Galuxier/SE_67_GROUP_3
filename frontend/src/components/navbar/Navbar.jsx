@@ -205,7 +205,7 @@ function Navbar() {
                           {user.role.includes('trainer') && (
                             <MenuItem>
                               <Link
-                                to="/trainer/management"
+                                to="/user/trainer/management"
                                 className="block px-4 py-1 text-sm text-text hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                               >
                                 Trainer

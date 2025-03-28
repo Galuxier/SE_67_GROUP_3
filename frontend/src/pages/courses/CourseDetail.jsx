@@ -161,11 +161,11 @@ export default function CourseDetail() {
         </div>
       </div>
 
-      <div className="flex justify-center">
+      <div className="flex justify-center w-full">
         <img
           src={imageURLs[course._id] || course.course_image_url[0]}
           alt={course.course_name}
-          className="w-200 h-200 object-cover mt-4 rounded-lg"
+          className="w-full h-auto object-cover mt-4 rounded-lg"
         />
       </div>
 

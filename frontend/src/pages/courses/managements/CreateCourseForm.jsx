@@ -37,7 +37,7 @@ const CreateCourseForm = () => {
     start_date: "",
     end_date: "",
     gym_id: gym_id || (gymData ? gymData._id : ""),
-    gym_name: gymData ? gymData.gym_name : "",
+     gym_name: gymData ? gymData.gym_name : "",
     image_url: null,
     previewImage: null,
   });
@@ -247,13 +247,21 @@ const CreateCourseForm = () => {
       };
     });
     const trainer_in_course = activities.flatMap((activity) => {
-      return activity.trainer.map((trainer) => ({
-        trainer_id: trainer.id, // Map trainer.id to trainer_id
-        status: trainer.statuses, // Map trainer status
-        isMenber: trainer.statuses === 'ready' ? true : false, // Conditional logic for isMenber
-      }));
-    });
-    formData.append("trainer_in_course", JSON.stringify(trainer_in_course));
+  return activity.trainer.map((trainer) => ({
+    trainer_id: trainer.id, // Map trainer.id to trainer_id
+    status: trainer.statuses, // Map trainer status
+    isMember: trainer.statuses === 'ready', // Conditional logic for isMenber
+  }));
+});
+
+// กรอง trainer ที่มี trainer_id ซ้ำกัน
+const uniqueTrainers = trainer_in_course.filter((value, index, self) => {
+  return index === self.findIndex((t) => t.trainer_id === value.trainer_id);
+});
+
+// ส่งข้อมูล trainer_in_course ที่ไม่ซ้ำกันไปยัง formData
+formData.append("trainer_in_course", JSON.stringify(uniqueTrainers));
+
     
     // console.log("trainnerINcourse",trainer_in_course);
     
@@ -265,15 +273,15 @@ const CreateCourseForm = () => {
       console.log(`${key}: ${value}`);
     }
 
-    // try {
-    //   const response = await createCourse(formData);
-    //   console.log("Course created:", response);
-    //   toast.success("Course created successfully!");
-    //   navigate(`/gym/management/${gym_id}`);
-    // } catch (error) {
-    //   console.error("Error creating course:", error);
-    //   toast.error("Failed to create course. Please try again.");
-    // }
+    try {
+      const response = await createCourse(formData);
+      console.log("Course created:", response);
+      toast.success("Course created successfully!");
+      navigate(`/gym/management/${gym_id}`);
+    } catch (error) {
+      console.error("Error creating course:", error);
+      toast.error("Failed to create course. Please try again.");
+    }
   };
 
   const handleAddActivity = (date, day) => {

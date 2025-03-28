@@ -92,3 +92,13 @@ export async function searchCourses(params = {}) {
     throw error;
   }
 }
+
+export async function getCoursesByOwnerId(owner_id) {
+  try {
+    const response = await api.get(`/user/${owner_id}/courses`);
+    return response.data;
+  } catch (error) {
+    console.error('Get Gym Courses Failed: ', error);
+    throw error;
+  }
+}
