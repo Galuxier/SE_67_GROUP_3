@@ -19,7 +19,7 @@ export default defineConfig({
     port: 5173,      
     strictPort: true,
     proxy: {
-      '/api': 'http://10.35.145.93:3000',
+      '/api': process.env.VITE_API_URL || 'http://localhost:3000',
     },
   },
 })
