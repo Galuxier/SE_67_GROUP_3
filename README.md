@@ -1,4 +1,7 @@
 # SE_67_GROUP_3  
+
+*Read this in [English](README.md), [ภาษาไทย](README.th.md)*
+
 Welcome to our Muay Thai project. For trainer course, High quality product, And explore many events.
 
 ## Team Members  
@@ -13,7 +16,6 @@ Welcome to our Muay Thai project. For trainer course, High quality product, And 
 ---
 
 ## Project Overview  
-
 **Muay Thai Hub** is a comprehensive platform connecting every aspect of the Muay Thai community in Thailand.
 
 Our application serves multiple user roles including gym owners, trainers, event organizers, shop owners, and enthusiasts, offering a centralized ecosystem for all Muay Thai activities.
@@ -30,19 +32,10 @@ Our application serves multiple user roles including gym owners, trainers, event
 - **Frontend**: React.js with Vite, Tailwind CSS, Context API for state management
 - **Backend**: Node.js with Express.js (TypeScript), JWT authentication
 - **Database**: MongoDB with Mongoose ODM
-- **APIs & Integration**: RESTful API architecture, Google Maps integration
+- **APIs & Integration**: RESTful API architecture
 - **Cloud Services**: Image storage and file handling
-- **DevOps**: CI/CD pipeline, containerized deployment
-
-### Development Methodology
-- Agile development with Scrum methodology
-- Version control with Git and GitHub
-- Comprehensive testing strategy including unit and integration tests
 
 ### Security Features
 - JWT-based authentication system
 - Role-based access control
 - Environment variable protection
-- Secure payment processing
-
-This project demonstrates our team's ability to design and implement a complex, multi-role web application with modern technologies and best practices.
